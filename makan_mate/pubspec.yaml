@@ -1,5 +1,23 @@
 name: makan_mate
-description: "A new Flutter project."
+description: >
+  MakanMate is an AI-powered food discovery and recommendation app designed to help users explore and enjoy local Malaysian cuisine. The app provides personalized food recommendations based on user preferences, location, and food trends. Features include location-based food discovery, AR-based food hunts, and food challenges, with integration with Firebase for real-time data syncing and Firebase ML for personalized recommendations. The app encourages users to explore regional dishes, try new foods, and share their food experiences with friends.
+  
+  Key Features:
+  - Personalized AI food recommendations
+  - AR-based food hunt for local food discovery
+  - Food challenges and gamification elements
+  - Real-time updates and food event notifications
+  - User reviews, ratings, and social sharing features
+  - Integration with Firebase for backend services (authentication, database, notifications)
+  - Support for dietary preferences (halal, vegetarian, etc.)
+  - Multilingual support for a diverse Malaysian audience
+  
+  Target Audience:
+  - Food lovers, tourists, locals looking to explore new dishes
+  - Suitable for users with dietary restrictions (halal, vegetarian, vegan)
+  - Designed for users in Malaysia, with region-specific recommendations
+  - Gamified food discovery for both casual and serious food explorers
+  
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -34,6 +52,11 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  firebase_core: ^4.0.0
+  firebase_auth: ^6.0.1
+  cloud_firestore: ^6.0.0
+  firebase_storage: ^13.0.0
+  firebase_analytics: ^12.0.0
 
 dev_dependencies:
   flutter_test:

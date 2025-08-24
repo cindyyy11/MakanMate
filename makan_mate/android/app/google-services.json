@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "400315761727",
+    "project_id": "makanmate-44f9e",
+    "storage_bucket": "makanmate-44f9e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:400315761727:android:54f830ce49e235f520248a",
+        "android_client_info": {
+          "package_name": "com.example.makan_mate"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB5a0YQEtyVKKVxWqeHqIzgMdSItEWZbEI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
