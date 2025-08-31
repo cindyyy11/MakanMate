@@ -43,3 +43,15 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# AI Models (large files)
+*.tflite
+*.pb
+*.h5
+python_models/models/
+python_models/__pycache__/
+python_models/venv/
+
+# Environment files
+.env
+*.env
