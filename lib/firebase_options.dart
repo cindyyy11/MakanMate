@@ -43,17 +43,17 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyCDQnIoumsfP0ImGTl8uU-Oo1EJXu9teDc',
-    appId: '1:400315761727:web:0f42aab33f099bc720248a',
+    appId: '1:400315761727:web:a6afc9ac0299c89320248a',
     messagingSenderId: '400315761727',
     projectId: 'makanmate-44f9e',
     authDomain: 'makanmate-44f9e.firebaseapp.com',
     storageBucket: 'makanmate-44f9e.firebasestorage.app',
-    measurementId: 'G-8T5FW31H9G',
+    measurementId: 'G-HWH51M564Y',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyB5a0YQEtyVKKVxWqeHqIzgMdSItEWZbEI',
-    appId: '1:400315761727:android:54f830ce49e235f520248a',
+    appId: '1:400315761727:android:20bc2b2f498faf0520248a',
     messagingSenderId: '400315761727',
     projectId: 'makanmate-44f9e',
     storageBucket: 'makanmate-44f9e.firebasestorage.app',
@@ -61,7 +61,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBEzmlD6WRkbXyjnmL1fSCwx-ZcMl_veok',
-    appId: '1:400315761727:ios:5b41f05effc160f220248a',
+    appId: '1:400315761727:ios:c5bd592bbdaaeb9a20248a',
     messagingSenderId: '400315761727',
     projectId: 'makanmate-44f9e',
     storageBucket: 'makanmate-44f9e.firebasestorage.app',
@@ -70,7 +70,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyBEzmlD6WRkbXyjnmL1fSCwx-ZcMl_veok',
-    appId: '1:400315761727:ios:5b41f05effc160f220248a',
+    appId: '1:400315761727:ios:c5bd592bbdaaeb9a20248a',
     messagingSenderId: '400315761727',
     projectId: 'makanmate-44f9e',
     storageBucket: 'makanmate-44f9e.firebasestorage.app',
@@ -79,13 +79,14 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions windows = FirebaseOptions(
     apiKey: 'AIzaSyCDQnIoumsfP0ImGTl8uU-Oo1EJXu9teDc',
-    appId: '1:400315761727:web:cabffdb8c43534a420248a',
+    appId: '1:400315761727:web:bad696ea0c7a8d2220248a',
     messagingSenderId: '400315761727',
     projectId: 'makanmate-44f9e',
     authDomain: 'makanmate-44f9e.firebaseapp.com',
     storageBucket: 'makanmate-44f9e.firebasestorage.app',
-    measurementId: 'G-VPQ7BT4KCW',
+    measurementId: 'G-ZK4QLF48NZ',
   );
+
   
 
 }
