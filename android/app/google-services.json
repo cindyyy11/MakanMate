@@ -12,7 +12,20 @@
           "package_name": "com.example.makan_mate"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "400315761727-j5bc7kuolnf6bb129krcid7q7orc5tph.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.makan_mate",
+            "certificate_hash": "05158b0e5d7945959b624578fcf617cfcf160dee"
+          }
+        },
+        {
+          "client_id": "400315761727-mkpcelmpnfm7bdtp94k4n42boa8b5ud7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB5a0YQEtyVKKVxWqeHqIzgMdSItEWZbEI"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "400315761727-8eni81np87gps3te5q6taql85j2t4gg8.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "400315761727-s6vtmd7jh7or4s2s69k1nirr3r73sa3m.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.makanMate"
+              }
+            }
+          ]
         }
       }
     }

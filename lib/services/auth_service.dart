@@ -59,9 +59,13 @@ class AuthService extends BaseService {
   // Google Sign In
   Future<UserCredential?> signInWithGoogle() async {
     try {
+      print('Signed in with google!');
       final GoogleSignInAccount? googleUser = await _googleSignIn
           .authenticate();
+          print('Google authentication success: ${googleUser!.email}');
       if (googleUser == null) return null;
+
+      print('Signed in with google 2!');
 
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
