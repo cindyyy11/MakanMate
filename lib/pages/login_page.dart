@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import '../components/my_textfield.dart';
 import '../components/loginpage_button.dart';
 import '../components/square_tile.dart';
+import 'signup_page.dart';
+
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -48,6 +50,32 @@ void wrongCredentialMessage() {
     }
   }
 
+  void signInAsGuest() async {
+    try {
+      await FirebaseAuth.instance.signInAnonymously();
+      print('Signed in as guest!');
+      // Navigate to your main/home page after login
+      // Example:
+      // Navigator.pushReplacementNamed(context, '/home');
+    } on FirebaseAuthException catch (e) {
+      print('Guest login failed: ${e.code}');
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Guest Login Failed'),
+          content: Text(e.message ?? 'Unknown error'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -55,7 +83,7 @@ void wrongCredentialMessage() {
       body: Column(
         children: [
           //logo
-          Image.asset('assets/images/makanmate_logo.jpg'),
+          Image.asset('assets/images/logos/makanmate_logo.jpg'),
 
           SizedBox(height: 20),
 
@@ -114,6 +142,7 @@ void wrongCredentialMessage() {
           //Log in
           LoginpageButton(
             onTap: signUserIn,
+            text: 'Log In',
           ),
 
           SizedBox(height: 40),
@@ -150,7 +179,7 @@ void wrongCredentialMessage() {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SquareTile(imagePath: "assets/images/gmail_logo.jpg"),
+              SquareTile(imagePath: "assets/images/logos/gmail_logo.jpg"),
             ],
           ),
 
@@ -167,15 +196,37 @@ void wrongCredentialMessage() {
                 ),
               ),
               SizedBox(width: 4),
-              Text(
-                "Sign Up",
-                style: TextStyle(
-                  color: Colors.blue[700],
-                  fontWeight: FontWeight.bold,
+              GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const SignupPage()),
+                    );
+                  },
+                child: Text(
+                  "Sign Up",
+                  style: TextStyle(
+                    color: Colors.blue[700],
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
-          )
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center, 
+            children: [
+            TextButton(
+              onPressed: signInAsGuest,
+              child: Text(
+                "Continue as Guest",
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            ),
+          ]),
         ],
       ),
     );
