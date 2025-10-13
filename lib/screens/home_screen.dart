@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  HomeScreen({Key? key}) : super(key: key);
+
+    final user = FirebaseAuth.instance.currentUser;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -58,6 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: _buildAppBar(),
       body: _buildBody(),
       bottomNavigationBar: _buildBottomNavBar(),
+      
     );
   }
 
@@ -68,6 +72,13 @@ class _HomeScreenState extends State<HomeScreen> {
       title: Row(
         children: [
           Icon(Icons.restaurant_menu, color: Colors.orange, size: 28),
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.black54),
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+            },
+          ),
+
           SizedBox(width: 8),
           Text(
             'MakanMate',

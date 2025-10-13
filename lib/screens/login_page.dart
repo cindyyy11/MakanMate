@@ -2,10 +2,12 @@
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:makan_mate/services/auth_service.dart';
 import '../components/my_textfield.dart';
 import '../components/loginpage_button.dart';
 import '../components/square_tile.dart';
 import 'signup_page.dart';
+import 'package:google_sign_in/google_sign_in.dart' as g;
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -54,9 +56,6 @@ void wrongCredentialMessage() {
     try {
       await FirebaseAuth.instance.signInAnonymously();
       print('Signed in as guest!');
-      // Navigate to your main/home page after login
-      // Example:
-      // Navigator.pushReplacementNamed(context, '/home');
     } on FirebaseAuthException catch (e) {
       print('Guest login failed: ${e.code}');
       showDialog(
@@ -74,7 +73,6 @@ void wrongCredentialMessage() {
       );
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -176,10 +174,32 @@ void wrongCredentialMessage() {
           SizedBox(height: 30),
 
           //gmail
+          // Row(
+          //   mainAxisAlignment: MainAxisAlignment.center,
+          //   children: [
+          //     SquareTile(imagePath: "assets/images/logos/gmail_logo.jpg"),
+          //   ],
+          // ),
+
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SquareTile(imagePath: "assets/images/logos/gmail_logo.jpg"),
+              GestureDetector(
+                onTap: () async {
+                  try {
+                    final userCredential = await AuthService().signInWithGoogle();
+                    if (userCredential != null) {
+                      // User logged in successfully
+                      print("Google login: ${userCredential.user?.displayName}");
+                      // Example: navigate to homepage
+                      // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomePage()));
+                    }
+                  } catch (e) {
+                    print("Google sign-in failed: $e");
+                  }
+                },
+                child: SquareTile(imagePath: "assets/images/logos/gmail_logo.jpg"),
+              ),
             ],
           ),
 
