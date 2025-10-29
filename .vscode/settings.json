@@ -20,6 +20,5 @@
         "titleBar.inactiveBackground": "#a1060599",
         "titleBar.inactiveForeground": "#e7e7e799"
     },
-    "peacock.color": "#a10605",
-    "java.project.sourcePaths": ["lib/features/recommendations"]
+    "peacock.color": "#a10605"
 }
