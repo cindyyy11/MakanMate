@@ -2,8 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:makan_mate/models/user_models.dart';
 import 'package:makan_mate/services/base_service.dart';
 
-
-
 class UserService extends BaseService {
   static final UserService _instance = UserService._internal();
   factory UserService() => _instance;
@@ -12,10 +10,13 @@ class UserService extends BaseService {
   static const String COLLECTION_NAME = 'users';
   static const String INTERACTIONS_COLLECTION = 'user_interactions';
 
-  // Create user
+  // 🔹 Create user
   Future<void> createUser(UserModel user) async {
     try {
-      await BaseService.firestore.collection(COLLECTION_NAME).doc(user.id).set(user.toJson());
+      await BaseService.firestore
+          .collection(COLLECTION_NAME)
+          .doc(user.id)
+          .set(user.toFirestore()); // ✅ changed from toJson()
       BaseService.logger.i('User created: ${user.id}');
     } catch (e) {
       BaseService.logger.e('Error creating user: $e');
@@ -23,15 +24,15 @@ class UserService extends BaseService {
     }
   }
 
-  // Get user by ID
+  // 🔹 Get user by ID
   Future<UserModel?> getUser(String userId) async {
     try {
-      final doc = await BaseService.firestore.collection(COLLECTION_NAME).doc(userId).get();
-      
+      final doc =
+          await BaseService.firestore.collection(COLLECTION_NAME).doc(userId).get();
+
       if (doc.exists) {
         return UserModel.fromFirestore(doc);
       }
-      
       return null;
     } catch (e) {
       BaseService.logger.e('Error getting user: $e');
@@ -39,14 +40,15 @@ class UserService extends BaseService {
     }
   }
 
-  // Update user
+  // 🔹 Update entire user document
   Future<void> updateUser(UserModel user) async {
     try {
+      final updatedUser = user.copyWith(updatedAt: DateTime.now());
       await BaseService.firestore
           .collection(COLLECTION_NAME)
           .doc(user.id)
-          .update(user.copyWith(updatedAt: DateTime.now()).toJson());
-      
+          .update(updatedUser.toFirestore()); // ✅ changed from toJson()
+
       BaseService.logger.i('User updated: ${user.id}');
     } catch (e) {
       BaseService.logger.e('Error updating user: $e');
@@ -54,7 +56,7 @@ class UserService extends BaseService {
     }
   }
 
-  // Update user preferences
+  // 🔹 Update user preferences
   Future<void> updateUserPreferences({
     required String userId,
     Map<String, double>? cuisinePreferences,
@@ -70,21 +72,24 @@ class UserService extends BaseService {
       if (cuisinePreferences != null) {
         updates['cuisinePreferences'] = cuisinePreferences;
       }
-      
+
       if (dietaryRestrictions != null) {
         updates['dietaryRestrictions'] = dietaryRestrictions;
       }
-      
+
       if (spiceTolerance != null) {
         updates['spiceTolerance'] = spiceTolerance;
       }
-      
+
       if (culturalBackground != null) {
         updates['culturalBackground'] = culturalBackground;
       }
 
-      await BaseService.firestore.collection(COLLECTION_NAME).doc(userId).update(updates);
-      
+      await BaseService.firestore
+          .collection(COLLECTION_NAME)
+          .doc(userId)
+          .update(updates);
+
       BaseService.logger.i('User preferences updated: $userId');
     } catch (e) {
       BaseService.logger.e('Error updating user preferences: $e');
@@ -92,7 +97,7 @@ class UserService extends BaseService {
     }
   }
 
-  // Update behavioral patterns
+  // 🔹 Update behavioral patterns
   Future<void> updateBehavioralPatterns(
     String userId,
     Map<String, double> behaviorPatterns,
@@ -108,7 +113,7 @@ class UserService extends BaseService {
     }
   }
 
-  // Track user interaction
+  // 🔹 Track user interaction
   Future<void> trackInteraction({
     required String userId,
     required String itemId,
@@ -119,7 +124,7 @@ class UserService extends BaseService {
   }) async {
     try {
       final interaction = UserInteraction(
-        id: '', // Firestore will generate
+        id: '',
         userId: userId,
         itemId: itemId,
         interactionType: interactionType,
@@ -129,8 +134,10 @@ class UserService extends BaseService {
         timestamp: DateTime.now(),
       );
 
-      await BaseService.firestore.collection(INTERACTIONS_COLLECTION).add(interaction.toJson());
-      
+      await BaseService.firestore
+          .collection(INTERACTIONS_COLLECTION)
+          .add(interaction.toJson());
+
       BaseService.logger.i('Interaction tracked: $userId -> $itemId ($interactionType)');
     } catch (e) {
       BaseService.logger.e('Error tracking interaction: $e');
@@ -138,7 +145,7 @@ class UserService extends BaseService {
     }
   }
 
-  // Get user interactions
+  // 🔹 Get user interactions
   Future<List<UserInteraction>> getUserInteractions(
     String userId, {
     int limit = 100,
@@ -158,7 +165,7 @@ class UserService extends BaseService {
     }
   }
 
-  // Get interactions since timestamp
+  // 🔹 Get interactions since timestamp
   Future<List<UserInteraction>> getInteractionsSince(DateTime since) async {
     try {
       final query = await BaseService.firestore
@@ -173,24 +180,22 @@ class UserService extends BaseService {
     }
   }
 
-  // Delete user data
+  // 🔹 Delete user data
   Future<void> deleteUserData(String userId) async {
     try {
-      // Delete user document
       await BaseService.firestore.collection(COLLECTION_NAME).doc(userId).delete();
-      
-      // Delete user interactions
+
       final interactions = await BaseService.firestore
           .collection(INTERACTIONS_COLLECTION)
           .where('userId', isEqualTo: userId)
           .get();
-      
+
       final batch = BaseService.firestore.batch();
       for (var doc in interactions.docs) {
         batch.delete(doc.reference);
       }
       await batch.commit();
-      
+
       BaseService.logger.i('User data deleted: $userId');
     } catch (e) {
       BaseService.logger.e('Error deleting user data: $e');
@@ -198,17 +203,17 @@ class UserService extends BaseService {
     }
   }
 
-  // Get active users (for model training)
+  // 🔹 Get active users (for AI model training)
   Future<List<String>> getActiveUsers({int limit = 1000}) async {
     try {
-      final cutoff = DateTime.now().subtract(Duration(days: 7));
-      
+      final cutoff = DateTime.now().subtract(const Duration(days: 7));
+
       final query = await BaseService.firestore
           .collection(INTERACTIONS_COLLECTION)
           .where('timestamp', isGreaterThan: Timestamp.fromDate(cutoff))
           .get();
 
-      Set<String> activeUserIds = {};
+      final Set<String> activeUserIds = {};
       for (var doc in query.docs) {
         activeUserIds.add(doc.data()['userId']);
       }
@@ -220,7 +225,7 @@ class UserService extends BaseService {
     }
   }
 
-  // Get all users (for model training)
+  // 🔹 Get all users (for AI model training)
   Future<List<UserModel>> getAllUsers({int limit = 10000}) async {
     try {
       final query = await BaseService.firestore

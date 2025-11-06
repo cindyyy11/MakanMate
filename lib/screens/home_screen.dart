@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:makan_mate/core/di/injection_container.dart';
+import 'package:makan_mate/features/home/presentation/bloc/home_bloc.dart';
+import 'package:makan_mate/features/home/presentation/bloc/home_event.dart';
+import 'package:makan_mate/features/home/presentation/bloc/home_state.dart';
+import 'package:makan_mate/features/home/domain/entities/restaurant_entity.dart';
+import 'package:makan_mate/features/map/presentation/bloc/map_bloc.dart';
+import 'package:makan_mate/features/map/presentation/pages/map_page.dart';
 
 class HomeScreen extends StatefulWidget {
-  HomeScreen({Key? key}) : super(key: key);
-
-    final user = FirebaseAuth.instance.currentUser;
+  const HomeScreen({Key? key}) : super(key: key);
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -14,54 +19,34 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   int _selectedIndex = 0;
 
-  // Sample data for testing
-  final List<Map<String, dynamic>> _foodCategories = [
-    {
-      'name': 'Popular',
-      'icon': Icons.local_fire_department,
-      'color': Colors.orange,
-    },
-    {'name': 'Halal', 'icon': Icons.mosque, 'color': Colors.green},
-    {'name': 'Vegetarian', 'icon': Icons.eco, 'color': Colors.lightGreen},
-    {'name': 'Nearby', 'icon': Icons.location_on, 'color': Colors.blue},
-  ];
-
-  final List<Map<String, dynamic>> _recommendedFood = [
-    {
-      'name': 'Nasi Lemak',
-      'restaurant': 'Village Park Restaurant',
-      'rating': 4.8,
-      'price': 'RM 8.50',
-      'image': 'https://via.placeholder.com/150/FF6B6B/FFFFFF?text=Nasi+Lemak',
-      'tags': ['Halal', 'Local', 'Spicy'],
-    },
-    {
-      'name': 'Char Kway Teow',
-      'restaurant': 'Penang Street Food',
-      'rating': 4.6,
-      'price': 'RM 12.00',
-      'image':
-          'https://via.placeholder.com/150/4ECDC4/FFFFFF?text=Char+Kway+Teow',
-      'tags': ['Local', 'Spicy', 'Popular'],
-    },
-    {
-      'name': 'Laksa',
-      'restaurant': 'Authentic Malaysian',
-      'rating': 4.7,
-      'price': 'RM 10.50',
-      'image': 'https://via.placeholder.com/150/45B7D1/FFFFFF?text=Laksa',
-      'tags': ['Halal', 'Soup', 'Spicy'],
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    // Trigger Firestore load
+    context.read<HomeBloc>().add(LoadHomeDataEvent());
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: _buildAppBar(),
-      body: _buildBody(),
+      body: BlocBuilder<HomeBloc, HomeState>(
+        builder: (context, state) {
+          if (state is HomeLoading) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (state is HomeLoaded) {
+            return _buildBody(
+              categories: state.categories,
+              recommendations: state.recommendations,
+            );
+          } else if (state is HomeError) {
+            return Center(child: Text(state.message));
+          }
+          return const SizedBox();
+        },
+      ),
       bottomNavigationBar: _buildBottomNavBar(),
-      
     );
   }
 
@@ -71,16 +56,9 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.white,
       title: Row(
         children: [
-          Icon(Icons.restaurant_menu, color: Colors.orange, size: 28),
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.black54),
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-            },
-          ),
-
-          SizedBox(width: 8),
-          Text(
+          const Icon(Icons.restaurant_menu, color: Colors.orange, size: 28),
+          const SizedBox(width: 8),
+          const Text(
             'MakanMate',
             style: TextStyle(
               color: Colors.black87,
@@ -92,20 +70,18 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       actions: [
         IconButton(
-          icon: Icon(Icons.notifications_outlined, color: Colors.black54),
+          icon: const Icon(Icons.notifications_outlined, color: Colors.black54),
           onPressed: () {
-            // TODO: Navigate to notifications
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Notifications feature coming soon!')),
+              const SnackBar(content: Text('Notifications feature coming soon!')),
             );
           },
         ),
         IconButton(
-          icon: Icon(Icons.person_outline, color: Colors.black54),
+          icon: const Icon(Icons.person_outline, color: Colors.black54),
           onPressed: () {
-            // TODO: Navigate to profile
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Profile feature coming soon!')),
+              const SnackBar(content: Text('Profile feature coming soon!')),
             );
           },
         ),
@@ -113,19 +89,22 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody({
+    required List<RestaurantEntity> categories,
+    required List<RestaurantEntity> recommendations,
+  }) {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildWelcomeSection(),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           _buildSearchBar(),
-          SizedBox(height: 24),
-          _buildCategoriesSection(),
-          SizedBox(height: 24),
-          _buildRecommendationsSection(),
+          const SizedBox(height: 24),
+          _buildCategoriesSection(categories),
+          const SizedBox(height: 24),
+          _buildRecommendationsSection(recommendations),
         ],
       ),
     );
@@ -133,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildWelcomeSection() {
     return Container(
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [Colors.orange.shade400, Colors.orange.shade600],
@@ -147,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+              children: const [
                 Text(
                   'Hello, Foodie! 👋',
                   style: TextStyle(
@@ -160,14 +139,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   'Discover amazing local food around you',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white70,
                     fontSize: 16,
                   ),
                 ),
               ],
             ),
           ),
-          Icon(Icons.restaurant, color: Colors.white, size: 50),
+          const Icon(Icons.restaurant, color: Colors.white, size: 50),
         ],
       ),
     );
@@ -182,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
             blurRadius: 10,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -190,34 +169,32 @@ class _HomeScreenState extends State<HomeScreen> {
         controller: _searchController,
         decoration: InputDecoration(
           hintText: 'Search for food, restaurants...',
-          prefixIcon: Icon(Icons.search, color: Colors.grey),
+          prefixIcon: const Icon(Icons.search, color: Colors.grey),
           suffixIcon: IconButton(
-            icon: Icon(Icons.mic, color: Colors.orange),
+            icon: const Icon(Icons.mic, color: Colors.orange),
             onPressed: () {
-              // TODO: Implement voice search
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Voice search coming soon!')),
+                const SnackBar(content: Text('Voice search coming soon!')),
               );
             },
           ),
           border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
         onSubmitted: (value) {
-          // TODO: Implement search functionality
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Search for: $value')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Search for: $value')),
+          );
         },
       ),
     );
   }
 
-  Widget _buildCategoriesSection() {
+  Widget _buildCategoriesSection(List<RestaurantEntity> categories) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           'Categories',
           style: TextStyle(
             fontSize: 20,
@@ -225,23 +202,21 @@ class _HomeScreenState extends State<HomeScreen> {
             color: Colors.black87,
           ),
         ),
-        SizedBox(height: 16),
-        Container(
+        const SizedBox(height: 16),
+        SizedBox(
           height: 100,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: _foodCategories.length,
+            itemCount: categories.length,
             itemBuilder: (context, index) {
-              final category = _foodCategories[index];
+              final cat = categories[index];
               return Container(
                 width: 80,
-                margin: EdgeInsets.only(right: 16),
+                margin: const EdgeInsets.only(right: 16),
                 child: GestureDetector(
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('${category['name']} category selected'),
-                      ),
+                      SnackBar(content: Text('${cat.name} category selected')),
                     );
                   },
                   child: Column(
@@ -250,19 +225,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         height: 60,
                         width: 60,
                         decoration: BoxDecoration(
-                          color: category['color'].withOpacity(0.1),
+                          color: Colors.orange.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: Icon(
-                          category['icon'],
-                          color: category['color'],
-                          size: 28,
-                        ),
+                        child: const Icon(Icons.fastfood, color: Colors.orange, size: 28),
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Text(
-                        category['name'],
-                        style: TextStyle(
+                        cat.cuisine ?? 'Unknown',
+                        style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                         ),
@@ -279,14 +250,14 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildRecommendationsSection() {
+  Widget _buildRecommendationsSection(List<RestaurantEntity> recommendations) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
+            const Text(
               'Recommended for You',
               style: TextStyle(
                 fontSize: 20,
@@ -297,20 +268,20 @@ class _HomeScreenState extends State<HomeScreen> {
             TextButton(
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('See all recommendations')),
+                  const SnackBar(content: Text('See all recommendations')),
                 );
               },
-              child: Text('See All'),
+              child: const Text('See All'),
             ),
           ],
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         ListView.builder(
           shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          itemCount: _recommendedFood.length,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: recommendations.length,
           itemBuilder: (context, index) {
-            final food = _recommendedFood[index];
+            final food = recommendations[index];
             return _buildFoodCard(food);
           },
         ),
@@ -318,9 +289,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildFoodCard(Map<String, dynamic> food) {
+  Widget _buildFoodCard(RestaurantEntity food) {
+    final imageUrl = food.image?.isNotEmpty == true
+        ? food.image!
+        : 'assets/images/logos/image-not-found.jpg'; // fallback
+
     return Container(
-      margin: EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -328,119 +303,59 @@ class _HomeScreenState extends State<HomeScreen> {
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
             blurRadius: 10,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(12),
+        padding: const EdgeInsets.all(12),
         child: Row(
           children: [
-            // Food Image
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: Colors.grey[200],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  food['image'],
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Colors.grey[200],
-                      child: Icon(Icons.image, color: Colors.grey),
-                    );
-                  },
-                ),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(
+                imageUrl,
+                width: 80,
+                height: 80,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey[200],
+                    width: 80,
+                    height: 80,
+                    child: const Icon(Icons.image_not_supported, color: Colors.grey),
+                  );
+                },
               ),
             ),
-            SizedBox(width: 12),
-            // Food Details
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    food['name'],
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    food['restaurant'],
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                  ),
-                  SizedBox(height: 8),
+                  Text(food.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  Text(food.description ?? '-', style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
-                      Icon(Icons.star, color: Colors.amber, size: 16),
-                      SizedBox(width: 4),
-                      Text(
-                        food['rating'].toString(),
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      Spacer(),
-                      Text(
-                        food['price'],
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orange,
-                        ),
-                      ),
+                      const Icon(Icons.star, color: Colors.amber, size: 16),
+                      const SizedBox(width: 4),
+                      Text(food.rating?.toStringAsFixed(1) ?? '-', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                      const Spacer(),
+                      Text(food.priceRange ?? '-', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange)),
                     ],
-                  ),
-                  SizedBox(height: 8),
-                  Wrap(
-                    spacing: 6,
-                    children: (food['tags'] as List<String>).take(2).map((tag) {
-                      return Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          tag,
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.orange,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      );
-                    }).toList(),
                   ),
                 ],
               ),
             ),
-            // Action Buttons
             Column(
               children: [
                 IconButton(
-                  icon: Icon(Icons.favorite_border, color: Colors.grey),
+                  icon: const Icon(Icons.favorite_border, color: Colors.grey),
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Added ${food['name']} to favorites!'),
-                      ),
-                    );
-                  },
-                ),
-                IconButton(
-                  icon: Icon(Icons.add_shopping_cart, color: Colors.orange),
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('${food['name']} added to cart!')),
+                      SnackBar(content: Text('Added ${food.name} to favorites!')),
                     );
                   },
                 ),
@@ -459,25 +374,28 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           _selectedIndex = index;
         });
-
-        // Handle navigation
         switch (index) {
           case 0:
-            // Already on home
             break;
           case 1:
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Explore feature coming soon!')),
+              const SnackBar(content: Text('Explore feature coming soon!')),
             );
             break;
           case 2:
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('AR Hunt feature coming soon!')),
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => BlocProvider(
+                  create: (_) => sl<MapBloc>(),
+                  child: const MapPage(),
+                ),
+              ),
             );
             break;
           case 3:
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Profile feature coming soon!')),
+              const SnackBar(content: Text('Profile feature coming soon!')),
             );
             break;
         }
@@ -485,10 +403,10 @@ class _HomeScreenState extends State<HomeScreen> {
       type: BottomNavigationBarType.fixed,
       selectedItemColor: Colors.orange,
       unselectedItemColor: Colors.grey,
-      items: [
+      items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
         BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Explore'),
-        BottomNavigationBarItem(icon: Icon(Icons.camera_alt), label: 'AR Hunt'),
+        BottomNavigationBarItem(icon: Icon(Icons.map_outlined), label: 'Map'),
         BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
       ],
     );
