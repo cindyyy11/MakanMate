@@ -10,7 +10,10 @@ class AuthService extends BaseService {
   factory AuthService() => _instance;
   AuthService._internal();
 
-  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+    final GoogleSignIn _googleSignIn = GoogleSignIn(
+    // Optional: you can pass Web client ID for web support
+    clientId: '400315761727-mkpcelmpnfm7bdtp94k4n42boa8b5ud7.apps.googleusercontent.com',
+  );
   final FacebookAuth _facebookAuth = FacebookAuth.instance;
 
   // Current user stream
@@ -59,25 +62,25 @@ class AuthService extends BaseService {
   // Google Sign In
   Future<UserCredential?> signInWithGoogle() async {
     try {
-      print('Signed in with google!');
-      final GoogleSignInAccount? googleUser = await _googleSignIn
-          .authenticate();
-          print('Google authentication success: ${googleUser!.email}');
-      if (googleUser == null) return null;
+      // Step 1: Ask the user to pick a Google account
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) return null; // user cancelled login
 
-      print('Signed in with google 2!');
-
+      // Step 2: Retrieve the authentication tokens
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
+
+      // Step 3: Create Firebase credential
       final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.idToken, //unsure
+        accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      final UserCredential result = await BaseService.auth.signInWithCredential(
-        credential,
-      );
+      // Step 4: Sign in with Firebase
+      final UserCredential result =
+          await BaseService.auth.signInWithCredential(credential);
 
+      // Step 5: Create or update user profile in Firestore
       if (result.user != null) {
         await _createOrUpdateUserProfile(result.user!);
       }
@@ -89,33 +92,6 @@ class AuthService extends BaseService {
     }
   }
 
-  // Facebook Sign In
-  Future<UserCredential?> signInWithFacebook() async {
-    try {
-      final LoginResult result = await _facebookAuth.login();
-
-      if (result.status == LoginStatus.success) {
-        final AccessToken? accessToken = result.accessToken;
-        final AuthCredential credential = FacebookAuthProvider.credential(
-          accessToken!.tokenString,
-        );
-
-        final UserCredential userCredential = await BaseService.auth
-            .signInWithCredential(credential);
-
-        if (userCredential.user != null) {
-          await _createOrUpdateUserProfile(userCredential.user!);
-        }
-
-        return userCredential;
-      }
-
-      return null;
-    } catch (e) {
-      BaseService.logger.e('Facebook sign in error: $e');
-      rethrow;
-    }
-  }
 
   // Sign Out
   Future<void> signOut() async {

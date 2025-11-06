@@ -4,7 +4,7 @@ import 'package:makan_mate/models/base_model.dart';
 
 part 'user_models.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class UserModel extends BaseModel {
   final String id;
   final String name;
@@ -33,12 +33,11 @@ class UserModel extends BaseModel {
     required this.createdAt,
     required this.updatedAt,
   });
-
-  factory UserModel.fromJson(Map<String, dynamic> json) => _$UserModelFromJson(json);
   
+  factory UserModel.fromJson(Map<String, dynamic> json) => _$UserModelFromJson(json);
   @override
   Map<String, dynamic> toJson() => _$UserModelToJson(this);
-  
+
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     return UserModel.fromJson({
@@ -46,40 +45,41 @@ class UserModel extends BaseModel {
       ...data,
     });
   }
-  
-  // Convert to feature vector for AI
+
+  Map<String, dynamic> toFirestore() {
+    final data = toJson();
+    data['currentLocation'] = currentLocation.toJson();
+    data['createdAt'] = Timestamp.fromDate(createdAt);
+    data['updatedAt'] = Timestamp.fromDate(updatedAt);
+    return data;
+  }
+
   List<double> toFeatureVector() {
     List<double> features = [];
-    
-    // Cuisine preferences
     List<String> cuisines = ['malay', 'chinese', 'indian', 'western', 'thai'];
     for (String cuisine in cuisines) {
       features.add(cuisinePreferences[cuisine] ?? 0.0);
     }
-    
-    // Dietary restrictions
+
     features.add(dietaryRestrictions.contains('halal') ? 1.0 : 0.0);
     features.add(dietaryRestrictions.contains('vegetarian') ? 1.0 : 0.0);
     features.add(dietaryRestrictions.contains('vegan') ? 1.0 : 0.0);
-    
-    // Spice tolerance
+
     features.add(spiceTolerance);
-    
-    // Cultural background
+
     List<String> cultures = ['malay', 'chinese', 'indian', 'mixed'];
     for (String culture in cultures) {
       features.add(culturalBackground.toLowerCase() == culture ? 1.0 : 0.0);
     }
-    
-    // Behavioral patterns
+
     features.add(behaviorPatterns['morning_activity'] ?? 0.0);
     features.add(behaviorPatterns['afternoon_activity'] ?? 0.0);
     features.add(behaviorPatterns['evening_activity'] ?? 0.0);
     features.add(behaviorPatterns['weekend_activity'] ?? 0.0);
-    
+
     return features;
   }
-  
+
   UserModel copyWith({
     String? id,
     String? name,
@@ -109,7 +109,7 @@ class UserModel extends BaseModel {
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
-  
+
   @override
   List<Object?> get props => [
     id, name, email, profileImageUrl, dietaryRestrictions,
@@ -137,10 +137,18 @@ class Location extends BaseModel {
   });
 
   factory Location.fromJson(Map<String, dynamic> json) => _$LocationFromJson(json);
-  
   @override
   Map<String, dynamic> toJson() => _$LocationToJson(this);
-  
+
+  Map<String, dynamic> toFirestore() => {
+    'latitude': latitude,
+    'longitude': longitude,
+    'address': address,
+    'city': city,
+    'state': state,
+    'country': country,
+  };
+
   @override
   List<Object?> get props => [latitude, longitude, address, city, state, country];
 }
@@ -167,7 +175,8 @@ class UserInteraction extends BaseModel {
     required this.timestamp,
   });
 
-  factory UserInteraction.fromJson(Map<String, dynamic> json) => _$UserInteractionFromJson(json);
+  factory UserInteraction.fromJson(Map<String, dynamic> json) =>
+      _$UserInteractionFromJson(json);
   
   @override
   Map<String, dynamic> toJson() => _$UserInteractionToJson(this);
