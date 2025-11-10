@@ -1,0 +1,147 @@
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+class VendorSettingsPage extends StatelessWidget {
+  const VendorSettingsPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Settings',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
+        backgroundColor: Colors.orange,
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: ListView(
+        children: [
+          // Profile Section
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Text(
+              'Profile',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.person),
+            title: const Text('Edit Profile'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              // TODO: Navigate to edit profile
+            },
+          ),
+          const Divider(),
+
+          // Account Section
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Text(
+              'Account',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.notifications),
+            title: const Text('Notifications'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              // TODO: Navigate to notifications settings
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.lock),
+            title: const Text('Change Password'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              // TODO: Navigate to change password
+            },
+          ),
+          const Divider(),
+
+          // Support Section
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Text(
+              'Support',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.help),
+            title: const Text('Help & Support'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              // TODO: Navigate to help
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.info),
+            title: const Text('About'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              // TODO: Show about dialog
+            },
+          ),
+          const Divider(),
+
+          // Logout
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.red),
+            title: const Text(
+              'Logout',
+              style: TextStyle(color: Colors.red),
+            ),
+            onTap: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Logout'),
+                  content: const Text('Are you sure you want to logout?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Cancel'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                      child: const Text('Logout'),
+                    ),
+                  ],
+                ),
+              );
+
+              if (confirm == true) {
+                await FirebaseAuth.instance.signOut();
+                if (context.mounted) {
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    '/auth',
+                    (route) => false,
+                  );
+                }
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+

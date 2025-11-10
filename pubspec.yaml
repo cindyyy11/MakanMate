@@ -151,6 +151,7 @@ flutter:
     #   - images/a_dot_ham.jpeg
     assets:
         - assets/images/logos/
+        - assets/icons/
         # - assets/ml_models/
         # - assets/lottie/
         # - .env

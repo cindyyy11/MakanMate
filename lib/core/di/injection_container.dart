@@ -14,6 +14,27 @@ import '../../features/home/domain/usecases/get_categories_usecase.dart';
 import '../../features/home/domain/usecases/get_recommendations_usecase.dart';
 import '../../features/home/presentation/bloc/home_bloc.dart';
 
+// Vendor Feature imports
+import '../../features/vendor/data/datasources/vendor_remote_datasource.dart';
+import '../../features/vendor/data/datasources/promotion_remote_datasource.dart';
+import '../../features/vendor/data/repositories/vendor_repository_impl.dart';
+import '../../features/vendor/data/repositories/promotion_repository_impl.dart';
+import '../../features/vendor/data/services/storage_service.dart';
+import '../../features/vendor/domain/repositories/vendor_repository.dart';
+import '../../features/vendor/domain/repositories/promotion_repository.dart';
+import '../../features/vendor/domain/usecases/add_menu_item_usecase.dart';
+import '../../features/vendor/domain/usecases/delete_menu_item_usecase.dart';
+import '../../features/vendor/domain/usecases/get_menu_items_usecase.dart';
+import '../../features/vendor/domain/usecases/update_menu_item_usecase.dart';
+import '../../features/vendor/domain/usecases/get_promotions_usecase.dart';
+import '../../features/vendor/domain/usecases/get_promotions_by_status_usecase.dart';
+import '../../features/vendor/domain/usecases/add_promotion_usecase.dart';
+import '../../features/vendor/domain/usecases/update_promotion_usecase.dart';
+import '../../features/vendor/domain/usecases/delete_promotion_usecase.dart';
+import '../../features/vendor/domain/usecases/deactivate_promotion_usecase.dart';
+import '../../features/vendor/presentation/bloc/vendor_bloc.dart';
+import '../../features/vendor/presentation/bloc/promotion_bloc.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -43,4 +64,56 @@ Future<void> init() async {
     sl.registerLazySingleton<MapRepository>(() => MapRepositoryImpl(sl()));
     sl.registerLazySingleton(() => GetNearbyRestaurantsUseCase(sl()));
     sl.registerFactory(() => MapBloc(sl()));
+
+    // Vendor Feature
+    sl.registerLazySingleton<VendorRemoteDataSource>(
+      () => VendorRemoteDataSourceImpl(),
+    );
+
+    sl.registerLazySingleton<StorageService>(
+      () => StorageService(),
+    );
+
+    sl.registerLazySingleton<VendorRepository>(
+      () => VendorRepositoryImpl(remoteDataSource: sl()),
+    );
+
+    sl.registerLazySingleton(() => GetMenuItemsUseCase(sl()));
+    sl.registerLazySingleton(() => AddMenuItemUseCase(sl()));
+    sl.registerLazySingleton(() => UpdateMenuItemUseCase(sl()));
+    sl.registerLazySingleton(() => DeleteMenuItemUseCase(sl()));
+
+    sl.registerFactory(() => VendorBloc(
+      getMenuItems: sl(),
+      addMenuItem: sl(),
+      updateMenuItem: sl(),
+      deleteMenuItem: sl(),
+      storageService: sl(),
+    ));
+
+    // Promotion Feature
+    sl.registerLazySingleton<PromotionRemoteDataSource>(
+      () => PromotionRemoteDataSourceImpl(),
+    );
+
+    sl.registerLazySingleton<PromotionRepository>(
+      () => PromotionRepositoryImpl(remoteDataSource: sl()),
+    );
+
+    sl.registerLazySingleton(() => GetPromotionsUseCase(sl()));
+    sl.registerLazySingleton(() => GetPromotionsByStatusUseCase(sl()));
+    sl.registerLazySingleton(() => AddPromotionUseCase(sl()));
+    sl.registerLazySingleton(() => UpdatePromotionUseCase(sl()));
+    sl.registerLazySingleton(() => DeletePromotionUseCase(sl()));
+    sl.registerLazySingleton(() => DeactivatePromotionUseCase(sl()));
+
+    sl.registerFactory(() => PromotionBloc(
+      getPromotions: sl(),
+      getPromotionsByStatus: sl(),
+      addPromotion: sl(),
+      updatePromotion: sl(),
+      deletePromotion: sl(),
+      deactivatePromotion: sl(),
+      storageService: sl(),
+    ));
 }

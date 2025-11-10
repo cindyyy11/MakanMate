@@ -78,176 +78,178 @@ void wrongCredentialMessage() {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.amber[200],
-      body: Column(
-        children: [
-          //logo
-          Image.asset('assets/images/logos/makanmate_logo.jpg'),
-
-          SizedBox(height: 20),
-
-          //Welcome
-          Text(
-            "Login",
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Text(
-            "Welcome to MakanMate!",
-            style: TextStyle(
-              color: Colors.grey[700],
-              fontSize: 16,
-            ),
-          ),
-
-          SizedBox(height: 25),
-
-          //email textfield
-          MyTextfield(
-            controller: emailController,
-            hintText: 'Email',
-            obscureText: false,
-          ),
-          SizedBox(height: 10),
-
-          //password textfield
-          MyTextfield(
-            controller: passwordController,
-            hintText: 'Password',
-            obscureText: true,
-          ),
-
-          SizedBox(height: 10),
-
-          //forgot password
-          Padding(padding:  const EdgeInsets.symmetric(horizontal: 25.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Text("Forgot Password?",
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 14,
-                ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            //logo
+            Image.asset('assets/images/logos/makanmate_logo.jpg'),
+        
+            SizedBox(height: 20),
+        
+            //Welcome
+            Text(
+              "Login",
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
               ),
-            ]),
-          ),
-
-          SizedBox(height: 25),
-          
-          //Log in
-          LoginpageButton(
-            onTap: signUserIn,
-            text: 'Log In',
-          ),
-
-          SizedBox(height: 40),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 25.0),
+            ),
+            Text(
+              "Welcome to MakanMate!",
+              style: TextStyle(
+                color: Colors.grey[700],
+                fontSize: 16,
+              ),
+            ),
+        
+            SizedBox(height: 25),
+        
+            //email textfield
+            MyTextfield(
+              controller: emailController,
+              hintText: 'Email',
+              obscureText: false,
+            ),
+            SizedBox(height: 10),
+        
+            //password textfield
+            MyTextfield(
+              controller: passwordController,
+              hintText: 'Password',
+              obscureText: true,
+            ),
+        
+            SizedBox(height: 10),
+        
+            //forgot password
+            Padding(padding:  const EdgeInsets.symmetric(horizontal: 25.0),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Expanded(
-                  child: Divider(
-                    thickness: 0.5,
-                    color: Colors.grey[400],
+                Text("Forgot Password?",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 14,
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                  child: Text("  Or login with  ",
-                  style: TextStyle(color: Colors.grey[700])
+              ]),
+            ),
+        
+            SizedBox(height: 25),
+            
+            //Log in
+            LoginpageButton(
+              onTap: signUserIn,
+              text: 'Log In',
+            ),
+        
+            SizedBox(height: 40),
+        
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 25.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Divider(
+                      thickness: 0.5,
+                      color: Colors.grey[400],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                    child: Text("  Or login with  ",
+                    style: TextStyle(color: Colors.grey[700])
+                    ),
+                  ),
+                  Expanded(
+                    child: Divider(
+                      thickness: 0.5,
+                      color: Colors.grey[400],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        
+            SizedBox(height: 30),
+        
+            //gmail
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.center,
+            //   children: [
+            //     SquareTile(imagePath: "assets/images/logos/gmail_logo.jpg"),
+            //   ],
+            // ),
+        
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                GestureDetector(
+                  onTap: () async {
+                    try {
+                      final userCredential = await AuthService().signInWithGoogle();
+                      if (userCredential != null) {
+                        // User logged in successfully
+                        print("Google login: ${userCredential.user?.displayName}");
+                        // Example: navigate to homepage
+                        // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomePage()));
+                      }
+                    } catch (e) {
+                      print("Google sign-in failed: $e");
+                    }
+                  },
+                  child: SquareTile(imagePath: "assets/images/logos/gmail_logo.jpg"),
+                ),
+              ],
+            ),
+        
+            SizedBox(height: 30),
+        
+            //not a member? register now
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  "Don't have an account?",
+                  style: TextStyle(
+                    color: Colors.grey[700],
                   ),
                 ),
-                Expanded(
-                  child: Divider(
-                    thickness: 0.5,
-                    color: Colors.grey[400],
+                SizedBox(width: 4),
+                GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const SignupPage()),
+                      );
+                    },
+                  child: Text(
+                    "Sign Up",
+                    style: TextStyle(
+                      color: Colors.blue[700],
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
             ),
-          ),
-
-          SizedBox(height: 30),
-
-          //gmail
-          // Row(
-          //   mainAxisAlignment: MainAxisAlignment.center,
-          //   children: [
-          //     SquareTile(imagePath: "assets/images/logos/gmail_logo.jpg"),
-          //   ],
-          // ),
-
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              GestureDetector(
-                onTap: () async {
-                  try {
-                    final userCredential = await AuthService().signInWithGoogle();
-                    if (userCredential != null) {
-                      // User logged in successfully
-                      print("Google login: ${userCredential.user?.displayName}");
-                      // Example: navigate to homepage
-                      // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomePage()));
-                    }
-                  } catch (e) {
-                    print("Google sign-in failed: $e");
-                  }
-                },
-                child: SquareTile(imagePath: "assets/images/logos/gmail_logo.jpg"),
-              ),
-            ],
-          ),
-
-          SizedBox(height: 30),
-
-          //not a member? register now
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                "Don't have an account?",
-                style: TextStyle(
-                  color: Colors.grey[700],
-                ),
-              ),
-              SizedBox(width: 4),
-              GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const SignupPage()),
-                    );
-                  },
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center, 
+              children: [
+              TextButton(
+                onPressed: signInAsGuest,
                 child: Text(
-                  "Sign Up",
+                  "Continue as Guest",
                   style: TextStyle(
-                    color: Colors.blue[700],
-                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[600],
+                    decoration: TextDecoration.underline,
                   ),
                 ),
               ),
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center, 
-            children: [
-            TextButton(
-              onPressed: signInAsGuest,
-              child: Text(
-                "Continue as Guest",
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  decoration: TextDecoration.underline,
-                ),
-              ),
-            ),
-          ]),
-        ],
+            ]),
+          ],
+        ),
       ),
     );
   }

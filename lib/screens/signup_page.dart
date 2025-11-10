@@ -23,7 +23,8 @@ class _SignupPageState extends State<SignupPage> {
   final phoneController = TextEditingController();
 
   DateTime? birthDate;
-  String selectedCountryCode = '+60'; 
+  String selectedCountryCode = '+60';
+  String selectedRole = 'customer'; // 'customer' or 'vendor' 
 
   // date picker
   Future<void> pickBirthDate() async {
@@ -84,7 +85,8 @@ class _SignupPageState extends State<SignupPage> {
       'phone': '$selectedCountryCode ${phoneController.text.trim()}',
       'birthDate': birthDate!.toIso8601String(),
       'createdAt': Timestamp.now(),
-      'isGuest': false, // optional field for later filtering
+      'isGuest': false,
+      'role': selectedRole, // 'customer' or 'vendor'
     });
 
       print('Account created successfully!');
@@ -274,11 +276,101 @@ class _SignupPageState extends State<SignupPage> {
                 ],
               ),
             ),
-          ),
-
+            ),
 
             const SizedBox(height: 10),
 
+            // Role Selection
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 25.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Account Type *',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              selectedRole = 'customer';
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: selectedRole == 'customer'
+                                  ? Colors.amber[400]
+                                  : Colors.amber[100],
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: selectedRole == 'customer'
+                                    ? Colors.amber[700]!
+                                    : Colors.amber[300]!,
+                                width: 2,
+                              ),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                'Customer',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              selectedRole = 'vendor';
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: selectedRole == 'vendor'
+                                  ? Colors.amber[400]
+                                  : Colors.amber[100],
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: selectedRole == 'vendor'
+                                    ? Colors.amber[700]!
+                                    : Colors.amber[300]!,
+                                width: 2,
+                              ),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                'Vendor',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 10),
 
             // password textfield
             MyTextfield(
