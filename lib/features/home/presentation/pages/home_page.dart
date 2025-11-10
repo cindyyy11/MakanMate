@@ -7,14 +7,23 @@ import 'package:makan_mate/features/home/presentation/bloc/home_bloc.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_event.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_state.dart';
 import 'package:makan_mate/features/home/presentation/widgets/restaurant_card.dart';
+import 'package:makan_mate/features/home/presentation/widgets/ai_recommendations_section.dart';
+import 'package:makan_mate/features/recommendations/presentation/bloc/recommendation_bloc.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => di.sl<HomeBloc>()..add(const LoadRestaurants()),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => di.sl<HomeBloc>()..add(const LoadRestaurants()),
+        ),
+        BlocProvider(
+          create: (_) => di.sl<RecommendationBloc>(),
+        ),
+      ],
       child: Scaffold(
         appBar: AppBar(
           title: const Text('MakanMate'),
@@ -25,11 +34,36 @@ class HomePage extends StatelessWidget {
                 // Navigate to search
               },
             ),
-            IconButton(
-              icon: const Icon(Icons.logout),
-              onPressed: () {
-                context.read<AuthBloc>().add(SignOutRequested());
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'test_model') {
+                  Navigator.pushNamed(context, '/model-testing');
+                } else if (value == 'logout') {
+                  context.read<AuthBloc>().add(SignOutRequested());
+                }
               },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'test_model',
+                  child: Row(
+                    children: [
+                      Icon(Icons.science, size: 20),
+                      SizedBox(width: 8),
+                      Text('Test AI Model'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'logout',
+                  child: Row(
+                    children: [
+                      Icon(Icons.logout, size: 20),
+                      SizedBox(width: 8),
+                      Text('Logout'),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -64,14 +98,40 @@ class HomePage extends StatelessWidget {
                 onRefresh: () async {
                   context.read<HomeBloc>().add(RefreshRestaurants());
                 },
-                child: ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: state.restaurants.length,
-                  itemBuilder: (context, index) {
-                    return RestaurantCard(
-                      restaurant: state.restaurants[index],
-                    );
-                  },
+                child: ListView(
+                  children: [
+                    // AI Recommendations Section
+                    const AIRecommendationsSection(),
+                    
+                    // Divider
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.restaurant, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            'All Restaurants',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    // Restaurants List
+                    ...state.restaurants.map(
+                      (restaurant) => Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        child: RestaurantCard(restaurant: restaurant),
+                      ),
+                    ),
+                  ],
                 ),
               );
             }

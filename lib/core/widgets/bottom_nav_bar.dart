@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:makan_mate/core/theme/app_colors.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -16,8 +17,8 @@ class CustomBottomNavBar extends StatelessWidget {
       currentIndex: currentIndex,
       onTap: onTap,
       type: BottomNavigationBarType.fixed,
-      selectedItemColor: Theme.of(context).colorScheme.primary,
-      unselectedItemColor: Colors.grey,
+      selectedItemColor: AppColors.primary,
+      unselectedItemColor: AppColors.grey500,
       items: const [
         BottomNavigationBarItem(
           icon: Icon(Icons.home_outlined),

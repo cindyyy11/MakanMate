@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:makan_mate/core/constants/ui_constants.dart';
+import 'package:makan_mate/core/theme/app_colors.dart';
 
 class EmptyStateWidget extends StatelessWidget {
   final String title;
@@ -18,14 +20,14 @@ class EmptyStateWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: UIConstants.paddingLg,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               icon ?? Icons.inbox_outlined,
               size: 80,
-              color: Colors.grey[400],
+              color: AppColors.grey400,
             ),
             const SizedBox(height: 16),
             Text(
@@ -40,7 +42,7 @@ class EmptyStateWidget extends StatelessWidget {
               Text(
                 subtitle!,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
+                      color: AppColors.grey600,
                     ),
                 textAlign: TextAlign.center,
               ),

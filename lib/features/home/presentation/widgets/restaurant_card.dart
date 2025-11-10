@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:makan_mate/core/constants/ui_constants.dart';
+import 'package:makan_mate/core/theme/app_colors.dart';
 import 'package:makan_mate/features/home/domain/entities/restaurant_entity.dart';
 
 class RestaurantCard extends StatelessWidget {
@@ -17,14 +19,14 @@ class RestaurantCard extends StatelessWidget {
         onTap: () {
           // Navigate to restaurant details
         },
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: UIConstants.borderRadiusMd,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Image
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(12),
+              borderRadius: BorderRadius.vertical(
+                top: Radius.circular(UIConstants.radiusMd),
               ),
               child: Image.network(
                 restaurant.imageUrl,
@@ -33,13 +35,17 @@ class RestaurantCard extends StatelessWidget {
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => Container(
                   height: 180,
-                  color: Colors.grey[300],
-                  child: const Icon(Icons.restaurant, size: 48),
+                  color: AppColors.grey300,
+                  child: const Icon(
+                    Icons.restaurant,
+                    size: UIConstants.iconSize2Xl,
+                    color: AppColors.grey500,
+                  ),
                 ),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: UIConstants.paddingMd,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -50,14 +56,18 @@ class RestaurantCard extends StatelessWidget {
                         child: Text(
                           restaurant.name,
                           style: const TextStyle(
-                            fontSize: 18,
+                            fontSize: UIConstants.fontSizeXl,
                             fontWeight: FontWeight.bold,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const Icon(Icons.star, color: Colors.amber, size: 20),
+                      const Icon(
+                        Icons.star,
+                        color: AppColors.ratingFilled,
+                        size: UIConstants.iconSizeMd,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         restaurant.rating.toStringAsFixed(1),
@@ -69,9 +79,9 @@ class RestaurantCard extends StatelessWidget {
                   // Cuisine and price
                   Text(
                     '${restaurant.cuisineType} • ${restaurant.priceRange}',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 14,
+                    style: const TextStyle(
+                      color: AppColors.grey600,
+                      fontSize: UIConstants.fontSizeMd,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -80,9 +90,9 @@ class RestaurantCard extends StatelessWidget {
                     spacing: 8,
                     children: [
                       if (restaurant.isHalal)
-                        _buildTag('Halal', Colors.green),
+                        _buildTag('Halal', AppColors.success),
                       if (restaurant.isVegetarian)
-                        _buildTag('Vegetarian', Colors.orange),
+                        _buildTag('Vegetarian', AppColors.vegan),
                     ],
                   ),
                 ],
@@ -98,15 +108,15 @@ class RestaurantCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(4),
+        color: AppColors.withOpacity(color, 0.1),
+        borderRadius: UIConstants.borderRadiusSm,
         border: Border.all(color: color),
       ),
       child: Text(
         label,
         style: TextStyle(
           color: color,
-          fontSize: 12,
+          fontSize: UIConstants.fontSizeSm,
           fontWeight: FontWeight.w600,
         ),
       ),

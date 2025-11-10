@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:makan_mate/core/constants/ui_constants.dart';
+import 'package:makan_mate/core/theme/app_colors.dart';
 
 class RatingWidget extends StatelessWidget {
   final double rating;
@@ -37,8 +39,8 @@ class RatingWidget extends StatelessWidget {
                       : Icons.star_border,
               size: size,
               color: isActive || isHalf
-                  ? (activeColor ?? Colors.amber)
-                  : (inactiveColor ?? Colors.grey[400]),
+                  ? (activeColor ?? AppColors.ratingFilled)
+                  : (inactiveColor ?? AppColors.ratingEmpty),
             );
           },
         ),
@@ -48,7 +50,7 @@ class RatingWidget extends StatelessWidget {
             rating.toStringAsFixed(1),
             style: const TextStyle(
               fontWeight: FontWeight.w600,
-              fontSize: 14,
+              fontSize: UIConstants.fontSizeMd,
             ),
           ),
         ],

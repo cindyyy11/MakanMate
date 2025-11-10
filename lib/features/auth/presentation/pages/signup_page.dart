@@ -1,5 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:makan_mate/core/theme/app_colors.dart';
+import 'package:makan_mate/core/constants/ui_constants.dart';
 import 'package:makan_mate/features/auth/presentation/widgets/signup_form.dart';
 import 'package:makan_mate/features/auth/presentation/widgets/social_auth_buttons.dart';
 import 'package:makan_mate/services/auth_service.dart';
@@ -60,16 +62,7 @@ class _SignUpPageState extends State<SignUpPage> with TickerProviderStateMixin {
         width: double.infinity,
         height: double.infinity,
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topRight,
-            end: Alignment.bottomLeft,
-            colors: [
-              const Color(0xFFFFB300), // Deep amber
-              const Color(0xFFFFCA28), // Amber
-              const Color(0xFFFFD54F), // Amber
-              const Color(0xFFFFE082), // Light amber
-            ],
-          ),
+          gradient: AppColors.primaryGradient,
         ),
         child: Stack(
           children: [
@@ -82,15 +75,15 @@ class _SignUpPageState extends State<SignUpPage> with TickerProviderStateMixin {
                 padding: const EdgeInsets.all(16.0),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.3),
+                    color: AppColors.withOpacity(AppColors.surface, 0.3),
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.5),
+                      color: AppColors.withOpacity(AppColors.surface, 0.5),
                       width: 2,
                     ),
                   ),
                   child: IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black87),
+                    icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.textPrimary),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ),
@@ -120,12 +113,12 @@ class _SignUpPageState extends State<SignUpPage> with TickerProviderStateMixin {
                           Text(
                             'Sign Up',
                             style: TextStyle(
-                              fontSize: 32,
+                              fontSize: UIConstants.fontSize3Xl,
                               fontWeight: FontWeight.bold,
-                              color: Colors.black87,
+                              color: AppColors.textPrimary,
                               shadows: [
                                 Shadow(
-                                  color: Colors.white.withValues(alpha: 0.5),
+                                  color: AppColors.withOpacity(AppColors.surface, 0.5),
                                   offset: const Offset(0, 1),
                                   blurRadius: 2,
                                 ),
@@ -138,8 +131,8 @@ class _SignUpPageState extends State<SignUpPage> with TickerProviderStateMixin {
                           Text(
                             'Create your MakanMate account',
                             style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey[800],
+                              fontSize: UIConstants.fontSizeLg,
+                              color: AppColors.grey800,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -174,17 +167,17 @@ class _SignUpPageState extends State<SignUpPage> with TickerProviderStateMixin {
         Positioned(
           top: -150,
           left: -100,
-          child: _buildFloatingCircle(350, Colors.white.withValues(alpha: 0.12)),
+          child: _buildFloatingCircle(350, AppColors.withOpacity(AppColors.surface, 0.12)),
         ),
         Positioned(
           bottom: -100,
           right: -100,
-          child: _buildFloatingCircle(300, Colors.white.withValues(alpha: 0.15)),
+          child: _buildFloatingCircle(300, AppColors.withOpacity(AppColors.surface, 0.15)),
         ),
         Positioned(
           top: 300,
           right: -50,
-          child: _buildFloatingCircle(200, Colors.white.withValues(alpha: 0.1)),
+          child: _buildFloatingCircle(200, AppColors.withOpacity(AppColors.surface, 0.1)),
         ),
       ],
     );
@@ -203,17 +196,17 @@ class _SignUpPageState extends State<SignUpPage> with TickerProviderStateMixin {
 
   Widget _buildLogoSection() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: UIConstants.paddingMd,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white.withValues(alpha: 0.3),
+        color: AppColors.withOpacity(AppColors.surface, 0.3),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.5),
+          color: AppColors.withOpacity(AppColors.surface, 0.5),
           width: 3,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.orange.withValues(alpha: 0.3),
+            color: AppColors.withOpacity(AppColors.primary, 0.3),
             blurRadius: 20,
             spreadRadius: 5,
           ),
@@ -231,13 +224,13 @@ class _SignUpPageState extends State<SignUpPage> with TickerProviderStateMixin {
               width: 100,
               height: 100,
               decoration: BoxDecoration(
-                color: Colors.orange.shade300,
+                color: AppColors.secondaryLight,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.restaurant_menu,
                 size: 50,
-                color: Colors.white,
+                color: AppColors.textOnDark,
               ),
             );
           },
@@ -248,28 +241,28 @@ class _SignUpPageState extends State<SignUpPage> with TickerProviderStateMixin {
 
   Widget _buildSignUpCard() {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(30),
+      borderRadius: UIConstants.borderRadiusXl,
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
         child: Container(
-          padding: const EdgeInsets.all(32),
+          padding: UIConstants.paddingLg,
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Colors.white.withValues(alpha: 0.4),
-                Colors.white.withValues(alpha: 0.2),
+                AppColors.withOpacity(AppColors.surface, 0.4),
+                AppColors.withOpacity(AppColors.surface, 0.2),
               ],
             ),
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: UIConstants.borderRadiusXl,
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.5),
+              color: AppColors.withOpacity(AppColors.surface, 0.5),
               width: 2,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.orange.withValues(alpha: 0.2),
+                color: AppColors.withOpacity(AppColors.primary, 0.2),
                 blurRadius: 30,
                 spreadRadius: 5,
               ),
@@ -287,24 +280,24 @@ class _SignUpPageState extends State<SignUpPage> with TickerProviderStateMixin {
                 children: [
                   Expanded(
                     child: Divider(
-                      color: Colors.grey.shade600,
+                      color: AppColors.grey600,
                       thickness: 1,
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: UIConstants.paddingHorizontalMd,
                     child: Text(
                       'or sign up with',
                       style: TextStyle(
-                        color: Colors.grey[700],
-                        fontSize: 12,
+                        color: AppColors.grey700,
+                        fontSize: UIConstants.fontSizeSm,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
                   Expanded(
                     child: Divider(
-                      color: Colors.grey.shade600,
+                      color: AppColors.grey600,
                       thickness: 1,
                     ),
                   ),
@@ -331,10 +324,10 @@ class _SignUpPageState extends State<SignUpPage> with TickerProviderStateMixin {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(20),
+        color: AppColors.withOpacity(AppColors.surface, 0.3),
+        borderRadius: UIConstants.borderRadiusLg,
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.5),
+          color: AppColors.withOpacity(AppColors.surface, 0.5),
           width: 2,
         ),
       ),
@@ -344,8 +337,8 @@ class _SignUpPageState extends State<SignUpPage> with TickerProviderStateMixin {
           Text(
             'Already have an account? ',
             style: TextStyle(
-              color: Colors.grey[800],
-              fontSize: 14,
+              color: AppColors.grey800,
+              fontSize: UIConstants.fontSizeMd,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -354,11 +347,11 @@ class _SignUpPageState extends State<SignUpPage> with TickerProviderStateMixin {
             child: Text(
               'Login',
               style: TextStyle(
-                color: Colors.blue[700],
-                fontSize: 14,
+                color: AppColors.info,
+                fontSize: UIConstants.fontSizeMd,
                 fontWeight: FontWeight.bold,
                 decoration: TextDecoration.underline,
-                decorationColor: Colors.blue[700],
+                decorationColor: AppColors.info,
                 decorationThickness: 2,
               ),
             ),

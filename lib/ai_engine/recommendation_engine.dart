@@ -326,10 +326,10 @@ class RecommendationEngine extends AIEngineBase {
       List<RecommendationItem> recommendations = [];
 
       // Convert user and items to feature vectors
-      final userFeatures = _extractUserFeatures(user);
+      final userFeatures = extractUserFeatures(user);
 
       for (FoodItem item in candidateItems) {
-        final itemFeatures = _extractItemFeatures(item);
+        final itemFeatures = extractItemFeatures(item);
 
         // Prepare input for TensorFlow Lite model
         // Input shape: [1, USER_FEATURE_DIM + ITEM_FEATURE_DIM]
@@ -548,7 +548,7 @@ class RecommendationEngine extends AIEngineBase {
   }
 
   /// Extract numerical features from user for ML model
-  List<double> _extractUserFeatures(UserModel user) {
+  List<double> extractUserFeatures(UserModel user) {
     List<double> features = [];
 
     // Cuisine preferences (5 features)
@@ -582,7 +582,7 @@ class RecommendationEngine extends AIEngineBase {
   }
 
   /// Extract numerical features from food item for ML model
-  List<double> _extractItemFeatures(FoodItem item) {
+  List<double> extractItemFeatures(FoodItem item) {
     List<double> features = [];
 
     // Basic features (6 features)

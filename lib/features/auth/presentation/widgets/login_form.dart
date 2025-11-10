@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:makan_mate/core/theme/app_colors.dart';
 import 'package:makan_mate/features/auth/presentation/widgets/forgot_password_dialog.dart';
 import 'package:makan_mate/services/auth_service.dart';
 
@@ -70,7 +71,7 @@ class _LoginFormState extends State<LoginForm> {
             suffixIcon: IconButton(
               icon: Icon(
                 _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
-                color: Colors.grey[700],
+                color: AppColors.grey700,
               ),
               onPressed: () {
                 setState(() {

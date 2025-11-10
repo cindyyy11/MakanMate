@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:makan_mate/core/constants/ui_constants.dart';
+import 'package:makan_mate/core/theme/app_colors.dart';
 
 class CustomErrorWidget extends StatelessWidget {
   final String message;
@@ -16,14 +18,14 @@ class CustomErrorWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: UIConstants.paddingLg,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               icon ?? Icons.error_outline,
               size: 64,
-              color: Colors.red,
+              color: AppColors.error,
             ),
             const SizedBox(height: 16),
             Text(

@@ -1,10 +1,11 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:makan_mate/core/theme/app_colors.dart';
+import 'package:makan_mate/core/constants/ui_constants.dart';
 import 'package:makan_mate/features/auth/presentation/pages/signup_page.dart';
 import 'package:makan_mate/features/auth/presentation/widgets/login_form.dart';
 import 'package:makan_mate/features/auth/presentation/widgets/social_auth_buttons.dart';
 import 'package:makan_mate/services/auth_service.dart';
-
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -18,32 +19,32 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   late AnimationController _slideController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
-  
+
   final AuthService _authService = AuthService();
 
   @override
   void initState() {
     super.initState();
-    
+
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-    
+
     _slideController = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
-    
+
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
     );
-    
+
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOut));
-    
+
     _fadeController.forward();
     _slideController.forward();
   }
@@ -61,23 +62,12 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFFFFE082), // Light amber
-              const Color(0xFFFFD54F), // Amber
-              const Color(0xFFFFCA28), // Amber
-              const Color(0xFFFFB300), // Deep amber
-            ],
-          ),
-        ),
+        decoration: BoxDecoration(gradient: AppColors.primaryGradient),
         child: Stack(
           children: [
             // Animated background circles
             _buildAnimatedBackground(),
-            
+
             // Main content
             SafeArea(
               child: FadeTransition(
@@ -92,49 +82,52 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         children: [
                           // Logo with glassmorphism
                           _buildLogoSection(),
-                          
+
                           const SizedBox(height: 32),
-                          
+
                           // Welcome text
                           Text(
                             'Login',
                             style: TextStyle(
-                              fontSize: 32,
+                              fontSize: UIConstants.fontSize3Xl,
                               fontWeight: FontWeight.bold,
-                              color: Colors.black87,
+                              color: AppColors.textPrimary,
                               shadows: [
                                 Shadow(
-                                  color: Colors.white.withValues(alpha: 0.5),
+                                  color: AppColors.withOpacity(
+                                    AppColors.surface,
+                                    0.5,
+                                  ),
                                   offset: const Offset(0, 1),
                                   blurRadius: 2,
                                 ),
                               ],
                             ),
                           ),
-                          
+
                           const SizedBox(height: 8),
-                          
+
                           Text(
                             'Welcome to MakanMate!',
                             style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey[800],
+                              fontSize: UIConstants.fontSizeLg,
+                              color: AppColors.grey800,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          
+
                           const SizedBox(height: 32),
-                          
+
                           // Login Form Card
                           _buildLoginCard(),
-                          
+
                           const SizedBox(height: 24),
-                          
+
                           // Sign up prompt
                           _buildSignUpPrompt(),
-                          
+
                           const SizedBox(height: 16),
-                          
+
                           // Guest login
                           _buildGuestButton(),
                         ],
@@ -156,17 +149,26 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         Positioned(
           top: -100,
           right: -100,
-          child: _buildFloatingCircle(300, Colors.white.withValues(alpha: 0.15)),
+          child: _buildFloatingCircle(
+            300,
+            AppColors.withOpacity(AppColors.surface, 0.15),
+          ),
         ),
         Positioned(
           bottom: -150,
           left: -100,
-          child: _buildFloatingCircle(350, Colors.white.withValues(alpha: 0.12)),
+          child: _buildFloatingCircle(
+            350,
+            AppColors.withOpacity(AppColors.surface, 0.12),
+          ),
         ),
         Positioned(
           top: 200,
           left: -50,
-          child: _buildFloatingCircle(200, Colors.white.withValues(alpha: 0.1)),
+          child: _buildFloatingCircle(
+            200,
+            AppColors.withOpacity(AppColors.surface, 0.1),
+          ),
         ),
       ],
     );
@@ -176,26 +178,23 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color,
-      ),
+      decoration: BoxDecoration(shape: BoxShape.circle, color: color),
     );
   }
 
   Widget _buildLogoSection() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: UIConstants.paddingMd,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white.withValues(alpha: 0.3),
+        color: AppColors.withOpacity(AppColors.surface, 0.3),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.5),
+          color: AppColors.withOpacity(AppColors.surface, 0.5),
           width: 3,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.orange.withValues(alpha: 0.3),
+            color: AppColors.withOpacity(AppColors.primary, 0.3),
             blurRadius: 20,
             spreadRadius: 5,
           ),
@@ -213,13 +212,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               width: 100,
               height: 100,
               decoration: BoxDecoration(
-                color: Colors.orange.shade300,
+                color: AppColors.secondaryLight,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.restaurant_menu,
                 size: 50,
-                color: Colors.white,
+                color: AppColors.textOnDark,
               ),
             );
           },
@@ -230,28 +229,28 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   Widget _buildLoginCard() {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(30),
+      borderRadius: UIConstants.borderRadiusXl,
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
         child: Container(
-          padding: const EdgeInsets.all(32),
+          padding: UIConstants.paddingLg,
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Colors.white.withValues(alpha: 0.4),
-                Colors.white.withValues(alpha: 0.2),
+                AppColors.withOpacity(AppColors.surface, 0.4),
+                AppColors.withOpacity(AppColors.surface, 0.2),
               ],
             ),
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: UIConstants.borderRadiusXl,
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.5),
+              color: AppColors.withOpacity(AppColors.surface, 0.5),
               width: 2,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.orange.withValues(alpha: 0.2),
+                color: AppColors.withOpacity(AppColors.primary, 0.2),
                 blurRadius: 30,
                 spreadRadius: 5,
               ),
@@ -261,40 +260,34 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             children: [
               // Login Form
               const LoginForm(),
-              
+
               const SizedBox(height: 24),
-              
+
               // Divider
               Row(
                 children: [
                   Expanded(
-                    child: Divider(
-                      color: Colors.grey.shade600,
-                      thickness: 1,
-                    ),
+                    child: Divider(color: AppColors.grey600, thickness: 1),
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: UIConstants.paddingHorizontalMd,
                     child: Text(
                       'or continue with',
                       style: TextStyle(
-                        color: Colors.grey[700],
-                        fontSize: 12,
+                        color: AppColors.grey700,
+                        fontSize: UIConstants.fontSizeSm,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
                   Expanded(
-                    child: Divider(
-                      color: Colors.grey.shade600,
-                      thickness: 1,
-                    ),
+                    child: Divider(color: AppColors.grey600, thickness: 1),
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Social Auth Buttons
               SocialAuthButton(
                 icon: 'assets/images/google_logo.png',
@@ -313,10 +306,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(20),
+        color: AppColors.withOpacity(AppColors.surface, 0.3),
+        borderRadius: UIConstants.borderRadiusLg,
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.5),
+          color: AppColors.withOpacity(AppColors.surface, 0.5),
           width: 2,
         ),
       ),
@@ -326,8 +319,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           Text(
             "Don't have an account? ",
             style: TextStyle(
-              color: Colors.grey[800],
-              fontSize: 14,
+              color: AppColors.grey800,
+              fontSize: UIConstants.fontSizeMd,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -341,11 +334,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             child: Text(
               'Sign Up',
               style: TextStyle(
-                color: Colors.blue[700],
-                fontSize: 14,
+                color: AppColors.info,
+                fontSize: UIConstants.fontSizeMd,
                 fontWeight: FontWeight.bold,
                 decoration: TextDecoration.underline,
-                decorationColor: Colors.blue[700],
+                decorationColor: AppColors.info,
                 decorationThickness: 2,
               ),
             ),
@@ -361,11 +354,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       child: Text(
         'Continue as Guest',
         style: TextStyle(
-          color: Colors.grey[700],
-          fontSize: 14,
+          color: AppColors.grey700,
+          fontSize: UIConstants.fontSizeMd,
           fontWeight: FontWeight.w600,
           decoration: TextDecoration.underline,
-          decorationColor: Colors.grey[700],
+          decorationColor: AppColors.grey700,
         ),
       ),
     );

@@ -1,5 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:makan_mate/core/constants/ui_constants.dart';
+import 'package:makan_mate/core/theme/app_colors.dart';
 import 'package:makan_mate/features/food/data/models/food_models.dart';
 import 'package:makan_mate/features/recommendations/data/models/recommendation_models.dart';
 import 'package:makan_mate/services/food_service.dart';
@@ -90,9 +92,9 @@ class _FoodItemCardState extends State<FoodItemCard>
           return Transform.scale(
             scale: _scaleAnimation.value,
             child: Card(
-              elevation: 4,
+              elevation: UIConstants.elevationMd,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: UIConstants.borderRadiusLg,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,7 +124,7 @@ class _FoodItemCardState extends State<FoodItemCard>
                                 setState(() => _isLiked = !_isLiked);
                                 widget.onLike();
                               },
-                              color: _isLiked ? Colors.red : Colors.white,
+                              color: _isLiked ? AppColors.error : AppColors.surface,
                             ),
                             const SizedBox(width: 8),
                             _buildActionButton(
@@ -131,7 +133,7 @@ class _FoodItemCardState extends State<FoodItemCard>
                                 setState(() => _isBookmarked = !_isBookmarked);
                                 widget.onBookmark();
                               },
-                              color: _isBookmarked ? Theme.of(context).primaryColor : Colors.white,
+                              color: _isBookmarked ? AppColors.primary : AppColors.surface,
                             ),
                           ],
                         ),
@@ -170,7 +172,7 @@ class _FoodItemCardState extends State<FoodItemCard>
                         Text(
                           _foodItem!.description,
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[600],
+                            color: AppColors.grey600,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -206,22 +208,22 @@ class _FoodItemCardState extends State<FoodItemCard>
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).primaryColor,
-                            borderRadius: BorderRadius.circular(8),
+                            color: AppColors.infoLight,
+                            borderRadius: UIConstants.borderRadiusSm,
                           ),
                           child: Row(
                             children: [
                               Icon(
                                 Icons.psychology,
-                                size: 16,
-                                color: Theme.of(context).primaryColor,
+                                size: UIConstants.iconSizeSm,
+                                color: AppColors.infoDark,
                               ),
                               const SizedBox(width: 6),
                               Expanded(
                                 child: Text(
                                   widget.recommendationItem.reason,
                                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Theme.of(context).primaryColor,
+                                    color: AppColors.infoDark,
                                     fontWeight: FontWeight.w500,
                                   ),
                                   maxLines: 2,
@@ -252,7 +254,7 @@ class _FoodItemCardState extends State<FoodItemCard>
         fit: BoxFit.cover,
         placeholder: (context, url) => Container(
           height: 200,
-          color: Colors.grey[200],
+          color: AppColors.grey200,
           child: const Center(
             child: CircularProgressIndicator(),
           ),
@@ -268,20 +270,20 @@ class _FoodItemCardState extends State<FoodItemCard>
     return Container(
       height: 200,
       width: double.infinity,
-      color: Colors.grey[200],
+      color: AppColors.grey200,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             Icons.restaurant,
-            size: 48,
-            color: Colors.grey[400],
+            size: UIConstants.iconSize2Xl,
+            color: AppColors.grey400,
           ),
           const SizedBox(height: 8),
           Text(
             _foodItem!.name,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Colors.grey[600],
+              color: AppColors.grey600,
             ),
             textAlign: TextAlign.center,
           ),
@@ -294,27 +296,22 @@ class _FoodItemCardState extends State<FoodItemCard>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Theme.of(context).primaryColor,
-            Theme.of(context).colorScheme.secondary,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(12),
+        gradient: AppColors.aiGradient,
+        borderRadius: UIConstants.borderRadiusMd,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Icon(
             Icons.auto_awesome,
-            size: 12,
-            color: Colors.white,
+            size: UIConstants.fontSizeSm,
+            color: AppColors.textOnDark,
           ),
           const SizedBox(width: 4),
           Text(
             'AI',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.white,
+              color: AppColors.textOnDark,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -333,12 +330,12 @@ class _FoodItemCardState extends State<FoodItemCard>
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.6),
+          color: AppColors.overlay,
           shape: BoxShape.circle,
         ),
         child: Icon(
           icon,
-          size: 20,
+          size: UIConstants.iconSizeMd,
           color: color,
         ),
       ),
@@ -350,22 +347,22 @@ class _FoodItemCardState extends State<FoodItemCard>
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: Colors.amber[100],
-          borderRadius: BorderRadius.circular(12),
+          color: AppColors.warningLight,
+          borderRadius: UIConstants.borderRadiusMd,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(
               Icons.star,
-              size: 14,
-              color: Colors.amber,
+              size: UIConstants.fontSizeMd,
+              color: AppColors.ratingFilled,
             ),
             const SizedBox(width: 4),
             Text(
               _foodItem!.averageRating.toStringAsFixed(1),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.amber[800],
+                color: AppColors.warningDark,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -398,13 +395,13 @@ class _FoodItemCardState extends State<FoodItemCard>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.green[100],
-        borderRadius: BorderRadius.circular(12),
+        color: AppColors.successLight,
+        borderRadius: UIConstants.borderRadiusMd,
       ),
       child: Text(
         'HALAL',
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: Colors.green[800],
+          color: AppColors.successDark,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -415,13 +412,13 @@ class _FoodItemCardState extends State<FoodItemCard>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.orange[100],
-        borderRadius: BorderRadius.circular(12),
+        color: AppColors.withOpacity(AppColors.vegan, 0.1),
+        borderRadius: UIConstants.borderRadiusMd,
       ),
       child: Text(
         'VEG',
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: Colors.orange[800],
+          color: AppColors.vegan,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -434,27 +431,27 @@ class _FoodItemCardState extends State<FoodItemCard>
     
     if (_foodItem!.spiceLevel <= 0.3) {
       spiceText = 'MILD';
-      spiceColor = Colors.blue;
+      spiceColor = AppColors.spiceMild;
     } else if (_foodItem!.spiceLevel <= 0.7) {
       spiceText = 'MEDIUM';
-      spiceColor = Colors.orange;
+      spiceColor = AppColors.spiceMedium;
     } else {
       spiceText = 'SPICY';
-      spiceColor = Colors.red;
+      spiceColor = AppColors.spiceHot;
     }
     
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: spiceColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
+        color: AppColors.withOpacity(spiceColor, 0.1),
+        borderRadius: UIConstants.borderRadiusMd,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
             Icons.local_fire_department,
-            size: 12,
+            size: UIConstants.fontSizeSm,
             color: spiceColor,
           ),
           const SizedBox(width: 2),
@@ -474,13 +471,13 @@ class _FoodItemCardState extends State<FoodItemCard>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.secondary,
-        borderRadius: BorderRadius.circular(16),
+        color: AppColors.secondary,
+        borderRadius: UIConstants.borderRadiusLg,
       ),
       child: Text(
         'RM ${_foodItem!.price.toStringAsFixed(2)}',
         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-          color: Colors.white,
+          color: AppColors.textOnDark,
           fontWeight: FontWeight.bold,
         ),
       ),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:makan_mate/core/constants/ui_constants.dart';
+import 'package:makan_mate/core/theme/app_colors.dart';
 
 class CustomButton extends StatelessWidget {
   final String text;
@@ -37,19 +39,19 @@ class CustomButton extends StatelessWidget {
                 width: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.textOnDark),
                 ),
               )
             : icon != null
                 ? Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(icon, size: 20),
+                      Icon(icon, size: UIConstants.iconSizeMd),
                       const SizedBox(width: 8),
                       Text(
                         text,
                         style: const TextStyle(
-                          fontSize: 16,
+                          fontSize: UIConstants.fontSizeLg,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -58,7 +60,7 @@ class CustomButton extends StatelessWidget {
                 : Text(
                     text,
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: UIConstants.fontSizeLg,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

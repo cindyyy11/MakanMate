@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:makan_mate/core/constants/ui_constants.dart';
+import 'package:makan_mate/core/theme/app_colors.dart';
 import 'package:shimmer/shimmer.dart';
 
 class ShimmerLoading extends StatelessWidget {
@@ -16,14 +18,14 @@ class ShimmerLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
+      baseColor: AppColors.grey300,
+      highlightColor: AppColors.grey100,
       child: Container(
         width: width,
         height: height,
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: borderRadius ?? BorderRadius.circular(8),
+          color: AppColors.surface,
+          borderRadius: borderRadius ?? UIConstants.borderRadiusSm,
         ),
       ),
     );
@@ -40,13 +42,15 @@ class RestaurantCardShimmer extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const ShimmerLoading(
+          ShimmerLoading(
             width: double.infinity,
             height: 180,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(UIConstants.radiusMd),
+            ),
           ),
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: UIConstants.paddingMd,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
