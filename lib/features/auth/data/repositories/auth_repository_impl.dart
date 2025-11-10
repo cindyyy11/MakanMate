@@ -4,6 +4,7 @@ import 'package:makan_mate/core/errors/failures.dart';
 import 'package:makan_mate/core/network/network_info.dart';
 import 'package:makan_mate/features/auth/data/datasources/auth_local_datasource.dart';
 import 'package:makan_mate/features/auth/data/datasources/auth_remote_datasource.dart';
+import 'package:makan_mate/features/auth/data/models/user_models.dart';
 import 'package:makan_mate/features/auth/domain/entities/user_entity.dart';
 import 'package:makan_mate/features/auth/domain/repositories/auth_repository.dart';
 
@@ -17,6 +18,17 @@ class AuthRepositoryImpl implements AuthRepository {
     required this.localDataSource,
     required this.networkInfo,
   });
+
+  /// Convert UserModel to UserEntity
+  UserEntity _toUserEntity(UserModel model) {
+    return UserEntity(
+      id: model.id,
+      email: model.email,
+      displayName: model.name,
+      photoUrl: model.profileImageUrl,
+      isAnonymous: false, // UserModel doesn't support anonymous users
+    );
+  }
 
   @override
   Future<Either<Failure, UserEntity>> signInWithEmailPassword({
@@ -33,7 +45,7 @@ class AuthRepositoryImpl implements AuthRepository {
         password,
       );
       await localDataSource.cacheUser(user);
-      return Right(user);
+      return Right(_toUserEntity(user));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
     } on CacheException catch (e) {
@@ -61,7 +73,7 @@ class AuthRepositoryImpl implements AuthRepository {
         displayName,
       );
       await localDataSource.cacheUser(user);
-      return Right(user);
+      return Right(_toUserEntity(user));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
     } on CacheException catch (e) {
@@ -81,7 +93,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final user = await remoteDataSource.signInWithGoogle();
       await localDataSource.cacheUser(user);
-      return Right(user);
+      return Right(_toUserEntity(user));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
     } on CacheException catch (e) {
@@ -100,8 +112,8 @@ class AuthRepositoryImpl implements AuthRepository {
       return const Left(NetworkFailure('Internet is required to sign out'));
     }
     try {
-      await remoteDataSource.signOut();     // revoke session
-      await localDataSource.clearCache();   // clear local only after success
+      await remoteDataSource.signOut(); // revoke session
+      await localDataSource.clearCache(); // clear local only after success
       return const Right(null);
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
@@ -114,7 +126,7 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
- @override
+  @override
   Future<Either<Failure, UserEntity?>> getCurrentUser() async {
     try {
       // Cache-first for fast startup
@@ -132,7 +144,7 @@ class AuthRepositoryImpl implements AuthRepository {
         }
       }();
 
-      return Right(cached);
+      return Right(cached != null ? _toUserEntity(cached) : null);
     } on CacheException catch (e) {
       return Left(CacheFailure(e.message));
     } catch (_) {
@@ -145,7 +157,7 @@ class AuthRepositoryImpl implements AuthRepository {
     if (!await networkInfo.isConnected) {
       return const Left(NetworkFailure('No internet connection'));
     }
-    
+
     try {
       await remoteDataSource.sendPasswordResetEmail(email);
       return const Right(null);
@@ -156,7 +168,7 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
-
   @override
-  Stream<UserEntity?> get authStateChanges => remoteDataSource.authStateChanges;
+  Stream<UserEntity?> get authStateChanges => remoteDataSource.authStateChanges
+      .map((userModel) => userModel != null ? _toUserEntity(userModel) : null);
 }

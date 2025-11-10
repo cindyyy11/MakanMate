@@ -10,12 +10,45 @@ import 'package:makan_mate/features/home/domain/repositories/restaurant_reposito
 class RestaurantRepositoryImpl implements RestaurantRepository {
   final RestaurantRemoteDataSource remoteDataSource;
   final NetworkInfo networkInfo;
-  
+
   RestaurantRepositoryImpl({
     required this.remoteDataSource,
     required this.networkInfo,
   });
-  
+
+  /// Convert Restaurant (data model) to RestaurantEntity (domain entity)
+  RestaurantEntity _toRestaurantEntity(Restaurant restaurant) {
+    return RestaurantEntity(
+      id: restaurant.id,
+      name: restaurant.name,
+      description: restaurant.description,
+      imageUrl: restaurant.imageUrls.isNotEmpty
+          ? restaurant.imageUrls.first
+          : '',
+      rating: restaurant.averageRating,
+      address:
+          restaurant.location.address ??
+          '${restaurant.location.city ?? ''}, ${restaurant.location.state ?? ''}',
+      cuisineType: restaurant.cuisineTypes.isNotEmpty
+          ? restaurant.cuisineTypes.first
+          : 'Other',
+      priceRange: _calculatePriceRange(restaurant.deliveryFee),
+      isHalal: restaurant.isHalalCertified,
+      isVegetarian: restaurant.amenities.contains('vegetarian'),
+      latitude: restaurant.location.latitude,
+      longitude: restaurant.location.longitude,
+      openingHours: restaurant.openingHours.values.toList(),
+    );
+  }
+
+  /// Calculate price range based on delivery fee
+  String _calculatePriceRange(double deliveryFee) {
+    if (deliveryFee <= 2.0) return '\$';
+    if (deliveryFee <= 5.0) return '\$\$';
+    if (deliveryFee <= 10.0) return '\$\$\$';
+    return '\$\$\$\$';
+  }
+
   @override
   Future<Either<Failure, List<RestaurantEntity>>> getRestaurants({
     int? limit,
@@ -25,86 +58,34 @@ class RestaurantRepositoryImpl implements RestaurantRepository {
     if (!await networkInfo.isConnected) {
       return const Left(NetworkFailure('No internet connection'));
     }
-    
+
     try {
       final restaurants = await remoteDataSource.getRestaurants(
         limit: limit,
         cuisineType: cuisineType,
         isHalal: isHalal,
       );
-      final entities = restaurants.map((r) => _toEntity(r)).toList();
-      return Right(entities);
+      return Right(restaurants.map((r) => _toRestaurantEntity(r)).toList());
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
-      return Left(ServerFailure('Failed to fetch restaurants'));
+      return Left(ServerFailure('Failed to fetch restaurants: $e'));
     }
   }
-  
+
   @override
   Future<Either<Failure, RestaurantEntity>> getRestaurantById(String id) async {
     if (!await networkInfo.isConnected) {
       return const Left(NetworkFailure('No internet connection'));
     }
-    
+
     try {
       final restaurant = await remoteDataSource.getRestaurantById(id);
-      return Right(_toEntity(restaurant));
+      return Right(_toRestaurantEntity(restaurant));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
-      return Left(ServerFailure('Failed to fetch restaurant'));
+      return Left(ServerFailure('Failed to fetch restaurant: $e'));
     }
-  }
-  
-  /// Convert Restaurant model to RestaurantEntity
-  RestaurantEntity _toEntity(Restaurant restaurant) {
-    // Get first image URL or empty string
-    final imageUrl = restaurant.imageUrls.isNotEmpty 
-        ? restaurant.imageUrls.first 
-        : '';
-    
-    // Get primary cuisine type or first one
-    final cuisineType = restaurant.cuisineTypes.isNotEmpty 
-        ? restaurant.cuisineTypes.first 
-        : 'Other';
-    
-    // Convert opening hours map to list of strings
-    final openingHours = restaurant.openingHours.entries
-        .map((e) => '${e.key}: ${e.value}')
-        .toList();
-    
-    // Determine price range based on delivery fee
-    String priceRange;
-    if (restaurant.deliveryFee < 5) {
-      priceRange = '\$';
-    } else if (restaurant.deliveryFee < 10) {
-      priceRange = '\$\$';
-    } else if (restaurant.deliveryFee < 20) {
-      priceRange = '\$\$\$';
-    } else {
-      priceRange = '\$\$\$\$';
-    }
-    
-    // Check if vegetarian (assuming amenities contain vegetarian info)
-    final isVegetarian = restaurant.amenities.contains('vegetarian') || 
-                        restaurant.amenities.any((a) => a.toLowerCase().contains('vegetarian'));
-    
-    return RestaurantEntity(
-      id: restaurant.id,
-      name: restaurant.name,
-      description: restaurant.description,
-      imageUrl: imageUrl,
-      rating: restaurant.averageRating,
-      address: restaurant.location.address ?? 
-               '${restaurant.location.city ?? ''}, ${restaurant.location.state ?? ''}'.trim(),
-      cuisineType: cuisineType,
-      priceRange: priceRange,
-      isHalal: restaurant.isHalalCertified,
-      isVegetarian: isVegetarian,
-      latitude: restaurant.location.latitude,
-      longitude: restaurant.location.longitude,
-      openingHours: openingHours,
-    );
   }
 }

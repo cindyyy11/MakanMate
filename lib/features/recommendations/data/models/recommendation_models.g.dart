@@ -57,7 +57,9 @@ RecommendationContext _$RecommendationContextFromJson(
   dayOfWeek: json['dayOfWeek'] as String?,
   weather: json['weather'] as String?,
   temperature: (json['temperature'] as num?)?.toDouble(),
-  currentLocation: json['currentLocation'] as Map<String, dynamic>?,
+  currentLocation: json['currentLocation'] == null
+      ? null
+      : Location.fromJson(json['currentLocation'] as Map<String, dynamic>),
   occasion: json['occasion'] as String?,
   groupSize: (json['groupSize'] as num?)?.toInt(),
 );
