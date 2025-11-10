@@ -1,7 +1,7 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:makan_mate/models/base_model.dart';
-import 'package:makan_mate/models/user_models.dart';
+import 'package:makan_mate/core/base_model.dart';
+import 'package:makan_mate/features/auth/data/models/user_models.dart';
 
 
 part 'restaurant_models.g.dart';

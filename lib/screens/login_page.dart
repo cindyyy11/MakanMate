@@ -3,9 +3,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:makan_mate/services/auth_service.dart';
-import '../components/my_textfield.dart';
-import '../components/loginpage_button.dart';
-import '../components/square_tile.dart';
+import '../features/auth/presentation/widgets/my_textfield.dart';
+import '../features/auth/presentation/widgets/loginpage_button.dart';
+import '../features/auth/presentation/widgets/square_tile.dart';
 import 'signup_page.dart';
 import 'package:google_sign_in/google_sign_in.dart' as g;
 

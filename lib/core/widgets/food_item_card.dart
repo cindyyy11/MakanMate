@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:makan_mate/models/food_models.dart';
-import 'package:makan_mate/models/recommendation_models.dart';
+import 'package:makan_mate/features/food/data/models/food_models.dart';
+import 'package:makan_mate/features/recommendations/data/models/recommendation_models.dart';
 import 'package:makan_mate/services/food_service.dart';
 
 class FoodItemCard extends StatefulWidget {

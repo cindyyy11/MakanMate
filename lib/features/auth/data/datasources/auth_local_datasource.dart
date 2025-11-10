@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:makan_mate/core/errors/exceptions.dart';
-import 'package:makan_mate/features/auth/data/models/user_model.dart';
+import 'package:makan_mate/features/auth/data/models/user_models.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 abstract class AuthLocalDataSource {

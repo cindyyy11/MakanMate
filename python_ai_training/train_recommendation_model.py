@@ -1,5 +1,5 @@
-from sklearn.calibration import LabelEncoder
-from sklearn.discriminant_analysis import StandardScaler
+from pathlib import Path
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
 import numpy as np
@@ -22,7 +22,8 @@ class MakanMateRecommendationModel:
         self.num_items = num_items
         self.embedding_dim = embedding_dim
         self.user_feature_dim = 15
-        self.item_feature_dim = 20
+        self.item_feature_dim = 15
+
         
         self.model = None
         self.user_scaler = StandardScaler()
@@ -38,7 +39,7 @@ class MakanMateRecommendationModel:
         try:
             if not firebase_admin._apps:
                 # You need to download the service account key from Firebase Console
-                cred = credentials.Certificate('path/to/serviceAccountKey.json')
+                cred = credentials.Certificate('firebase-credentials.json')
                 firebase_admin.initialize_app(cred)
             
             self.db = firestore.client()
@@ -51,67 +52,103 @@ class MakanMateRecommendationModel:
     def fetch_training_data(self):
         """Fetch training data from Firestore"""
         logger.info("Fetching training data from Firestore...")
-        
+
         if self.db is None:
             logger.warning("Firebase not available, using synthetic data")
             return self.generate_synthetic_data()
-        
+
         try:
-            # Get users
             users_ref = self.db.collection('users')
-            users = list(users_ref.stream())
-            
-            # Get food items
             items_ref = self.db.collection('food_items')
-            items = list(items_ref.stream())
-            
-            # Get interactions
             interactions_ref = self.db.collection('user_interactions')
-            interactions = list(interactions_ref.stream())
-            
+
+            # Attach doc.id into the dicts so downstream code can rely on 'id'
+            users = []
+            for doc in users_ref.stream():
+                d = doc.to_dict() or {}
+                if 'id' not in d:
+                    d['id'] = doc.id
+                users.append(d)
+
+            items = []
+            for doc in items_ref.stream():
+                d = doc.to_dict() or {}
+                if 'id' not in d:
+                    d['id'] = doc.id
+                items.append(d)
+
+            interactions = []
+            for doc in interactions_ref.stream():
+                d = doc.to_dict() or {}
+                # normalize field names for downstream use
+                if 'userId' not in d:
+                    d['userId'] = d.get('user_id') or d.get('uid') or d.get('user') or ''
+                if 'itemId' not in d:
+                    d['itemId'] = d.get('item_id') or d.get('foodId') or d.get('item') or ''
+                interactions.append(d)
+
             logger.info(f"Fetched {len(users)} users, {len(items)} items, {len(interactions)} interactions")
-            
+
+            # Fallback to synthetic if any critical collection is empty
+            if len(users) == 0 or len(items) == 0 or len(interactions) == 0:
+                logger.warning("Firestore has insufficient data (users/items/interactions). Using synthetic data.")
+                return self.generate_synthetic_data()
+
             return {
-                'users': [doc.to_dict() for doc in users],
-                'items': [doc.to_dict() for doc in items],
-                'interactions': [doc.to_dict() for doc in interactions],
+                'users': users,
+                'items': items,
+                'interactions': interactions,
             }
         except Exception as e:
             logger.error(f"Error fetching data from Firestore: {e}")
             return self.generate_synthetic_data()
+
     
     def generate_synthetic_data(self):
         """Generate synthetic Malaysian food data for training"""
         logger.info("Generating synthetic Malaysian food data...")
-        
+
+        rng = np.random.default_rng()  # NumPy Generator (safer than RandomState)
+
         # Malaysian cuisines and food categories
         cuisines = ['malay', 'chinese', 'indian', 'western', 'thai']
         categories = ['rice', 'noodles', 'soup', 'grilled', 'fried', 'dessert', 'beverage']
-        interactions_types = ['view', 'like', 'order', 'rate', 'bookmark']
-        
+
+        # Helper: weighted pick for any options (works for lists-of-lists too)
+        def weighted_pick(options, probs):
+            idx = rng.choice(len(options), p=probs)
+            return options[idx]
+
         # Generate users
         users = []
+        diet_options = [
+            ['halal'],
+            ['vegetarian'],
+            ['halal', 'vegetarian'],
+            []
+        ]
+        diet_probs = [0.6, 0.1, 0.05, 0.25]
+
         for i in range(self.num_users):
             user = {
                 'id': f'user_{i}',
                 'name': f'User {i}',
-                'culturalBackground': np.random.choice(['malay', 'chinese', 'indian', 'mixed']),
-                'spiceTolerance': np.random.uniform(0, 1),
-                'dietaryRestrictions': np.random.choice([
-                    ['halal'], ['vegetarian'], ['halal', 'vegetarian'], []
-                ], p=[0.6, 0.1, 0.05, 0.25]),
+                'culturalBackground': rng.choice(['malay', 'chinese', 'indian', 'mixed']),
+                'spiceTolerance': float(rng.uniform(0, 1)),
+                # SAFE weighted selection of list-valued field
+                'dietaryRestrictions': weighted_pick(diet_options, diet_probs),
                 'cuisinePreferences': {
-                    cuisine: np.random.uniform(0, 1) for cuisine in cuisines
+                    cuisine: float(rng.uniform(0, 1)) for cuisine in cuisines
                 },
                 'behaviorPatterns': {
-                    'morning_activity': np.random.uniform(0, 1),
-                    'afternoon_activity': np.random.uniform(0, 1),
-                    'evening_activity': np.random.uniform(0, 1),
-                    'weekend_activity': np.random.uniform(0, 1),
+                    'morning_activity': float(rng.uniform(0, 1)),
+                    'afternoon_activity': float(rng.uniform(0, 1)),
+                    'evening_activity': float(rng.uniform(0, 1)),
+                    'weekend_activity': float(rng.uniform(0, 1)),
                 }
             }
             users.append(user)
-        
+
         # Generate food items
         items = []
         malaysian_foods = [
@@ -126,115 +163,145 @@ class MakanMateRecommendationModel:
             ('Cendol', 'malay', ['dessert', 'cold'], 0.0),
             ('Wonton Noodles', 'chinese', ['noodles', 'soup'], 0.3),
         ]
-        
+
         for i in range(self.num_items):
             if i < len(malaysian_foods):
                 name, cuisine, cats, spice = malaysian_foods[i]
             else:
                 name = f'Food Item {i}'
-                cuisine = np.random.choice(cuisines)
-                cats = np.random.choice(categories, size=np.random.randint(1, 4), replace=False).tolist()
-                spice = np.random.uniform(0, 1)
-            
+                cuisine = rng.choice(cuisines)
+                cats = rng.choice(categories, size=int(rng.integers(1, 4)), replace=False).tolist()
+                spice = float(rng.uniform(0, 1))
+
             item = {
                 'id': f'item_{i}',
                 'name': name,
                 'cuisineType': cuisine,
                 'categories': cats,
-                'price': np.random.uniform(5.0, 50.0),
+                'price': float(rng.uniform(5.0, 50.0)),
                 'spiceLevel': spice,
-                'isHalal': np.random.choice([True, False], p=[0.7, 0.3]),
-                'isVegetarian': np.random.choice([True, False], p=[0.2, 0.8]),
-                'averageRating': np.random.uniform(3.0, 5.0),
-                'totalRatings': np.random.randint(0, 1000),
-                'totalOrders': np.random.randint(0, 500),
+                'isHalal': bool(rng.choice([True, False], p=[0.7, 0.3])),
+                'isVegetarian': bool(rng.choice([True, False], p=[0.2, 0.8])),
+                'averageRating': float(rng.uniform(3.0, 5.0)),
+                'totalRatings': int(rng.integers(0, 1000)),
+                'totalOrders': int(rng.integers(0, 500)),
                 'nutritionalInfo': {
-                    'calories': np.random.uniform(200, 800),
-                    'protein': np.random.uniform(5, 50),
-                    'carbs': np.random.uniform(20, 100),
-                    'fat': np.random.uniform(5, 40),
+                    'calories': float(rng.uniform(200, 800)),
+                    'protein': float(rng.uniform(5, 50)),
+                    'carbs': float(rng.uniform(20, 100)),
+                    'fat': float(rng.uniform(5, 40)),
                 }
             }
             items.append(item)
-        
+
         # Generate interactions
         interactions = []
-        for i in range(self.num_users * 20):  # Average 20 interactions per user
+        interaction_types = ['view', 'like', 'order', 'rate', 'bookmark']
+        for _ in range(self.num_users * 20):  # ~20 interactions per user
+            itype = rng.choice(interaction_types)
+            rating = float(rng.uniform(1, 5)) if rng.random() < 0.3 else None
             interaction = {
-                'userId': f'user_{np.random.randint(0, self.num_users)}',
-                'itemId': f'item_{np.random.randint(0, self.num_items)}',
-                'interactionType': np.random.choice(interactions_types),
-                'rating': np.random.uniform(1, 5) if np.random.random() < 0.3 else None,
-                'timestamp': datetime.now() - timedelta(days=np.random.randint(0, 90)),
+                'userId': f'user_{int(rng.integers(0, self.num_users))}',
+                'itemId': f'item_{int(rng.integers(0, self.num_items))}',
+                'interactionType': itype,
+                'rating': rating,
+                'timestamp': datetime.now() - timedelta(days=int(rng.integers(0, 90))),
             }
             interactions.append(interaction)
-        
+
         return {
             'users': users,
             'items': items,
             'interactions': interactions,
         }
+
     
+    def _first(self, d, keys, default=None):
+        for k in keys:
+            if k in d and d[k] is not None:
+                return d[k]
+        return default
+
     def preprocess_data(self, raw_data):
         """Preprocess raw data for training"""
         logger.info("Preprocessing training data...")
-        
+
         users = raw_data['users']
         items = raw_data['items']
         interactions = raw_data['interactions']
-        
-        # Create user and item mappings
-        user_ids = [user['id'] for user in users]
-        item_ids = [item['id'] for item in items]
-        
-        # Encode user and item IDs
+
+        # Build stable ID lists with fallbacks
+        user_ids = []
+        for u in users:
+            uid = self._first(u, ['id', 'uid', 'userId', 'user_id'])
+            if uid is None:
+                continue
+            user_ids.append(str(uid))
+
+        item_ids = []
+        for it in items:
+            iid = self._first(it, ['id', 'itemId', 'item_id', 'foodId'])
+            if iid is None:
+                continue
+            item_ids.append(str(iid))
+
+        if len(user_ids) == 0 or len(item_ids) == 0:
+            logger.warning("No valid users/items after preprocessing; using synthetic data.")
+            return self.preprocess_data(self.generate_synthetic_data())
+
+        # Fit encoders
         self.user_encoder.fit(user_ids)
         self.item_encoder.fit(item_ids)
-        
+
+        # IMPORTANT: resize embedding vocab to actual counts
+        self.num_users = len(self.user_encoder.classes_)
+        self.num_items = len(self.item_encoder.classes_)
+
         # Extract features
-        user_features = []
-        item_features = []
-        
-        # Process user features
-        for user in users:
-            features = self._extract_user_features(user)
-            user_features.append(features)
-        
-        # Process item features
-        for item in items:
-            features = self._extract_item_features(item)
-            item_features.append(features)
-        
-        # Scale features
+        user_features = [self._extract_user_features(u) for u in users if self._first(u, ['id','uid','userId','user_id']) in self.user_encoder.classes_]
+        item_features = [self._extract_item_features(it) for it in items if self._first(it, ['id','itemId','item_id','foodId']) in self.item_encoder.classes_]
+
+        # Scale
         user_features_scaled = self.user_scaler.fit_transform(user_features)
         item_features_scaled = self.item_scaler.fit_transform(item_features)
-        
-        # Process interactions
+
+        # Index lookup for fast mapping
+        user_index_map = {k: i for i, k in enumerate(self.user_encoder.classes_)}
+        item_index_map = {k: i for i, k in enumerate(self.item_encoder.classes_)}
+
+        # Build samples
         training_samples = []
-        for interaction in interactions:
-            try:
-                user_idx = self.user_encoder.transform([interaction['userId']])[0]
-                item_idx = self.item_encoder.transform([interaction['itemId']])[0]
-                rating = self._calculate_rating(interaction)
-                
-                training_samples.append({
-                    'user_idx': user_idx,
-                    'item_idx': item_idx,
-                    'user_features': user_features_scaled[user_idx],
-                    'item_features': item_features_scaled[item_idx],
-                    'rating': rating,
-                })
-            except ValueError:
-                # Skip interactions with unknown users/items
+        for inter in interactions:
+            uid = self._first(inter, ['userId', 'user_id', 'uid'])
+            iid = self._first(inter, ['itemId', 'item_id', 'foodId'])
+            if uid is None or iid is None:
                 continue
-        
+            uid = str(uid); iid = str(iid)
+            if uid not in user_index_map or iid not in item_index_map:
+                continue
+            uidx = user_index_map[uid]
+            iidx = item_index_map[iid]
+            rating = self._calculate_rating(inter)
+
+            training_samples.append({
+                'user_idx': uidx,
+                'item_idx': iidx,
+                'user_features': user_features_scaled[uidx],
+                'item_features': item_features_scaled[iidx],
+                'rating': rating,
+            })
+
+        if len(training_samples) == 0:
+            logger.warning("No interactions matched known users/items; using synthetic data.")
+            return self.preprocess_data(self.generate_synthetic_data())
+
         logger.info(f"Preprocessed {len(training_samples)} training samples")
-        
         return {
             'training_samples': training_samples,
             'user_features': user_features_scaled,
             'item_features': item_features_scaled,
         }
+
     
     def _extract_user_features(self, user):
         """Extract numerical features from user profile"""
@@ -460,57 +527,39 @@ class MakanMateRecommendationModel:
         logger.info("Model training completed")
         return history
     
-    def convert_to_tflite(self, model_path='recommendation_model.tflite'):
-        """Convert trained model to TensorFlow Lite"""
-        logger.info("📱 Converting model to TensorFlow Lite...")
-        
-        if self.model is None:
-            raise ValueError("Model must be trained before conversion")
-        
-        # Create representative dataset for quantization
-        def representative_dataset():
-            for i in range(100):
-                user_id = np.array([np.random.randint(0, self.num_users)], dtype=np.int32)
-                item_id = np.array([np.random.randint(0, self.num_items)], dtype=np.int32)
-                user_features = np.random.random((1, self.user_feature_dim)).astype(np.float32)
-                item_features = np.random.random((1, self.item_feature_dim)).astype(np.float32)
-                
-                yield [user_id, item_id, user_features, item_features]
-        
-        # Convert to TensorFlow Lite
+    def convert_to_tflite(self, mode: str = "dynamic"):
+        """
+        mode: "none" | "dynamic" | "float16" | "int8"
+        - none: FP32 TFLite (largest)
+        - dynamic: dynamic-range (recommended quick fix)
+        - float16: weights in FP16 (good size/speed on GPU/NNAPI)
+        - int8: full int8 (requires representative dataset, see _representative_data_gen)
+        """
+        import tensorflow as tf
+
         converter = tf.lite.TFLiteConverter.from_keras_model(self.model)
-        
-        # Optimization settings
-        converter.optimizations = [tf.lite.Optimize.DEFAULT]
-        converter.representative_dataset = representative_dataset
-        converter.target_spec.supported_ops = [
-            tf.lite.OpsSet.TFLITE_BUILTINS,
-            tf.lite.OpsSet.SELECT_TF_OPS
-        ]
-        converter.inference_input_type = tf.float32
-        converter.inference_output_type = tf.float32
-        
-        # Convert
+
+        if mode == "none":
+            pass  # no optimization
+
+        elif mode == "dynamic":
+            converter.optimizations = [tf.lite.Optimize.DEFAULT]  # no rep dataset needed
+
+        elif mode == "float16":
+            converter.optimizations = [tf.lite.Optimize.DEFAULT]
+            converter.target_spec.supported_types = [tf.float16]
+
+        elif mode == "int8":
+            converter.optimizations = [tf.lite.Optimize.DEFAULT]
+            converter.representative_dataset = self._representative_data_gen()
+            # Keep embeddings’ id tensors as int32, output as float32
+            converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+            converter.inference_input_type = tf.int32
+            converter.inference_output_type = tf.float32
+        else:
+            raise ValueError(f"Unknown TFLite mode: {mode}")
+
         tflite_model = converter.convert()
-        
-        # Save model
-        with open(model_path, 'wb') as f:
-            f.write(tflite_model)
-        
-        logger.info(f"Model converted to TensorFlow Lite: {model_path}")
-        
-        # Save preprocessing objects
-        with open('user_scaler.pkl', 'wb') as f:
-            pickle.dump(self.user_scaler, f)
-        with open('item_scaler.pkl', 'wb') as f:
-            pickle.dump(self.item_scaler, f)
-        with open('user_encoder.pkl', 'wb') as f:
-            pickle.dump(self.user_encoder, f)
-        with open('item_encoder.pkl', 'wb') as f:
-            pickle.dump(self.item_encoder, f)
-        
-        logger.info("Preprocessing objects saved")
-        
         return tflite_model
     
     def evaluate_model(self, processed_data):
@@ -569,7 +618,12 @@ def main():
     metrics = model.evaluate_model(processed_data)
     
     # Convert to TensorFlow Lite
-    tflite_model = model.convert_to_tflite()
+    tflite_model = model.convert_to_tflite(mode="dynamic")
+    out_dir = Path(__file__).parent
+    out_path = out_dir / "recommendation_model.tflite"
+    out_path.write_bytes(tflite_model)
+    logger.info(f"TFLite model written to: {out_path.resolve()}")
+    
     
     logger.info("Training pipeline completed successfully!")
     logger.info(f"Model saved as 'recommendation_model.tflite'")

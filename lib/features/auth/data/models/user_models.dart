@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:json_annotation/json_annotation.dart';
-import 'package:makan_mate/models/base_model.dart';
+import 'package:makan_mate/core/base_model.dart';
 
 part 'user_models.g.dart';
 

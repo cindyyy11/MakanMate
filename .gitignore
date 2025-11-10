@@ -51,6 +51,7 @@ app.*.map.json
 python_models/models/
 python_models/__pycache__/
 python_models/venv/
+python_ai_training/venv/
 
 # Environment files
 .env

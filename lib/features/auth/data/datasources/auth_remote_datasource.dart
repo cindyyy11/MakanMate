@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:makan_mate/core/errors/exceptions.dart';
-import 'package:makan_mate/features/auth/data/models/user_model.dart';
+import 'package:makan_mate/features/auth/data/models/user_models.dart';
 
 abstract class AuthRemoteDataSource {
   Future<UserModel> signInWithEmailPassword(String email, String password);

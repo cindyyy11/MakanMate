@@ -3,7 +3,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:makan_mate/services/base_service.dart';
 import 'package:makan_mate/services/user_service.dart';
-import '../models/user_models.dart';
+import '../features/auth/data/models/user_models.dart';
 
 class AuthService extends BaseService {
   static final AuthService _instance = AuthService._internal();
@@ -117,16 +117,11 @@ class AuthService extends BaseService {
     }
   }
 
-  // Guest Sign In (Anonymous)
+   // Guest Sign In (Anonymous)
   Future<UserCredential?> signInAsGuest() async {
     try {
       final UserCredential result = await BaseService.auth.signInAnonymously();
-      
-      if (result.user != null) {
-        // Optionally create a guest user profile
-        await _createGuestUserProfile(result.user!);
-      }
-      
+
       return result;
     } catch (e) {
       BaseService.logger.e('Guest sign in error: $e');
@@ -134,23 +129,7 @@ class AuthService extends BaseService {
     }
   }
 
-  // Create guest user profile
-  Future<void> _createGuestUserProfile(User user) async {
-    final userModel = UserModel(
-      id: user.uid,
-      name: 'Guest User',
-      email: 'guest@makanmate.app',
-      currentLocation: Location(
-        latitude: 3.1390,
-        longitude: 101.6869,
-      ), // Default to KL
-      isGuest: true, // Important: mark as guest
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
 
-    await UserService().createUser(userModel);
-  }
 
   // Sign Out
   Future<void> signOut() async {

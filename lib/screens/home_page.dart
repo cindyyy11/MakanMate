@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:makan_mate/components/logo_theme.dart';
-import 'package:makan_mate/components/searchbar.dart';
+import 'package:makan_mate/features/auth/presentation/widgets/logo_theme.dart';
+import 'package:makan_mate/features/auth/presentation/widgets/searchbar.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key? key}) : super(key: key);

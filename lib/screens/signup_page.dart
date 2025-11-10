@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import '../components/my_textfield.dart';
-import '../components/loginpage_button.dart';
+import '../features/auth/presentation/widgets/my_textfield.dart';
+import '../features/auth/presentation/widgets/loginpage_button.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:country_code_picker/country_code_picker.dart';
 

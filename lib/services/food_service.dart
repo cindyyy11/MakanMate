@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:makan_mate/models/food_models.dart';
-import 'package:makan_mate/models/review_models.dart';
-import 'package:makan_mate/models/user_models.dart';
+import 'package:makan_mate/features/food/data/models/food_models.dart';
+import 'package:makan_mate/features/reviews/data/models/review_models.dart';
+import 'package:makan_mate/features/auth/data/models/user_models.dart';
 import 'package:makan_mate/services/base_service.dart';
 import 'package:makan_mate/services/user_service.dart';
 
