@@ -199,11 +199,6 @@ Future<void> _initExternal() async {
   sl.registerLazySingleton<FirebaseFirestore>(() => FirebaseFirestore.instance);
   sl.registerLazySingleton<FirebaseStorage>(() => FirebaseStorage.instance);
 
-  // Google Sign-In (mobile only; v7 singleton)
-  if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
-    sl.registerLazySingleton<GoogleSignIn>(() => GoogleSignIn.instance);
-  }
-
   // Connectivity
   sl.registerLazySingleton<Connectivity>(() => Connectivity());
 }

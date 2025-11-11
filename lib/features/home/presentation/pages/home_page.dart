@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:makan_mate/core/di/injection_container.dart' as di;
 import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_event.dart';
+import 'package:makan_mate/features/auth/presentation/bloc/auth_state.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_bloc.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_event.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_state.dart';
@@ -20,18 +21,25 @@ class HomePage extends StatelessWidget {
         BlocProvider(
           create: (_) => di.sl<HomeBloc>()..add(const LoadRestaurants()),
         ),
-        BlocProvider(
-          create: (_) => di.sl<RecommendationBloc>(),
-        ),
+        BlocProvider(create: (_) => di.sl<RecommendationBloc>()),
       ],
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('MakanMate'),
+          title: BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, authState) {
+              if (authState is Authenticated) {
+                // Access the user’s displayName or email
+                final user = authState.user;
+                return Text('Welcome, ${user.displayName ?? user.email}');
+              }
+              return const Text('MakanMate');
+            },
+          ),
           actions: [
             IconButton(
               icon: const Icon(Icons.search),
               onPressed: () {
-                // Navigate to search
+                // Navigate to search page
               },
             ),
             PopupMenuButton<String>(
@@ -72,13 +80,17 @@ class HomePage extends StatelessWidget {
             if (state is HomeLoading) {
               return const Center(child: CircularProgressIndicator());
             }
-            
+
             if (state is HomeError) {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                    const Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: Colors.red,
+                    ),
                     const SizedBox(height: 16),
                     Text(state.message),
                     const SizedBox(height: 16),
@@ -92,7 +104,7 @@ class HomePage extends StatelessWidget {
                 ),
               );
             }
-            
+
             if (state is HomeLoaded) {
               return RefreshIndicator(
                 onRefresh: () async {
@@ -102,7 +114,7 @@ class HomePage extends StatelessWidget {
                   children: [
                     // AI Recommendations Section
                     const AIRecommendationsSection(),
-                    
+
                     // Divider
                     Padding(
                       padding: const EdgeInsets.symmetric(
@@ -120,7 +132,7 @@ class HomePage extends StatelessWidget {
                         ],
                       ),
                     ),
-                    
+
                     // Restaurants List
                     ...state.restaurants.map(
                       (restaurant) => Padding(
@@ -135,7 +147,7 @@ class HomePage extends StatelessWidget {
                 ),
               );
             }
-            
+
             return const SizedBox();
           },
         ),

@@ -3,11 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:makan_mate/core/theme/app_colors.dart';
 import 'package:makan_mate/core/constants/ui_constants.dart';
+import 'package:makan_mate/features/auth/data/datasources/auth_remote_datasource.dart';
+import 'package:makan_mate/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:makan_mate/features/auth/presentation/bloc/auth_event.dart';
+import 'package:makan_mate/features/auth/presentation/bloc/auth_state.dart';
 import 'package:makan_mate/features/auth/presentation/pages/signup_page.dart';
 import 'package:makan_mate/features/auth/presentation/widgets/login_form.dart';
 import 'package:makan_mate/features/auth/presentation/widgets/social_auth_buttons.dart';
-import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:makan_mate/features/auth/presentation/bloc/auth_event.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -25,7 +28,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
@@ -58,88 +60,92 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(gradient: AppColors.primaryGradient),
-        child: Stack(
-          children: [
-            // Animated background circles
-            _buildAnimatedBackground(),
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        return Scaffold(
+          body: Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: BoxDecoration(gradient: AppColors.primaryGradient),
+            child: Stack(
+              children: [
+                // Animated background circles
+                _buildAnimatedBackground(),
 
-            // Main content
-            SafeArea(
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: SlideTransition(
-                  position: _slideAnimation,
-                  child: Center(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // Logo with glassmorphism
-                          _buildLogoSection(),
+                // Main content
+                SafeArea(
+                  child: FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: SlideTransition(
+                      position: _slideAnimation,
+                      child: Center(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // Logo with glassmorphism
+                              _buildLogoSection(),
 
-                          const SizedBox(height: 32),
+                              const SizedBox(height: 32),
 
-                          // Welcome text
-                          Text(
-                            'Login',
-                            style: TextStyle(
-                              fontSize: UIConstants.fontSize3Xl,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
-                              shadows: [
-                                Shadow(
-                                  color: AppColors.withOpacity(
-                                    AppColors.surface,
-                                    0.5,
-                                  ),
-                                  offset: const Offset(0, 1),
-                                  blurRadius: 2,
+                              // Welcome text
+                              Text(
+                                'Login',
+                                style: TextStyle(
+                                  fontSize: UIConstants.fontSize3Xl,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textPrimary,
+                                  shadows: [
+                                    Shadow(
+                                      color: AppColors.withOpacity(
+                                        AppColors.surface,
+                                        0.5,
+                                      ),
+                                      offset: const Offset(0, 1),
+                                      blurRadius: 2,
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
+                              ),
+
+                              const SizedBox(height: 8),
+
+                              Text(
+                                'Welcome to MakanMate!',
+                                style: TextStyle(
+                                  fontSize: UIConstants.fontSizeLg,
+                                  color: AppColors.grey800,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+
+                              const SizedBox(height: 32),
+
+                              // Login Form Card
+                              _buildLoginCard(),
+
+                              const SizedBox(height: 24),
+
+                              // Sign up prompt
+                              _buildSignUpPrompt(),
+
+                              const SizedBox(height: 16),
+
+                              // Guest login
+                              _buildGuestButton(),
+                            ],
                           ),
-
-                          const SizedBox(height: 8),
-
-                          Text(
-                            'Welcome to MakanMate!',
-                            style: TextStyle(
-                              fontSize: UIConstants.fontSizeLg,
-                              color: AppColors.grey800,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-
-                          const SizedBox(height: 32),
-
-                          // Login Form Card
-                          _buildLoginCard(),
-
-                          const SizedBox(height: 24),
-
-                          // Sign up prompt
-                          _buildSignUpPrompt(),
-
-                          const SizedBox(height: 16),
-
-                          // Guest login
-                          _buildGuestButton(),
-                        ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -292,7 +298,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               SocialAuthButton(
                 icon: 'assets/images/google_logo.png',
                 label: 'Sign in with Google',
-                onPressed: _handleGoogleSignIn,
+                onPressed: () {
+                  _handleGoogleSignIn(context);
+                },
                 fullWidth: true,
               ),
             ],
@@ -364,16 +372,29 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
   }
 
-  void _handleGoogleSignIn() {
-    // ✅ Use BLoC instead of AuthService
-    context.read<AuthBloc>().add(GoogleSignInRequested());
+  Future<void> _handleGoogleSignIn(BuildContext context) async {
+    print('running google');
+    final authBloc = context.read<AuthBloc>();
+    try {
+      // Navigation handled by auth state changes
+      authBloc.add(GoogleSignInRequested());
+    } catch (e) {
+      if (mounted) {
+        _showErrorDialog('Google Sign-In Failed', e.toString());
+      }
+    }
   }
 
-  // Note: Guest sign-in not implemented in BLoC yet
-  // You can add it later if needed
-  void _handleGuestSignIn() {
-    // TODO: Add GuestSignInRequested event to AuthBloc if needed
-    _showErrorDialog('Guest Sign-In', 'Guest sign-in is not available yet.');
+  Future<void> _handleGuestSignIn() async {
+    try {
+      _showErrorDialog('Guest Sign-In', 'Guest sign-in is not available yet.');
+      // await _authService.signInAsGuest();
+      // Navigation handled by auth state changes
+    } catch (e) {
+      if (mounted) {
+        _showErrorDialog('Guest Sign-In Failed', e.toString());
+      }
+    }
   }
 
   void _showErrorDialog(String title, String message) {

@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:makan_mate/app.dart';
 import 'package:makan_mate/core/di/injection_container.dart' as di;
@@ -50,6 +51,8 @@ void main() async {
   //   log.w('App Check activation failed: $e');
   //   log.e('App Check stack', e, st);
   // }
+
+  await dotenv.load(fileName: ".env");
 
   // 4) Hive (local storage)
   await Hive.initFlutter();

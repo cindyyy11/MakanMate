@@ -12,6 +12,7 @@ class UserModel extends BaseModel {
   final String name;
   final String email;
   final String role;
+  final bool isVerified;
   final String? profileImageUrl;
   final List<String> dietaryRestrictions;
   final Map<String, double> cuisinePreferences;
@@ -27,6 +28,7 @@ class UserModel extends BaseModel {
     required this.name,
     required this.email,
     this.role = 'user',
+    this.isVerified = false,
     this.profileImageUrl,
     this.dietaryRestrictions = const [],
     this.cuisinePreferences = const {},
@@ -49,6 +51,7 @@ class UserModel extends BaseModel {
       'name': name,
       'email': email,
       'role': role,
+      'isVerified': isVerified,
       'profileImageUrl': profileImageUrl,
       'dietaryRestrictions': dietaryRestrictions,
       'cuisinePreferences': cuisinePreferences,
@@ -94,6 +97,7 @@ class UserModel extends BaseModel {
       name: user.displayName ?? email.split('@').first,
       email: email,
       role: role,
+      isVerified: user.emailVerified,
       profileImageUrl: user.photoURL,
       dietaryRestrictions: const [],
       cuisinePreferences: const {},
@@ -144,6 +148,7 @@ class UserModel extends BaseModel {
     String? name,
     String? email,
     String? role,
+    bool? isVerified,
     String? profileImageUrl,
     List<String>? dietaryRestrictions,
     Map<String, double>? cuisinePreferences,
@@ -159,6 +164,7 @@ class UserModel extends BaseModel {
       name: name ?? this.name,
       email: email ?? this.email,
       role: role ?? this.role,
+      isVerified: isVerified ?? this.isVerified,
       profileImageUrl: profileImageUrl ?? this.profileImageUrl,
       dietaryRestrictions: dietaryRestrictions ?? this.dietaryRestrictions,
       cuisinePreferences: cuisinePreferences ?? this.cuisinePreferences,
@@ -282,6 +288,7 @@ extension UserModelToEntity on UserModel {
       name: name,
       email: email,
       role: role,
+      isVerified: isVerified,
       profileImageUrl: profileImageUrl,
       dietaryRestrictions: dietaryRestrictions,
       cuisinePreferences: cuisinePreferences,
@@ -304,6 +311,7 @@ extension UserEntityToModel on UserEntity {
       name: name,
       email: email,
       role: role,
+      isVerified: isVerified,
       profileImageUrl: profileImageUrl,
       dietaryRestrictions: dietaryRestrictions,
       cuisinePreferences: cuisinePreferences,

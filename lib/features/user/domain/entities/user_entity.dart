@@ -8,6 +8,7 @@ class UserEntity extends Equatable {
   final String name;
   final String email;
   final String role;
+  final bool isVerified;
   final String? profileImageUrl;
   final List<String> dietaryRestrictions;
   final Map<String, double> cuisinePreferences;
@@ -23,6 +24,7 @@ class UserEntity extends Equatable {
     required this.name,
     required this.email,
     this.role = 'user',
+    required this.isVerified,
     this.profileImageUrl,
     this.dietaryRestrictions = const [],
     this.cuisinePreferences = const {},
@@ -36,19 +38,18 @@ class UserEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        email,
-        role,
-        profileImageUrl,
-        dietaryRestrictions,
-        cuisinePreferences,
-        spiceTolerance,
-        culturalBackground,
-        currentLocation,
-        behaviorPatterns,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    name,
+    email,
+    role,
+    profileImageUrl,
+    dietaryRestrictions,
+    cuisinePreferences,
+    spiceTolerance,
+    culturalBackground,
+    currentLocation,
+    behaviorPatterns,
+    createdAt,
+    updatedAt,
+  ];
 }
-

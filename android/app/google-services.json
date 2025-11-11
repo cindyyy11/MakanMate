@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "400315761727",
+    "firebase_url": "https://makanmate-44f9e-default-rtdb.asia-southeast1.firebasedatabase.app",
     "project_id": "makanmate-44f9e",
     "storage_bucket": "makanmate-44f9e.firebasestorage.app"
   },
@@ -22,6 +23,14 @@
           }
         },
         {
+          "client_id": "400315761727-sbgb2q7834k0if021kt53nns7rcu0of0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.makan_mate",
+            "certificate_hash": "99d56539c063c279ab27e4406f971c160dc0ab73"
+          }
+        },
+        {
           "client_id": "400315761727-mkpcelmpnfm7bdtp94k4n42boa8b5ud7.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -39,10 +48,10 @@
               "client_type": 3
             },
             {
-              "client_id": "400315761727-s6vtmd7jh7or4s2s69k1nirr3r73sa3m.apps.googleusercontent.com",
+              "client_id": "400315761727-0b9bvapat5gb52ncsjt36fsejkfo94pr.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.example.makanMate"
+                "bundle_id": "com.example.flutterWeek10Lab"
               }
             }
           ]
@@ -52,3 +61,4 @@
   ],
   "configuration_version": "1"
 }
+
