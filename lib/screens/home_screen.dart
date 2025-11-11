@@ -1,12 +1,18 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:makan_mate/core/di/injection_container.dart';
+import 'package:makan_mate/features/favorite/presentation/pages/favorite_page.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_bloc.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_event.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_state.dart';
 import 'package:makan_mate/features/home/domain/entities/restaurant_entity.dart';
+import 'package:makan_mate/features/home/presentation/pages/categories_restaurant_page.dart';
 import 'package:makan_mate/features/map/presentation/bloc/map_bloc.dart';
 import 'package:makan_mate/features/map/presentation/pages/map_page.dart';
+import 'package:makan_mate/features/map/presentation/bloc/map_event.dart' as map;
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -93,22 +99,37 @@ class _HomeScreenState extends State<HomeScreen> {
     required List<RestaurantEntity> categories,
     required List<RestaurantEntity> recommendations,
   }) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildWelcomeSection(),
-          const SizedBox(height: 20),
-          _buildSearchBar(),
-          const SizedBox(height: 24),
-          _buildCategoriesSection(categories),
-          const SizedBox(height: 24),
-          _buildRecommendationsSection(recommendations),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              _buildWelcomeSection(),
+              const SizedBox(height: 20),
+              _buildSearchBar(),
+              const SizedBox(height: 24),
+              const Text(
+                'Nearby Restaurants',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              _buildMapSection(), 
+              const SizedBox(height: 24),
+              _buildCategoriesSection(categories),
+              const SizedBox(height: 24),
+              _buildRecommendationsSection(recommendations),
+            ],
+          ),
+        ),
+      ],
     );
   }
+
 
   Widget _buildWelcomeSection() {
     return Container(
@@ -190,6 +211,28 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildMapSection() {
+    return Container(
+      height: 250,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.hardEdge,
+      child: BlocProvider(
+        create: (_) => sl<MapBloc>()..add(map.LoadMapEvent()), 
+        child: const MapPage(),
+      ),
+    );
+  }
+
+
   Widget _buildCategoriesSection(List<RestaurantEntity> categories) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -215,10 +258,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 margin: const EdgeInsets.only(right: 16),
                 child: GestureDetector(
                   onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('${cat.name} category selected')),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => BlocProvider.value(
+                          value: context.read<HomeBloc>(), 
+                          child: CategoryRestaurantPage(categoryName: cat.cuisine ?? 'Unknown'),
+                        ),
+                      ),
                     );
                   },
+
                   child: Column(
                     children: [
                       Container(
@@ -351,14 +401,53 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             Column(
               children: [
-                IconButton(
-                  icon: const Icon(Icons.favorite_border, color: Colors.grey),
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Added ${food.name} to favorites!')),
-                    );
-                  },
-                ),
+                StreamBuilder<DocumentSnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('favorites')
+                      .doc(FirebaseAuth.instance.currentUser?.uid)
+                      .collection('items')
+                      .doc(food.name) // or food.id if available
+                      .snapshots(),
+                      builder: (context, snapshot) {
+                        final isFavorited = snapshot.data?.exists ?? false;
+
+                        return IconButton(
+                          icon: Icon(
+                            isFavorited ? Icons.favorite : Icons.favorite_border,
+                            color: isFavorited ? Colors.red : Colors.grey,
+                          ),
+                          onPressed: () async {
+                            final user = FirebaseAuth.instance.currentUser;
+                            if (user == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Please log in to add favorites.')),
+                              );
+                              return;
+                            }
+
+                            final favRef = FirebaseFirestore.instance
+                                .collection('favorites')
+                                .doc(user.uid)
+                                .collection('items')
+                                .doc(food.name);
+
+                            if (isFavorited) {
+                              await favRef.delete();
+                            } else {
+                              await favRef.set({
+                                'id': food.name,
+                                'name': food.name,
+                                'cuisine': food.cuisine,
+                                'rating': food.rating,
+                                'priceRange': food.priceRange,
+                                'image': food.image,
+                                'description': food.description,
+                              });
+                            }
+                          },
+                        );
+                      },
+                    ),
               ],
             ),
           ],
@@ -378,20 +467,13 @@ class _HomeScreenState extends State<HomeScreen> {
           case 0:
             break;
           case 1:
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Explore feature coming soon!')),
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const FavoritePage()),
             );
             break;
           case 2:
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => BlocProvider(
-                  create: (_) => sl<MapBloc>(),
-                  child: const MapPage(),
-                ),
-              ),
-            );
+            //
             break;
           case 3:
             ScaffoldMessenger.of(context).showSnackBar(
@@ -405,8 +487,8 @@ class _HomeScreenState extends State<HomeScreen> {
       unselectedItemColor: Colors.grey,
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-        BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Explore'),
-        BottomNavigationBarItem(icon: Icon(Icons.map_outlined), label: 'Map'),
+        BottomNavigationBarItem(icon: Icon(Icons.favorite_border), label: 'Favourite'),
+        BottomNavigationBarItem(icon: Icon(Icons.casino), label: 'Spin Wheel'),
         BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
       ],
     );
