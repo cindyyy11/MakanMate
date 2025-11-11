@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
 
 // Local imports
@@ -19,6 +20,7 @@ Future<void> main() async {
 // 💡 Force logout on startup (for debugging only)
   await FirebaseAuth.instance.signOut();
   await di.init();
+  await dotenv.load(fileName: ".env");
 
   runApp(const MyApp());
 }

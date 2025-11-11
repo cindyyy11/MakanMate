@@ -153,7 +153,8 @@ flutter:
         - assets/images/logos/
         # - assets/ml_models/
         # - assets/lottie/
-        # - .env
+        - .env
+
 
     # fonts:
     #     - family: Poppins
