@@ -21,7 +21,7 @@ class PromotionModel extends PromotionEntity {
   });
 
   factory PromotionModel.fromMap(Map<String, dynamic> map) {
-    DateTime _parseDate(dynamic value, {DateTime? fallback}) {
+    DateTime parseDate(dynamic value, {DateTime? fallback}) {
       try {
         if (value is Timestamp) return value.toDate();
         if (value is DateTime) return value;
@@ -41,11 +41,11 @@ class PromotionModel extends PromotionEntity {
       buyQuantity: map['buyQuantity'],
       getQuantity: map['getQuantity'],
       imageUrl: map['imageUrl'] ?? '',
-      startDate: _parseDate(map['startDate'], fallback: DateTime.now()),
-      expiryDate: _parseDate(map['expiryDate'], fallback: DateTime.now()),
-      createdAt: _parseDate(map['createdAt'], fallback: DateTime.now()),
+      startDate: parseDate(map['startDate'], fallback: DateTime.now()),
+      expiryDate: parseDate(map['expiryDate'], fallback: DateTime.now()),
+      createdAt: parseDate(map['createdAt'], fallback: DateTime.now()),
       approvedAt: map['approvedAt'] != null
-          ? _parseDate(map['approvedAt'])
+          ? parseDate(map['approvedAt'])
           : null,
       approvedBy: map['approvedBy'],
     );

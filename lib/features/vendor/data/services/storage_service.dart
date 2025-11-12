@@ -86,5 +86,98 @@ class StorageService {
       throw Exception('Failed to upload image: $e');
     }
   }
+
+  /// Upload profile photo to Firebase Storage
+  /// Returns the download URL of the uploaded image
+  Future<String> uploadProfilePhoto(File imageFile) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) {
+        throw Exception('User not authenticated');
+      }
+
+      // Generate unique filename
+      final String fileName = '${_uuid.v4()}.jpg';
+      final String path = 'vendors/${user.uid}/profile_photo/$fileName';
+
+      // Create reference
+      final Reference ref = _storage.ref().child(path);
+
+      // Upload file
+      final UploadTask uploadTask = ref.putFile(imageFile);
+
+      // Wait for upload to complete
+      final TaskSnapshot snapshot = await uploadTask;
+
+      // Get download URL
+      final String downloadUrl = await snapshot.ref.getDownloadURL();
+
+      return downloadUrl;
+    } catch (e) {
+      throw Exception('Failed to upload profile photo: $e');
+    }
+  }
+
+  /// Upload business logo to Firebase Storage
+  /// Returns the download URL of the uploaded image
+  Future<String> uploadBusinessLogo(File imageFile) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) {
+        throw Exception('User not authenticated');
+      }
+
+      // Generate unique filename
+      final String fileName = '${_uuid.v4()}.jpg';
+      final String path = 'vendors/${user.uid}/business_logo/$fileName';
+
+      // Create reference
+      final Reference ref = _storage.ref().child(path);
+
+      // Upload file
+      final UploadTask uploadTask = ref.putFile(imageFile);
+
+      // Wait for upload to complete
+      final TaskSnapshot snapshot = await uploadTask;
+
+      // Get download URL
+      final String downloadUrl = await snapshot.ref.getDownloadURL();
+
+      return downloadUrl;
+    } catch (e) {
+      throw Exception('Failed to upload business logo: $e');
+    }
+  }
+
+  /// Upload certificate image to Firebase Storage
+  /// Returns the download URL of the uploaded image
+  Future<String> uploadCertificateImage(File imageFile, String certificationId) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) {
+        throw Exception('User not authenticated');
+      }
+
+      // Generate unique filename
+      final String fileName = '${_uuid.v4()}.jpg';
+      final String path = 'vendors/${user.uid}/certifications/$certificationId/$fileName';
+
+      // Create reference
+      final Reference ref = _storage.ref().child(path);
+
+      // Upload file
+      final UploadTask uploadTask = ref.putFile(imageFile);
+
+      // Wait for upload to complete
+      final TaskSnapshot snapshot = await uploadTask;
+
+      // Get download URL
+      final String downloadUrl = await snapshot.ref.getDownloadURL();
+
+      return downloadUrl;
+    } catch (e) {
+      throw Exception('Failed to upload certificate image: $e');
+    }
+  }
 }
 

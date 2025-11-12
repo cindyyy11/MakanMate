@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../../../core/di/injection_container.dart' as di;
+import '../bloc/vendor_profile_bloc.dart';
+import 'vendor_profile_page.dart';
 
 class VendorSettingsPage extends StatelessWidget {
   const VendorSettingsPage({super.key});
@@ -38,7 +42,15 @@ class VendorSettingsPage extends StatelessWidget {
             title: const Text('Edit Profile'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              // TODO: Navigate to edit profile
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BlocProvider(
+                    create: (_) => di.sl<VendorProfileBloc>(),
+                    child: const VendorProfilePage(),
+                  ),
+                ),
+              );
             },
           ),
           const Divider(),

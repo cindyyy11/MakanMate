@@ -40,6 +40,13 @@ import '../../features/vendor/domain/repositories/review_repository.dart';
 import '../../features/vendor/domain/usecases/watch_vendor_reviews_usecase.dart';
 import '../../features/vendor/domain/usecases/reply_to_review_usecase.dart';
 import '../../features/vendor/domain/usecases/report_review_usecase.dart';
+import '../../features/vendor/data/datasources/vendor_profile_remote_datasource.dart';
+import '../../features/vendor/data/repositories/vendor_profile_repository_impl.dart';
+import '../../features/vendor/domain/repositories/vendor_profile_repository.dart';
+import '../../features/vendor/domain/usecases/get_vendor_profile_usecase.dart';
+import '../../features/vendor/domain/usecases/update_vendor_profile_usecase.dart';
+import '../../features/vendor/domain/usecases/create_vendor_profile_usecase.dart';
+import '../../features/vendor/presentation/bloc/vendor_profile_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -136,5 +143,25 @@ Future<void> init() async {
       watchReviews: sl(),
       replyToReview: sl(),
       reportReview: sl(),
+    ));
+
+    // Vendor Profile Feature
+    sl.registerLazySingleton<VendorProfileRemoteDataSource>(
+      () => VendorProfileRemoteDataSourceImpl(),
+    );
+
+    sl.registerLazySingleton<VendorProfileRepository>(
+      () => VendorProfileRepositoryImpl(remoteDataSource: sl()),
+    );
+
+    sl.registerLazySingleton(() => GetVendorProfileUseCase(sl()));
+    sl.registerLazySingleton(() => UpdateVendorProfileUseCase(sl()));
+    sl.registerLazySingleton(() => CreateVendorProfileUseCase(sl()));
+
+    sl.registerFactory(() => VendorProfileBloc(
+      getVendorProfile: sl(),
+      updateVendorProfile: sl(),
+      createVendorProfile: sl(),
+      storageService: sl(),
     ));
 }
