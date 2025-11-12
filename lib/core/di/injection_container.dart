@@ -20,6 +20,9 @@ import 'package:makan_mate/features/auth/domain/usecases/sign_in_usecase.dart';
 import 'package:makan_mate/features/auth/domain/usecases/sign_out_usecase.dart';
 import 'package:makan_mate/features/auth/domain/usecases/sign_up_usecase.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:makan_mate/features/home/domain/usecases/get_categories_usecase.dart';
+import 'package:makan_mate/features/home/domain/usecases/get_recommendations_usecase.dart'
+    as HomeGetRecommendationsUseCase;
 import 'package:makan_mate/features/restaurant/data/datasources/restaurant_remote_datasource.dart';
 import 'package:makan_mate/features/restaurant/data/repositories/restaurant_repository_impl.dart';
 import 'package:makan_mate/features/home/domain/repositories/restaurant_repository.dart';
@@ -152,10 +155,21 @@ void _initAuth() {
 // ---------------------------
 void _initHome() {
   // Bloc
-  sl.registerFactory(() => HomeBloc(getRestaurants: sl()));
+  sl.registerFactory(
+    () => HomeBloc(
+      getCategoriesUseCase: sl(),
+      getRecommendationsUseCase: sl(),
+      getRestaurants: sl(),
+    ),
+  );
 
   // Use cases
   sl.registerLazySingleton(() => GetRestaurantsUseCase(sl()));
+  sl.registerLazySingleton(
+    () => HomeGetRecommendationsUseCase.GetRecommendationsUseCase(sl()),
+  );
+
+  sl.registerLazySingleton(() => GetCategoriesUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<RestaurantRepository>(

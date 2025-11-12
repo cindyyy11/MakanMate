@@ -5,11 +5,8 @@ import 'package:makan_mate/features/home/domain/entities/restaurant_entity.dart'
 
 class RestaurantCard extends StatelessWidget {
   final RestaurantEntity restaurant;
-  
-  const RestaurantCard({
-    Key? key,
-    required this.restaurant,
-  }) : super(key: key);
+
+  const RestaurantCard({Key? key, required this.restaurant}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +15,12 @@ class RestaurantCard extends StatelessWidget {
       child: InkWell(
         onTap: () {
           // Navigate to restaurant details
-          Navigator.pushNamed(context, '/restaurantDetail', arguments: restaurant);
+          Navigator.pushNamed(
+            context,
+            '/restaurantDetail',
+            arguments: restaurant,
+          );
+          print('restaurant args $restaurant');
         },
         borderRadius: UIConstants.borderRadiusMd,
         child: Column(
@@ -104,7 +106,7 @@ class RestaurantCard extends StatelessWidget {
       ),
     );
   }
-  
+
   Widget _buildTag(String label, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

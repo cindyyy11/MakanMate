@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:makan_mate/core/errors/exceptions.dart';
 import 'package:makan_mate/core/errors/failures.dart';
 import 'package:makan_mate/core/network/network_info.dart';
+import 'package:makan_mate/features/home/data/models/restaurant_model.dart';
 import 'package:makan_mate/features/restaurant/data/datasources/restaurant_remote_datasource.dart';
 import 'package:makan_mate/features/restaurant/data/models/restaurant_models.dart';
 import 'package:makan_mate/features/home/domain/entities/restaurant_entity.dart';
@@ -17,27 +18,22 @@ class RestaurantRepositoryImpl implements RestaurantRepository {
   });
 
   /// Convert Restaurant (data model) to RestaurantEntity (domain entity)
-  RestaurantEntity _toRestaurantEntity(Restaurant restaurant) {
+  RestaurantEntity _toRestaurantEntity(RestaurantModel restaurant) {
+    print("in _toRestaurantEntity");
     return RestaurantEntity(
       id: restaurant.id,
       name: restaurant.name,
       description: restaurant.description,
-      imageUrl: restaurant.imageUrls.isNotEmpty
-          ? restaurant.imageUrls.first
-          : '',
-      rating: restaurant.averageRating,
-      address:
-          restaurant.location.address ??
-          '${restaurant.location.city ?? ''}, ${restaurant.location.state ?? ''}',
-      cuisineType: restaurant.cuisineTypes.isNotEmpty
-          ? restaurant.cuisineTypes.first
-          : 'Other',
-      priceRange: _calculatePriceRange(restaurant.deliveryFee),
-      isHalal: restaurant.isHalalCertified,
-      isVegetarian: restaurant.amenities.contains('vegetarian'),
-      latitude: restaurant.location.latitude,
-      longitude: restaurant.location.longitude,
-      openingHours: restaurant.openingHours.values.toList(),
+      imageUrl: restaurant.imageUrl ?? '',
+      rating: restaurant.rating,
+      address: restaurant.address ?? '',
+      cuisineType: restaurant.cuisineType ?? 'Other',
+      priceRange: restaurant.priceRange,
+      isHalal: restaurant.isHalal,
+      isVegetarian: restaurant.isVegetarian,
+      latitude: restaurant.latitude,
+      longitude: restaurant.longitude,
+      openingHours: restaurant.openingHours.toList(),
     );
   }
 
@@ -87,5 +83,15 @@ class RestaurantRepositoryImpl implements RestaurantRepository {
     } catch (e) {
       return Left(ServerFailure('Failed to fetch restaurant: $e'));
     }
+  }
+
+  @override
+  Future<List<RestaurantModel>> getCategories() async {
+    return await remoteDataSource.fetchCategories();
+  }
+
+  @override
+  Future<List<RestaurantModel>> getRecommendations() async {
+    return await remoteDataSource.fetchRecommendations();
   }
 }

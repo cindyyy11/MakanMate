@@ -6,6 +6,7 @@ class RestaurantDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print(ModalRoute.of(context)!.settings.arguments);
     final RestaurantEntity restaurant =
         ModalRoute.of(context)!.settings.arguments as RestaurantEntity;
 
@@ -16,19 +17,30 @@ class RestaurantDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Image.network(restaurant.image, height: 200, width: double.infinity, fit: BoxFit.cover),
+            Image.network(
+              restaurant.imageUrl,
+              height: 200,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
             const SizedBox(height: 12),
-            Text(restaurant.name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            Text(restaurant.location, style: const TextStyle(color: Colors.grey)),
+            Text(
+              restaurant.name,
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            Text(
+              restaurant.address,
+              style: const TextStyle(color: Colors.grey),
+            ),
             const SizedBox(height: 8),
-            Text("Cuisine: ${restaurant.cuisine}"),
+            Text("Cuisine: ${restaurant.cuisineType}"),
             Text("Price: ${restaurant.priceRange}"),
             const SizedBox(height: 8),
             Row(
               children: [
                 Icon(Icons.star, color: Colors.amber),
                 Text(restaurant.rating.toString()),
-                if (restaurant.halal)
+                if (restaurant.isHalal)
                   const Padding(
                     padding: EdgeInsets.only(left: 8),
                     child: Text("Halal", style: TextStyle(color: Colors.green)),

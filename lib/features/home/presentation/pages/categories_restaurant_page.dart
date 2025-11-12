@@ -9,7 +9,7 @@ class CategoryRestaurantPage extends StatelessWidget {
   final String categoryName;
 
   const CategoryRestaurantPage({Key? key, required this.categoryName})
-      : super(key: key);
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -25,8 +25,11 @@ class CategoryRestaurantPage extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           } else if (state is HomeLoaded) {
             final filteredRestaurants = state.recommendations
-                .where((r) =>
-                    r.cuisine?.toLowerCase() == categoryName.toLowerCase())
+                .where(
+                  (r) =>
+                      r.cuisineType?.toLowerCase() ==
+                      categoryName.toLowerCase(),
+                )
                 .toList();
 
             if (filteredRestaurants.isEmpty) {
@@ -55,9 +58,12 @@ class CategoryRestaurantPage extends StatelessWidget {
     );
   }
 
-  Widget _buildRestaurantCard(BuildContext context, RestaurantEntity restaurant) {
-    final imageUrl = restaurant.image?.isNotEmpty == true
-        ? restaurant.image!
+  Widget _buildRestaurantCard(
+    BuildContext context,
+    RestaurantEntity restaurant,
+  ) {
+    final imageUrl = restaurant.imageUrl?.isNotEmpty == true
+        ? restaurant.imageUrl!
         : 'assets/images/logos/image-not-found.jpg';
 
     return Container(
@@ -90,7 +96,10 @@ class CategoryRestaurantPage extends StatelessWidget {
                     width: 80,
                     height: 80,
                     color: Colors.grey[200],
-                    child: const Icon(Icons.image_not_supported, color: Colors.grey),
+                    child: const Icon(
+                      Icons.image_not_supported,
+                      color: Colors.grey,
+                    ),
                   );
                 },
               ),
@@ -124,7 +133,9 @@ class CategoryRestaurantPage extends StatelessWidget {
                       Text(
                         restaurant.rating?.toStringAsFixed(1) ?? '-',
                         style: const TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.w500),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       const Spacer(),
                       Text(
@@ -146,7 +157,9 @@ class CategoryRestaurantPage extends StatelessWidget {
               icon: const Icon(Icons.favorite_border, color: Colors.grey),
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Added ${restaurant.name} to favorites!')),
+                  SnackBar(
+                    content: Text('Added ${restaurant.name} to favorites!'),
+                  ),
                 );
               },
             ),
