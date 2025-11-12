@@ -58,7 +58,9 @@ class RecommendationBloc extends Bloc<RecommendationEvent, RecommendationState> 
         (recommendations) {
           logger.i('Successfully loaded ${recommendations.length} recommendations');
           if (recommendations.isEmpty) {
-            emit(const RecommendationEmpty());
+            emit(const RecommendationEmpty(
+              message: 'No recommendations available. Try refreshing or check back later.',
+            ));
           } else {
             emit(RecommendationLoaded(recommendations: recommendations));
           }
@@ -193,7 +195,9 @@ class RecommendationBloc extends Bloc<RecommendationEvent, RecommendationState> 
         (recommendations) {
           logger.i('Successfully refreshed ${recommendations.length} recommendations');
           if (recommendations.isEmpty) {
-            emit(const RecommendationEmpty());
+            emit(const RecommendationEmpty(
+              message: 'No recommendations available. Try refreshing or check back later.',
+            ));
           } else {
             emit(RecommendationLoaded(
               recommendations: recommendations,

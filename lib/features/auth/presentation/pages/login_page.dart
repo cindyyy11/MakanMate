@@ -1,11 +1,13 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:makan_mate/core/theme/app_colors.dart';
 import 'package:makan_mate/core/constants/ui_constants.dart';
 import 'package:makan_mate/features/auth/presentation/pages/signup_page.dart';
 import 'package:makan_mate/features/auth/presentation/widgets/login_form.dart';
 import 'package:makan_mate/features/auth/presentation/widgets/social_auth_buttons.dart';
-import 'package:makan_mate/services/auth_service.dart';
+import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:makan_mate/features/auth/presentation/bloc/auth_event.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -19,8 +21,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   late AnimationController _slideController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
-
-  final AuthService _authService = AuthService();
 
   @override
   void initState() {
@@ -364,26 +364,16 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
   }
 
-  Future<void> _handleGoogleSignIn() async {
-    try {
-      await _authService.signInWithGoogle();
-      // Navigation handled by auth state changes
-    } catch (e) {
-      if (mounted) {
-        _showErrorDialog('Google Sign-In Failed', e.toString());
-      }
-    }
+  void _handleGoogleSignIn() {
+    // ✅ Use BLoC instead of AuthService
+    context.read<AuthBloc>().add(GoogleSignInRequested());
   }
 
-  Future<void> _handleGuestSignIn() async {
-    try {
-      await _authService.signInAsGuest();
-      // Navigation handled by auth state changes
-    } catch (e) {
-      if (mounted) {
-        _showErrorDialog('Guest Sign-In Failed', e.toString());
-      }
-    }
+  // Note: Guest sign-in not implemented in BLoC yet
+  // You can add it later if needed
+  void _handleGuestSignIn() {
+    // TODO: Add GuestSignInRequested event to AuthBloc if needed
+    _showErrorDialog('Guest Sign-In', 'Guest sign-in is not available yet.');
   }
 
   void _showErrorDialog(String title, String message) {

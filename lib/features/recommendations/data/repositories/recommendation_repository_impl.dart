@@ -6,6 +6,7 @@ import 'package:makan_mate/features/recommendations/data/datasources/recommendat
 import 'package:makan_mate/features/recommendations/data/datasources/recommendation_remote_datasource.dart';
 import 'package:makan_mate/features/recommendations/data/models/recommendation_models.dart';
 import 'package:makan_mate/features/recommendations/domain/entities/recommendation_entity.dart';
+import 'package:makan_mate/features/recommendations/domain/entities/user_interaction_entity.dart';
 import 'package:makan_mate/features/recommendations/domain/repositories/recommendation_repository.dart';
 
 /// Implementation of the recommendation repository
@@ -236,8 +237,56 @@ class RecommendationRepositoryImpl implements RecommendationRepository {
             )
           : null,
       occasion: entity.occasion,
-      groupSize: entity.groupSize,
+      groupSize:       entity.groupSize,
     );
+  }
+
+  @override
+  Future<Either<Failure, List<UserInteractionEntity>>> getUserInteractions({
+    required String userId,
+    int limit = 100,
+  }) async {
+    try {
+      logger.i('Getting user interactions for: $userId');
+
+      final interactions = await remoteDataSource.getUserInteractions(
+        userId: userId,
+        limit: limit,
+      );
+
+      logger.i('Successfully retrieved ${interactions.length} user interactions');
+      return Right(interactions.map((i) => i.toEntity()).toList());
+    } on Exception catch (e) {
+      logger.e('Error getting user interactions: $e');
+      return Left(ServerFailure(e.toString()));
+    } catch (e) {
+      logger.e('Unexpected error getting user interactions: $e');
+      return Left(ServerFailure('Failed to get user interactions: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<UserInteractionEntity>>> getItemInteractions({
+    required String itemId,
+    int limit = 100,
+  }) async {
+    try {
+      logger.i('Getting item interactions for: $itemId');
+
+      final interactions = await remoteDataSource.getItemInteractions(
+        itemId: itemId,
+        limit: limit,
+      );
+
+      logger.i('Successfully retrieved ${interactions.length} item interactions');
+      return Right(interactions.map((i) => i.toEntity()).toList());
+    } on Exception catch (e) {
+      logger.e('Error getting item interactions: $e');
+      return Left(ServerFailure(e.toString()));
+    } catch (e) {
+      logger.e('Unexpected error getting item interactions: $e');
+      return Left(ServerFailure('Failed to get item interactions: $e'));
+    }
   }
 }
 

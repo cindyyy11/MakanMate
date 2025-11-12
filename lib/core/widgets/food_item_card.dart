@@ -4,7 +4,8 @@ import 'package:makan_mate/core/constants/ui_constants.dart';
 import 'package:makan_mate/core/theme/app_colors.dart';
 import 'package:makan_mate/features/food/data/models/food_models.dart';
 import 'package:makan_mate/features/recommendations/data/models/recommendation_models.dart';
-import 'package:makan_mate/services/food_service.dart';
+import 'package:makan_mate/core/di/injection_container.dart' as di;
+import 'package:makan_mate/features/food/domain/usecases/get_food_item_usecase.dart';
 
 class FoodItemCard extends StatefulWidget {
   final RecommendationItem recommendationItem;
@@ -25,7 +26,7 @@ class FoodItemCard extends StatefulWidget {
 }
 
 class _FoodItemCardState extends State<FoodItemCard>
-  with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
   FoodItem? _foodItem;
@@ -48,8 +49,13 @@ class _FoodItemCardState extends State<FoodItemCard>
 
   void _loadFoodItem() async {
     try {
-      final foodItem = await FoodService().getFoodItem(widget.recommendationItem.itemId);
+      final getFoodItemUseCase = di.sl<GetFoodItemUseCase>();
+      final result = await getFoodItemUseCase(widget.recommendationItem.itemId);
       if (mounted) {
+        final foodItem = result.fold(
+          (failure) => null,
+          (entity) => entity.toFoodItem(),
+        );
         setState(() {
           _foodItem = foodItem;
           _isLoading = false;
@@ -70,9 +76,7 @@ class _FoodItemCardState extends State<FoodItemCard>
       return const Card(
         child: SizedBox(
           height: 200,
-          child: Center(
-            child: CircularProgressIndicator(),
-          ),
+          child: Center(child: CircularProgressIndicator()),
         ),
       );
     }
@@ -108,32 +112,36 @@ class _FoodItemCardState extends State<FoodItemCard>
                         ),
                         child: _buildFoodImage(),
                       ),
-                      Positioned(
-                        top: 12,
-                        left: 12,
-                        child: _buildAIBadge(),
-                      ),
+                      Positioned(top: 12, left: 12, child: _buildAIBadge()),
                       Positioned(
                         top: 12,
                         right: 12,
                         child: Row(
                           children: [
                             _buildActionButton(
-                              icon: _isLiked ? Icons.favorite : Icons.favorite_border,
+                              icon: _isLiked
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
                               onPressed: () {
                                 setState(() => _isLiked = !_isLiked);
                                 widget.onLike();
                               },
-                              color: _isLiked ? AppColors.error : AppColors.surface,
+                              color: _isLiked
+                                  ? AppColors.error
+                                  : AppColors.surface,
                             ),
                             const SizedBox(width: 8),
                             _buildActionButton(
-                              icon: _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                              icon: _isBookmarked
+                                  ? Icons.bookmark
+                                  : Icons.bookmark_border,
                               onPressed: () {
                                 setState(() => _isBookmarked = !_isBookmarked);
                                 widget.onBookmark();
                               },
-                              color: _isBookmarked ? AppColors.primary : AppColors.surface,
+                              color: _isBookmarked
+                                  ? AppColors.primary
+                                  : AppColors.surface,
                             ),
                           ],
                         ),
@@ -154,9 +162,8 @@ class _FoodItemCardState extends State<FoodItemCard>
                             Expanded(
                               child: Text(
                                 _foodItem!.name,
-                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                style: Theme.of(context).textTheme.titleLarge
+                                    ?.copyWith(fontWeight: FontWeight.bold),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -171,9 +178,8 @@ class _FoodItemCardState extends State<FoodItemCard>
                         // Description
                         Text(
                           _foodItem!.description,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.grey600,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppColors.grey600),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -190,7 +196,8 @@ class _FoodItemCardState extends State<FoodItemCard>
                                 children: [
                                   _buildCuisineTag(),
                                   if (_foodItem!.isHalal) _buildHalalTag(),
-                                  if (_foodItem!.isVegetarian) _buildVegetarianTag(),
+                                  if (_foodItem!.isVegetarian)
+                                    _buildVegetarianTag(),
                                   _buildSpiceLevelTag(),
                                 ],
                               ),
@@ -222,10 +229,11 @@ class _FoodItemCardState extends State<FoodItemCard>
                               Expanded(
                                 child: Text(
                                   widget.recommendationItem.reason,
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: AppColors.infoDark,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: AppColors.infoDark,
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -255,9 +263,7 @@ class _FoodItemCardState extends State<FoodItemCard>
         placeholder: (context, url) => Container(
           height: 200,
           color: AppColors.grey200,
-          child: const Center(
-            child: CircularProgressIndicator(),
-          ),
+          child: const Center(child: CircularProgressIndicator()),
         ),
         errorWidget: (context, url, error) => _buildPlaceholderImage(),
       );
@@ -282,9 +288,9 @@ class _FoodItemCardState extends State<FoodItemCard>
           const SizedBox(height: 8),
           Text(
             _foodItem!.name,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: AppColors.grey600,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(color: AppColors.grey600),
             textAlign: TextAlign.center,
           ),
         ],
@@ -333,11 +339,7 @@ class _FoodItemCardState extends State<FoodItemCard>
           color: AppColors.overlay,
           shape: BoxShape.circle,
         ),
-        child: Icon(
-          icon,
-          size: UIConstants.iconSizeMd,
-          color: color,
-        ),
+        child: Icon(icon, size: UIConstants.iconSizeMd, color: color),
       ),
     );
   }
@@ -428,7 +430,7 @@ class _FoodItemCardState extends State<FoodItemCard>
   Widget _buildSpiceLevelTag() {
     String spiceText;
     Color spiceColor;
-    
+
     if (_foodItem!.spiceLevel <= 0.3) {
       spiceText = 'MILD';
       spiceColor = AppColors.spiceMild;
@@ -439,7 +441,7 @@ class _FoodItemCardState extends State<FoodItemCard>
       spiceText = 'SPICY';
       spiceColor = AppColors.spiceHot;
     }
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(

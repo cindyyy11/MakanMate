@@ -1,10 +1,11 @@
 import 'dart:ui';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:makan_mate/features/auth/presentation/bloc/auth_state.dart';
+import 'package:makan_mate/features/auth/presentation/bloc/auth_event.dart';
 import 'package:flutter/material.dart';
 import 'package:makan_mate/core/theme/app_colors.dart';
 import 'package:makan_mate/features/auth/presentation/widgets/forgot_password_dialog.dart';
-import 'package:makan_mate/services/auth_service.dart';
-
-
 
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key});
@@ -17,7 +18,6 @@ class _LoginFormState extends State<LoginForm> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final AuthService _authService = AuthService();
   bool _isPasswordVisible = false;
   bool _isLoading = false;
 
@@ -30,105 +30,125 @@ class _LoginFormState extends State<LoginForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Form(
-      key: _formKey,
-      child: Column(
-        children: [
-          // Email field
-          _buildGlassTextField(
-            controller: _emailController,
-            hintText: 'Email',
-            icon: Icons.email_outlined,
-            keyboardType: TextInputType.emailAddress,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your email';
-              }
-              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                return 'Please enter a valid email';
-              }
-              return null;
-            },
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Password field
-          _buildGlassTextField(
-            controller: _passwordController,
-            hintText: 'Password',
-            icon: Icons.lock_outline,
-            obscureText: !_isPasswordVisible,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your password';
-              }
-              if (value.length < 6) {
-                return 'Password must be at least 6 characters';
-              }
-              return null;
-            },
-            suffixIcon: IconButton(
-              icon: Icon(
-                _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
-                color: AppColors.grey700,
-              ),
-              onPressed: () {
-                setState(() {
-                  _isPasswordVisible = !_isPasswordVisible;
-                });
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is Authenticated) {
+          // Navigate only when user is authenticated
+          Navigator.pushReplacementNamed(context, '/home');
+        } else if (state is AuthError) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.message)));
+        }
+      },
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            // Email field
+            _buildGlassTextField(
+              controller: _emailController,
+              hintText: 'Email',
+              icon: Icons.email_outlined,
+              keyboardType: TextInputType.emailAddress,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your email';
+                }
+                if (!RegExp(
+                  r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                ).hasMatch(value)) {
+                  return 'Please enter a valid email';
+                }
+                return null;
               },
             ),
-          ),
-          
-          const SizedBox(height: 12),
-          
-          // Forgot password
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => const ForgotPasswordDialog(),
-                );
+
+            const SizedBox(height: 16),
+
+            // Password field
+            _buildGlassTextField(
+              controller: _passwordController,
+              hintText: 'Password',
+              icon: Icons.lock_outline,
+              obscureText: !_isPasswordVisible,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your password';
+                }
+                if (value.length < 6) {
+                  return 'Password must be at least 6 characters';
+                }
+                return null;
               },
-              child: Text(
-                'Forgot Password?',
-                style: TextStyle(
-                  color: Colors.grey[800],
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                  color: AppColors.grey700,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _isPasswordVisible = !_isPasswordVisible;
+                  });
+                },
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Forgot password
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => const ForgotPasswordDialog(),
+                  );
+                },
+                child: Text(
+                  'Forgot Password?',
+                  style: TextStyle(
+                    color: Colors.grey[800],
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
                 ),
               ),
             ),
-          ),
-          
-          const SizedBox(height: 24),
-          
-          // Login button
-          _buildGlassButton(
-            onPressed: _isLoading ? null : _handleLogin,
-            child: _isLoading
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
+
+            const SizedBox(height: 24),
+
+            // Login button
+            _buildGlassButton(
+              onPressed: () {
+                if (!_isLoading) {
+                  _handleLogin(context);
+                }
+              },
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Colors.orange,
+                        ),
+                      ),
+                    )
+                  : const Text(
+                      'Login',
+                      style: TextStyle(
+                        color: Colors.black87,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1,
+                      ),
                     ),
-                  )
-                : const Text(
-                    'Login',
-                    style: TextStyle(
-                      color: Colors.black87,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
-                    ),
-                  ),
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -160,20 +180,11 @@ class _LoginFormState extends State<LoginForm> {
             obscureText: obscureText,
             keyboardType: keyboardType,
             validator: validator,
-            style: const TextStyle(
-              color: Colors.black87,
-              fontSize: 16,
-            ),
+            style: const TextStyle(color: Colors.black87, fontSize: 16),
             decoration: InputDecoration(
               hintText: hintText,
-              hintStyle: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 16,
-              ),
-              prefixIcon: Icon(
-                icon,
-                color: Colors.grey[700],
-              ),
+              hintStyle: TextStyle(color: Colors.grey[600], fontSize: 16),
+              prefixIcon: Icon(icon, color: Colors.grey[700]),
               suffixIcon: suffixIcon,
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(
@@ -228,22 +239,27 @@ class _LoginFormState extends State<LoginForm> {
     );
   }
 
-  Future<void> _handleLogin() async {
+  Future<void> _handleLogin(BuildContext context) async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
     setState(() => _isLoading = true);
 
+    final authBloc = context.read<AuthBloc>();
+
     try {
-      await _authService.signInWithEmail(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
+      authBloc.add(
+        SignInRequested(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        ),
       );
       // Navigation handled by auth state changes
+      print("Login successful ");
     } catch (e) {
       String message = 'An error occurred';
-      
+
       if (e.toString().contains('user-not-found')) {
         message = 'No user found with this email';
       } else if (e.toString().contains('wrong-password')) {

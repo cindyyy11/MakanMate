@@ -3,7 +3,7 @@ import 'package:makan_mate/features/auth/domain/entities/user_entity.dart';
 
 abstract class AuthEvent extends Equatable {
   const AuthEvent();
-  
+
   @override
   List<Object?> get props => [];
 }
@@ -15,12 +15,9 @@ class AuthCheckRequested extends AuthEvent {}
 class SignInRequested extends AuthEvent {
   final String email;
   final String password;
-  
-  const SignInRequested({
-    required this.email,
-    required this.password,
-  });
-  
+
+  const SignInRequested({required this.email, required this.password});
+
   @override
   List<Object> get props => [email, password];
 }
@@ -29,15 +26,17 @@ class SignUpRequested extends AuthEvent {
   final String email;
   final String password;
   final String? displayName;
-  
+  final String role;
+
   const SignUpRequested({
     required this.email,
     required this.password,
     this.displayName,
+    this.role = 'user',
   });
-  
+
   @override
-  List<Object?> get props => [email, password, displayName];
+  List<Object?> get props => [email, password, displayName, role];
 }
 
 class GoogleSignInRequested extends AuthEvent {}
@@ -46,9 +45,9 @@ class SignOutRequested extends AuthEvent {}
 
 class ForgotPasswordRequested extends AuthEvent {
   final String email;
-  
+
   const ForgotPasswordRequested(this.email);
-  
+
   @override
   List<Object> get props => [email];
 }

@@ -36,6 +36,18 @@ abstract class RecommendationRemoteDataSource {
   Future<Map<String, dynamic>> getRecommendationStats({
     required String userId,
   });
+
+  /// Get user interactions
+  Future<List<UserInteraction>> getUserInteractions({
+    required String userId,
+    int limit = 100,
+  });
+
+  /// Get item interactions
+  Future<List<UserInteraction>> getItemInteractions({
+    required String itemId,
+    int limit = 100,
+  });
 }
 
 /// Implementation of remote data source
@@ -74,8 +86,13 @@ class RecommendationRemoteDataSourceImpl
         context: context,
       );
 
-      // Cache recommendations in Firestore for analytics
-      await _cacheRecommendations(userId, recommendations);
+      // Cache recommendations in Firestore for analytics (don't fail if caching fails)
+      try {
+        await _cacheRecommendations(userId, recommendations);
+      } catch (e) {
+        logger.w('Failed to cache recommendations (non-critical): $e');
+        // Continue even if caching fails
+      }
 
       logger.i('Successfully fetched ${recommendations.length} recommendations');
       return recommendations;
@@ -303,6 +320,66 @@ class RecommendationRemoteDataSourceImpl
     } catch (e) {
       // Don't throw on cache failures
       logger.w('Failed to cache recommendations: $e');
+    }
+  }
+
+  @override
+  Future<List<UserInteraction>> getUserInteractions({
+    required String userId,
+    int limit = 100,
+  }) async {
+    try {
+      logger.i('Fetching user interactions for: $userId');
+
+      final query = await firestore
+          .collection('user_interactions')
+          .where('userId', isEqualTo: userId)
+          .orderBy('timestamp', descending: true)
+          .limit(limit)
+          .get();
+
+      final interactions = query.docs
+          .map((doc) => UserInteraction.fromFirestore(doc))
+          .toList();
+
+      logger.i('Successfully fetched ${interactions.length} user interactions');
+      return interactions;
+    } on FirebaseException catch (e) {
+      logger.e('Firebase error fetching user interactions: ${e.code}');
+      throw Exception('Failed to fetch user interactions: ${e.message}');
+    } catch (e, stackTrace) {
+      logger.e('Error fetching user interactions: $e', stackTrace: stackTrace);
+      throw Exception('Failed to fetch user interactions: $e');
+    }
+  }
+
+  @override
+  Future<List<UserInteraction>> getItemInteractions({
+    required String itemId,
+    int limit = 100,
+  }) async {
+    try {
+      logger.i('Fetching item interactions for: $itemId');
+
+      final query = await firestore
+          .collection('user_interactions')
+          .where('itemId', isEqualTo: itemId)
+          .orderBy('timestamp', descending: true)
+          .limit(limit)
+          .get();
+
+      final interactions = query.docs
+          .map((doc) => UserInteraction.fromFirestore(doc))
+          .toList();
+
+      logger.i('Successfully fetched ${interactions.length} item interactions');
+      return interactions;
+    } on FirebaseException catch (e) {
+      logger.e('Firebase error fetching item interactions: ${e.code}');
+      throw Exception('Failed to fetch item interactions: ${e.message}');
+    } catch (e, stackTrace) {
+      logger.e('Error fetching item interactions: $e', stackTrace: stackTrace);
+      throw Exception('Failed to fetch item interactions: $e');
     }
   }
 }

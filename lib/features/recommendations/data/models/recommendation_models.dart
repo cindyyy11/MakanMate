@@ -1,6 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:makan_mate/core/base_model.dart';
 import 'package:makan_mate/features/auth/data/models/user_models.dart';
+import 'package:makan_mate/features/recommendations/domain/entities/user_interaction_entity.dart';
 
 part 'recommendation_models.g.dart';
 
@@ -65,6 +67,7 @@ class RecommendationItem extends BaseModel {
 /// User interaction for building recommendation profile
 @JsonSerializable()
 class UserInteraction extends BaseModel {
+  final String id;
   final String userId;
   final String itemId;
   final String interactionType;
@@ -73,6 +76,7 @@ class UserInteraction extends BaseModel {
   final Map<String, dynamic>? context;
 
   const UserInteraction({
+    required this.id,
     required this.userId,
     required this.itemId,
     required this.interactionType,
@@ -87,8 +91,63 @@ class UserInteraction extends BaseModel {
   @override
   Map<String, dynamic> toJson() => _$UserInteractionToJson(this);
 
+  /// Create UserInteraction from Firestore document
+  factory UserInteraction.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return UserInteraction(
+      id: doc.id,
+      userId: data['userId'] as String,
+      itemId: data['itemId'] as String,
+      interactionType: data['interactionType'] as String,
+      rating: data['rating'] != null
+          ? (data['rating'] as num).toDouble()
+          : null,
+      timestamp: (data['timestamp'] as Timestamp).toDate(),
+      context: data['context'] != null
+          ? Map<String, dynamic>.from(data['context'] as Map)
+          : null,
+    );
+  }
+
   @override
-  List<Object?> get props => [userId, itemId, interactionType, timestamp];
+  List<Object?> get props => [
+    id,
+    userId,
+    itemId,
+    interactionType,
+    rating,
+    timestamp,
+    context,
+  ];
+
+  /// Convert to domain entity
+  UserInteractionEntity toEntity() {
+    return UserInteractionEntity(
+      id: id,
+      userId: userId,
+      itemId: itemId,
+      interactionType: interactionType,
+      rating: rating,
+      timestamp: timestamp,
+      context: context,
+    );
+  }
+}
+
+/// Extension to convert UserInteractionEntity back to UserInteraction (for AI engine compatibility)
+extension UserInteractionEntityToModel on UserInteractionEntity {
+  /// Convert UserInteractionEntity to UserInteraction
+  UserInteraction toModel() {
+    return UserInteraction(
+      id: id,
+      userId: userId,
+      itemId: itemId,
+      interactionType: interactionType,
+      rating: rating,
+      timestamp: timestamp,
+      context: context,
+    );
+  }
 }
 
 /// Context for recommendations

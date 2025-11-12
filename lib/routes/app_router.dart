@@ -7,6 +7,9 @@ import 'package:makan_mate/features/auth/presentation/pages/signup_page.dart';
 import 'package:makan_mate/features/home/presentation/pages/home_page.dart';
 import 'package:makan_mate/features/recommendations/presentation/pages/recommendations_page.dart';
 import 'package:makan_mate/features/recommendations/presentation/bloc/recommendation_bloc.dart';
+import 'package:makan_mate/features/admin/presentation/pages/admin_dashboard_page.dart';
+import 'package:makan_mate/features/admin/presentation/bloc/admin_bloc.dart';
+import 'package:makan_mate/features/admin/presentation/bloc/admin_event.dart';
 import 'package:makan_mate/core/ml/model_testing_screen.dart';
 import 'package:makan_mate/core/di/injection_container.dart' as di;
 
@@ -14,31 +17,21 @@ class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
       case '/':
-        return MaterialPageRoute(
-          builder: (_) => const AuthWrapper(),
-        );
-        
+        return MaterialPageRoute(builder: (_) => const AuthWrapper());
+
       case '/login':
-        return MaterialPageRoute(
-          builder: (_) => const LoginPage(),
-        );
-        
+        return MaterialPageRoute(builder: (_) => const LoginPage());
+
       case '/signup':
-        return MaterialPageRoute(
-          builder: (_) => const SignUpPage(),
-        );
-        
+        return MaterialPageRoute(builder: (_) => const SignUpPage());
+
       case '/home':
-        return MaterialPageRoute(
-          builder: (_) => const HomePage(),
-        );
+        return MaterialPageRoute(builder: (_) => const HomePage());
 
       case '/recommendations':
         final user = FirebaseAuth.instance.currentUser;
         if (user == null) {
-          return MaterialPageRoute(
-            builder: (_) => const LoginPage(),
-          );
+          return MaterialPageRoute(builder: (_) => const LoginPage());
         }
         return MaterialPageRoute(
           builder: (_) => BlocProvider(
@@ -47,17 +40,25 @@ class AppRouter {
           ),
         );
 
-      case '/model-testing':
+      case '/admin':
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null) {
+          return MaterialPageRoute(builder: (_) => const LoginPage());
+        }
         return MaterialPageRoute(
-          builder: (_) => const ModelTestingScreen(),
+          builder: (_) => BlocProvider(
+            create: (_) => di.sl<AdminBloc>()..add(const LoadPlatformMetrics()),
+            child: const AdminDashboardPage(),
+          ),
         );
-        
+
+      case '/model-testing':
+        return MaterialPageRoute(builder: (_) => const ModelTestingScreen());
+
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(
-            body: Center(
-              child: Text('No route defined for ${settings.name}'),
-            ),
+            body: Center(child: Text('No route defined for ${settings.name}')),
           ),
         );
     }

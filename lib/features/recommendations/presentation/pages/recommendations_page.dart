@@ -5,7 +5,9 @@ import 'package:makan_mate/features/recommendations/presentation/bloc/recommenda
 import 'package:makan_mate/features/recommendations/presentation/bloc/recommendation_event.dart';
 import 'package:makan_mate/features/recommendations/presentation/bloc/recommendation_state.dart';
 import 'package:makan_mate/features/recommendations/presentation/widgets/recommendation_card.dart';
-import 'package:makan_mate/services/food_service.dart';
+import 'package:makan_mate/core/di/injection_container.dart' as di;
+import 'package:makan_mate/features/food/domain/usecases/get_food_item_usecase.dart';
+import 'package:makan_mate/features/food/data/models/food_models.dart';
 
 /// Page displaying personalized AI recommendations
 class RecommendationsPage extends StatefulWidget {
@@ -21,7 +23,7 @@ class RecommendationsPage extends StatefulWidget {
 }
 
 class _RecommendationsPageState extends State<RecommendationsPage> {
-  final FoodService _foodService = FoodService();
+  final GetFoodItemUseCase _getFoodItemUseCase = di.sl<GetFoodItemUseCase>();
 
   @override
   void initState() {
@@ -141,7 +143,7 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
           final recommendation = state.recommendations[index];
           
           return FutureBuilder<FoodItem?>(
-            future: _foodService.getFoodItem(recommendation.itemId),
+            future: _getFoodItem(recommendation.itemId),
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
                 return const Card(
@@ -202,7 +204,7 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
             final recommendation = state.currentRecommendations[index];
             
             return FutureBuilder<FoodItem?>(
-              future: _foodService.getFoodItem(recommendation.itemId),
+              future: _getFoodItem(recommendation.itemId),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) return const SizedBox.shrink();
 
@@ -281,7 +283,7 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
                 final recommendation = state.cachedRecommendations![index];
                 
                 return FutureBuilder<FoodItem?>(
-                  future: _foodService.getFoodItem(recommendation.itemId),
+                  future: _getFoodItem(recommendation.itemId),
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) return const SizedBox.shrink();
 
@@ -431,6 +433,15 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
           ),
         ],
       ),
+    );
+  }
+
+  /// Get food item using use case
+  Future<FoodItem?> _getFoodItem(String itemId) async {
+    final result = await _getFoodItemUseCase(itemId);
+    return result.fold(
+      (failure) => null,
+      (entity) => entity.toFoodItem(),
     );
   }
 }

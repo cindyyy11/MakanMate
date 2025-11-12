@@ -1,4 +1,3 @@
-import 'package:makan_mate/features/auth/domain/entities/user_entity.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_state.dart';
 
 /// ------------------------------------------------------------
@@ -11,7 +10,8 @@ extension AuthStateX on AuthState {
   bool get hasError => this is AuthError;
 
   /// Returns the error message if state is AuthError, else null.
-  String? get errorMessage => this is AuthError ? (this as AuthError).message : null;
+  String? get errorMessage =>
+      this is AuthError ? (this as AuthError).message : null;
 }
 
 /// ------------------------------------------------------------
@@ -19,7 +19,8 @@ extension AuthStateX on AuthState {
 /// ------------------------------------------------------------
 class Helpers {
   /// Returns true if the string is null or empty after trimming.
-  static bool isNullOrEmpty(String? value) => value == null || value.trim().isEmpty;
+  static bool isNullOrEmpty(String? value) =>
+      value == null || value.trim().isEmpty;
 
   /// Safely parses an int; returns [defaultValue] if parsing fails.
   static int tryParseInt(String? value, {int defaultValue = 0}) =>
@@ -38,7 +39,9 @@ class Helpers {
     final parts = email.split('@');
     if (parts.length != 2 || parts[0].isEmpty) return email;
     final name = parts[0];
-    final masked = name.length <= 3 ? '${name[0]}***' : '${name.substring(0, 3)}***';
+    final masked = name.length <= 3
+        ? '${name[0]}***'
+        : '${name.substring(0, 3)}***';
     return '$masked@${parts[1]}';
   }
 }

@@ -131,6 +131,36 @@ class AppColors {
     end: Alignment.bottomRight,
   );
 
+  static const LinearGradient infoGradient = LinearGradient(
+    colors: [infoLight, infoDark],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient warningGradient = LinearGradient(
+    colors: [warningLight, warningDark],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient errorGradient = LinearGradient(
+    colors: [errorLight, errorDark],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient ratingGradient = LinearGradient(
+    colors: [rating, ratingFilled],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient secondaryGradient = LinearGradient(
+    colors: [secondaryLight, secondaryDark],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
   // ============================================================================
   // SHADOWS
   // ============================================================================

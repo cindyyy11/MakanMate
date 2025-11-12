@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -10,6 +11,7 @@ abstract class AuthRemoteDataSource {
     String email,
     String password,
     String? displayName,
+    String role,
   );
   Future<UserModel> signInWithGoogle();
   Future<void> signOut();
@@ -27,6 +29,60 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     GoogleSignIn? googleSignIn,
   }) : googleSignIn = googleSignIn ?? GoogleSignIn.instance;
 
+  Future<UserModel> getUserFromFirestore(User firebaseUser) async {
+    final userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(firebaseUser.uid)
+        .get();
+
+    // If user document doesn't exist, create it (for existing Firebase Auth users)
+    if (!userDoc.exists) {
+      final userModel = UserModel.fromFirebase(firebaseUser);
+      final userData = userModel.toJson();
+      userData['createdAt'] = Timestamp.fromDate(userModel.createdAt);
+      userData['updatedAt'] = Timestamp.fromDate(userModel.updatedAt);
+      userData['lastActive'] = FieldValue.serverTimestamp();
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userModel.id)
+          .set(userData);
+
+      return userModel;
+    }
+
+    final data = userDoc.data()!;
+
+    // Update lastActive field
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(firebaseUser.uid)
+        .update({'lastActive': FieldValue.serverTimestamp()});
+
+    return UserModel(
+      id: firebaseUser.uid,
+      name:
+          data['name'] ??
+          firebaseUser.displayName ??
+          firebaseUser.email!.split('@').first,
+      email: firebaseUser.email!,
+      role: data['role'] ?? 'user',
+      profileImageUrl: data['profileImageUrl'],
+      dietaryRestrictions: List<String>.from(data['dietaryRestrictions'] ?? []),
+      cuisinePreferences: Map<String, double>.from(
+        data['cuisinePreferences'] ?? {},
+      ),
+      spiceTolerance: (data['spiceTolerance'] ?? 0.5).toDouble(),
+      culturalBackground: data['culturalBackground'] ?? 'unknown',
+      currentLocation: Location.fromJson(data['currentLocation']),
+      behaviorPatterns: Map<String, double>.from(
+        data['behaviorPatterns'] ?? {},
+      ),
+      createdAt: (data['createdAt'] as Timestamp).toDate(),
+      updatedAt: (data['updatedAt'] as Timestamp).toDate(),
+    );
+  }
+
   @override
   Future<UserModel> signInWithEmailPassword(
     String email,
@@ -39,7 +95,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
       final user = cred.user;
       if (user == null) throw AuthException('Sign in failed');
-      return UserModel.fromFirebase(user);
+      return await getUserFromFirestore(user);
     } on FirebaseAuthException catch (e) {
       throw AuthException(_mapFirebaseAuthCode(e));
     }
@@ -50,6 +106,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     String email,
     String password,
     String? displayName,
+    String role,
   ) async {
     try {
       final cred = await firebaseAuth.createUserWithEmailAndPassword(
@@ -64,7 +121,22 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         await user.reload();
       }
       final refreshed = firebaseAuth.currentUser ?? user;
-      return UserModel.fromFirebase(refreshed);
+
+      // Create user model with role
+      final userModel = UserModel.fromFirebase(refreshed, role: role);
+
+      // Create user document in Firestore with lastActive field
+      final userData = userModel.toJson();
+      userData['createdAt'] = Timestamp.fromDate(userModel.createdAt);
+      userData['updatedAt'] = Timestamp.fromDate(userModel.updatedAt);
+      userData['lastActive'] = FieldValue.serverTimestamp();
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userModel.id)
+          .set(userData);
+
+      return userModel;
     } on FirebaseAuthException catch (e) {
       throw AuthException(_mapFirebaseAuthCode(e));
     }
@@ -73,26 +145,55 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<UserModel> signInWithGoogle() async {
     try {
+      User? user;
       if (kIsWeb) {
         // WEB: use Firebase web popup/redirect flow
         final provider = GoogleAuthProvider();
         // Optional: provider.setCustomParameters({'prompt': 'select_account'});
         final cred = await firebaseAuth.signInWithPopup(provider);
-        final user = cred.user;
+        user = cred.user;
         if (user == null) throw AuthException('Google sign-in failed');
-        return UserModel.fromFirebase(user);
       } else {
         // MOBILE: google_sign_in v7 interactive auth → idToken → Firebase credential
         final account = await googleSignIn
             .authenticate(); // throws on cancel/fail
-        final googleAuth = await account.authentication; 
+        final googleAuth = account.authentication;
         final credential = GoogleAuthProvider.credential(
           idToken: googleAuth.idToken,
         );
         final cred = await firebaseAuth.signInWithCredential(credential);
-        final user = cred.user;
+        user = cred.user;
         if (user == null) throw AuthException('Google sign-in failed');
-        return UserModel.fromFirebase(user);
+      }
+
+      // Check if user document exists, create if not
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (!userDoc.exists) {
+        // Create user document if it doesn't exist
+        final userModel = UserModel.fromFirebase(user);
+        final userData = userModel.toJson();
+        userData['createdAt'] = Timestamp.fromDate(userModel.createdAt);
+        userData['updatedAt'] = Timestamp.fromDate(userModel.updatedAt);
+        userData['lastActive'] = FieldValue.serverTimestamp();
+
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userModel.id)
+            .set(userData);
+
+        return userModel;
+      } else {
+        // Update lastActive and return existing user
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .update({'lastActive': FieldValue.serverTimestamp()});
+
+        return await getUserFromFirestore(user);
       }
     } on FirebaseAuthException catch (e) {
       throw AuthException(_mapFirebaseAuthCode(e));
@@ -132,7 +233,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       throw AuthException('Failed to send password reset email');
     }
   }
-  
+
   String _getPasswordResetErrorMessage(FirebaseAuthException e) {
     switch (e.code) {
       case 'user-not-found':

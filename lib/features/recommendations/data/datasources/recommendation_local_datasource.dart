@@ -1,4 +1,4 @@
-import 'package:hive/hive.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:logger/logger.dart';
 import 'package:makan_mate/features/recommendations/data/models/recommendation_models.dart';
 

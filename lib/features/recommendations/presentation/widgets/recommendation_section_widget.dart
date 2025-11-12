@@ -6,7 +6,9 @@ import 'package:makan_mate/features/recommendations/presentation/bloc/recommenda
 import 'package:makan_mate/features/recommendations/presentation/bloc/recommendation_state.dart';
 import 'package:makan_mate/features/recommendations/presentation/pages/recommendations_page.dart';
 import 'package:makan_mate/features/recommendations/presentation/widgets/recommendation_card.dart';
-import 'package:makan_mate/services/food_service.dart';
+import 'package:makan_mate/core/di/injection_container.dart' as di;
+import 'package:makan_mate/features/food/domain/usecases/get_food_item_usecase.dart';
+import 'package:makan_mate/features/food/data/models/food_models.dart';
 
 /// Reusable widget for displaying AI recommendations
 /// 
@@ -177,7 +179,7 @@ class RecommendationSectionWidget extends StatelessWidget {
               width: 300,
               margin: const EdgeInsets.only(right: 16),
               child: FutureBuilder<FoodItem?>(
-                future: FoodService().getFoodItem(recommendation.itemId),
+                future: _getFoodItem(recommendation.itemId),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return Card(
@@ -215,7 +217,7 @@ class RecommendationSectionWidget extends StatelessWidget {
         final recommendation = recommendations[index];
 
         return FutureBuilder<FoodItem?>(
-          future: FoodService().getFoodItem(recommendation.itemId),
+          future: _getFoodItem(recommendation.itemId),
           builder: (context, snapshot) {
             if (!snapshot.hasData) {
               return const Card(
@@ -373,6 +375,16 @@ class RecommendationSectionWidget extends StatelessWidget {
         content: Text('Added to bookmarks'),
         duration: Duration(seconds: 2),
       ),
+    );
+  }
+
+  /// Get food item using use case
+  Future<FoodItem?> _getFoodItem(String itemId) async {
+    final getFoodItemUseCase = di.sl<GetFoodItemUseCase>();
+    final result = await getFoodItemUseCase(itemId);
+    return result.fold(
+      (failure) => null,
+      (entity) => entity.toFoodItem(),
     );
   }
 }

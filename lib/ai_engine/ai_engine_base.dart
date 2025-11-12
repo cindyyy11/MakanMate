@@ -94,6 +94,31 @@ abstract class AIEngineBase {
     _logger.i('AI model disposed');
   }
   
+  /// Set interpreter (for loading from file)
+  void setInterpreter(Interpreter interpreter) {
+    _interpreter = interpreter;
+    
+    // Get tensor information
+    _inputShapes = [];
+    _outputShapes = [];
+    _inputTypes = [];
+    _outputTypes = [];
+    
+    for (int i = 0; i < _interpreter!.getInputTensors().length; i++) {
+      _inputShapes!.add(_interpreter!.getInputTensor(i).shape);
+      _inputTypes!.add(_interpreter!.getInputTensor(i).type);
+    }
+    
+    for (int i = 0; i < _interpreter!.getOutputTensors().length; i++) {
+      _outputShapes!.add(_interpreter!.getOutputTensor(i).shape);
+      _outputTypes!.add(_interpreter!.getOutputTensor(i).type);
+    }
+    
+    _logger.i('Model loaded successfully');
+    _logger.i('Input shapes: $_inputShapes');
+    _logger.i('Output shapes: $_outputShapes');
+  }
+  
   // Getters for subclasses
   Interpreter? get interpreter => _interpreter;
   List<List<int>>? get inputShapes => _inputShapes;

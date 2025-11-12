@@ -7,6 +7,8 @@ import 'package:makan_mate/features/auth/data/datasources/auth_remote_datasource
 import 'package:makan_mate/features/auth/data/models/user_models.dart';
 import 'package:makan_mate/features/auth/domain/entities/user_entity.dart';
 import 'package:makan_mate/features/auth/domain/repositories/auth_repository.dart';
+import 'package:makan_mate/services/activity_log_service.dart';
+import 'package:makan_mate/services/metrics_service.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
@@ -24,6 +26,7 @@ class AuthRepositoryImpl implements AuthRepository {
     return UserEntity(
       id: model.id,
       email: model.email,
+      role: model.role,
       displayName: model.name,
       photoUrl: model.profileImageUrl,
       isAnonymous: false, // UserModel doesn't support anonymous users
@@ -45,6 +48,11 @@ class AuthRepositoryImpl implements AuthRepository {
         password,
       );
       await localDataSource.cacheUser(user);
+
+      // ✅ Call infrastructure services from Repository (Data layer)
+      await ActivityLogService().logUserSignIn(user.id, user.name);
+      await MetricsService().updateUserActivity(user.id);
+
       return Right(_toUserEntity(user));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
@@ -62,6 +70,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required String email,
     required String password,
     String? displayName,
+    String role = 'user',
   }) async {
     if (!await networkInfo.isConnected) {
       return const Left(NetworkFailure('No internet connection'));
@@ -71,8 +80,14 @@ class AuthRepositoryImpl implements AuthRepository {
         email,
         password,
         displayName,
+        role,
       );
       await localDataSource.cacheUser(user);
+
+      // ✅ Call infrastructure services from Repository (Data layer)
+      await ActivityLogService().logUserSignUp(user.id, user.name);
+      await MetricsService().updateUserActivity(user.id);
+
       return Right(_toUserEntity(user));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
@@ -93,6 +108,11 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final user = await remoteDataSource.signInWithGoogle();
       await localDataSource.cacheUser(user);
+
+      // ✅ Call infrastructure services from Repository (Data layer)
+      await ActivityLogService().logUserSignIn(user.id, user.name);
+      await MetricsService().updateUserActivity(user.id);
+
       return Right(_toUserEntity(user));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));

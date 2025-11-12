@@ -2,7 +2,7 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:makan_mate/core/base_model.dart';
 import 'package:makan_mate/features/auth/data/models/user_models.dart';
-
+import 'package:makan_mate/features/food/domain/entities/food_entity.dart';
 
 part 'food_models.g.dart';
 
@@ -115,4 +115,73 @@ class FoodItem extends BaseModel {
     isGlutenFree, nutritionalInfo, ingredients, restaurantLocation,
     averageRating, totalRatings, totalOrders, metadata, createdAt, updatedAt,
   ];
+}
+
+// ============================================================================
+// Clean Architecture Extensions
+// ============================================================================
+
+/// Extension to convert FoodItem to FoodEntity (Domain layer)
+extension FoodItemToEntity on FoodItem {
+  /// Convert FoodItem to FoodEntity
+  FoodEntity toEntity() {
+    return FoodEntity(
+      id: id,
+      name: name,
+      description: description,
+      restaurantId: restaurantId,
+      imageUrls: imageUrls,
+      categories: categories,
+      cuisineType: cuisineType,
+      price: price,
+      spiceLevel: spiceLevel,
+      isHalal: isHalal,
+      isVegetarian: isVegetarian,
+      isVegan: isVegan,
+      isGlutenFree: isGlutenFree,
+      nutritionalInfo: nutritionalInfo,
+      ingredients: ingredients,
+      restaurantLocation: restaurantLocation,
+      averageRating: averageRating,
+      totalRatings: totalRatings,
+      totalOrders: totalOrders,
+      metadata: metadata,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    );
+  }
+}
+
+/// Type alias for clarity (FoodModel = FoodItem in data layer)
+typedef FoodModel = FoodItem;
+
+/// Extension to convert FoodEntity back to FoodItem (for AI engine compatibility)
+extension FoodEntityToFoodItem on FoodEntity {
+  /// Convert FoodEntity back to FoodItem
+  FoodItem toFoodItem() {
+    return FoodItem(
+      id: id,
+      name: name,
+      description: description,
+      restaurantId: restaurantId,
+      imageUrls: imageUrls,
+      categories: categories,
+      cuisineType: cuisineType,
+      price: price,
+      spiceLevel: spiceLevel,
+      isHalal: isHalal,
+      isVegetarian: isVegetarian,
+      isVegan: isVegan,
+      isGlutenFree: isGlutenFree,
+      nutritionalInfo: nutritionalInfo,
+      ingredients: ingredients,
+      restaurantLocation: restaurantLocation,
+      averageRating: averageRating,
+      totalRatings: totalRatings,
+      totalOrders: totalOrders,
+      metadata: metadata,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    );
+  }
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:makan_mate/core/constants/ui_constants.dart';
 import 'package:makan_mate/core/theme/app_colors.dart';
 
 class MyTextfield extends StatelessWidget {

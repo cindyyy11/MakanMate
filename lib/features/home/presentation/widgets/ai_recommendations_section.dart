@@ -6,7 +6,9 @@ import 'package:makan_mate/features/recommendations/domain/entities/recommendati
 import 'package:makan_mate/features/recommendations/presentation/bloc/recommendation_bloc.dart';
 import 'package:makan_mate/features/recommendations/presentation/bloc/recommendation_event.dart';
 import 'package:makan_mate/features/recommendations/presentation/bloc/recommendation_state.dart';
-import 'package:makan_mate/services/food_service.dart';
+import 'package:makan_mate/core/di/injection_container.dart' as di;
+import 'package:makan_mate/features/food/domain/usecases/get_food_item_usecase.dart';
+import 'package:makan_mate/features/food/data/models/food_models.dart';
 import 'package:makan_mate/core/theme/app_colors.dart';
 import 'package:makan_mate/core/constants/ui_constants.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -23,7 +25,7 @@ class AIRecommendationsSection extends StatefulWidget {
 }
 
 class _AIRecommendationsSectionState extends State<AIRecommendationsSection> {
-  final FoodService _foodService = FoodService();
+  final GetFoodItemUseCase _getFoodItemUseCase = di.sl<GetFoodItemUseCase>();
 
   @override
   void initState() {
@@ -163,7 +165,7 @@ class _AIRecommendationsSectionState extends State<AIRecommendationsSection> {
     final user = FirebaseAuth.instance.currentUser;
 
     return FutureBuilder<FoodItem?>(
-      future: _foodService.getFoodItem(recommendation.itemId),
+      future: _getFoodItem(recommendation.itemId),
       builder: (context, snapshot) {
         if (!snapshot.hasData || snapshot.data == null) {
           return _buildLoadingCard();
@@ -453,5 +455,14 @@ class _AIRecommendationsSectionState extends State<AIRecommendationsSection> {
 
   Widget _buildEmptyState() {
     return const SizedBox.shrink();
+  }
+
+  /// Get food item using use case
+  Future<FoodItem?> _getFoodItem(String itemId) async {
+    final result = await _getFoodItemUseCase(itemId);
+    return result.fold(
+      (failure) => null,
+      (entity) => entity.toFoodItem(),
+    );
   }
 }

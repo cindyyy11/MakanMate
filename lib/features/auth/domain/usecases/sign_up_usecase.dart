@@ -5,18 +5,20 @@ import 'package:makan_mate/features/auth/domain/repositories/auth_repository.dar
 
 class SignUpUseCase {
   final AuthRepository repository;
-  
+
   SignUpUseCase(this.repository);
-  
+
   Future<Either<Failure, UserEntity>> call({
     required String email,
     required String password,
     String? displayName,
+    String role = 'user',
   }) async {
     return await repository.signUpWithEmailPassword(
       email: email,
       password: password,
       displayName: displayName,
+      role: role,
     );
   }
 }

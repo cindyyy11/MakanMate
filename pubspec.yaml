@@ -64,6 +64,17 @@ dependencies:
     http: ^1.5.0
     dio: ^5.9.0
     json_annotation: ^4.9.0
+    
+    # Charts & Visualization
+    fl_chart: ^0.69.0
+    
+    # PDF Generation
+    pdf: ^3.11.1
+    printing: ^5.13.3
+    
+    # File Export
+    file_picker: ^8.1.2
+    open_filex: ^4.7.0
 
     # Location & Maps
     geolocator: ^14.0.2
@@ -88,9 +99,6 @@ dependencies:
     flutter_bloc: ^9.1.1
     equatable: ^2.0.7
     bloc: ^9.1.0
-    riverpod: ^2.6.1
-    provider: ^6.1.5+1
-    flutter_riverpod: ^2.6.1
 
     # Voice & Audio
     speech_to_text: ^7.3.0

@@ -1,14 +1,15 @@
 import 'package:dartz/dartz.dart';
 import 'package:makan_mate/core/errors/failures.dart';
 import 'package:makan_mate/features/recommendations/domain/entities/recommendation_entity.dart';
+import 'package:makan_mate/features/recommendations/domain/entities/user_interaction_entity.dart';
 
 /// Repository interface for recommendation operations
-/// 
+///
 /// Following clean architecture principles, this defines the contract
 /// that the data layer must implement
 abstract class RecommendationRepository {
   /// Get personalized recommendations for a user
-  /// 
+  ///
   /// Returns [Right<List<RecommendationEntity>>] on success
   /// Returns [Left<Failure>] on error
   Future<Either<Failure, List<RecommendationEntity>>> getRecommendations({
@@ -18,7 +19,8 @@ abstract class RecommendationRepository {
   });
 
   /// Get recommendations based on specific context
-  Future<Either<Failure, List<RecommendationEntity>>> getContextualRecommendations({
+  Future<Either<Failure, List<RecommendationEntity>>>
+  getContextualRecommendations({
     required String userId,
     required RecommendationContextEntity context,
     int limit = 10,
@@ -49,5 +51,16 @@ abstract class RecommendationRepository {
   Future<Either<Failure, Map<String, dynamic>>> getRecommendationStats({
     required String userId,
   });
-}
 
+  /// Get user interactions (for building recommendation profiles)
+  Future<Either<Failure, List<UserInteractionEntity>>> getUserInteractions({
+    required String userId,
+    int limit = 100,
+  });
+
+  /// Get item interactions (for collaborative filtering)
+  Future<Either<Failure, List<UserInteractionEntity>>> getItemInteractions({
+    required String itemId,
+    int limit = 100,
+  });
+}

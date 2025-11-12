@@ -30,6 +30,7 @@ Map<String, dynamic> _$RecommendationItemToJson(RecommendationItem instance) =>
 
 UserInteraction _$UserInteractionFromJson(Map<String, dynamic> json) =>
     UserInteraction(
+      id: json['id'] as String,
       userId: json['userId'] as String,
       itemId: json['itemId'] as String,
       interactionType: json['interactionType'] as String,
@@ -40,6 +41,7 @@ UserInteraction _$UserInteractionFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$UserInteractionToJson(UserInteraction instance) =>
     <String, dynamic>{
+      'id': instance.id,
       'userId': instance.userId,
       'itemId': instance.itemId,
       'interactionType': instance.interactionType,

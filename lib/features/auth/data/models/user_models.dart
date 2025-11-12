@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:makan_mate/core/base_model.dart';
+import 'package:makan_mate/features/user/domain/entities/user_entity.dart';
 
 part 'user_models.g.dart';
 
@@ -10,6 +11,7 @@ class UserModel extends BaseModel {
   final String id;
   final String name;
   final String email;
+  final String role;
   final String? profileImageUrl;
   final List<String> dietaryRestrictions;
   final Map<String, double> cuisinePreferences;
@@ -24,6 +26,7 @@ class UserModel extends BaseModel {
     required this.id,
     required this.name,
     required this.email,
+    this.role = 'user',
     this.profileImageUrl,
     this.dietaryRestrictions = const [],
     this.cuisinePreferences = const {},
@@ -39,7 +42,24 @@ class UserModel extends BaseModel {
       _$UserModelFromJson(json);
 
   @override
-  Map<String, dynamic> toJson() => _$UserModelToJson(this);
+  //Nested object needs to be JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'email': email,
+      'role': role,
+      'profileImageUrl': profileImageUrl,
+      'dietaryRestrictions': dietaryRestrictions,
+      'cuisinePreferences': cuisinePreferences,
+      'spiceTolerance': spiceTolerance,
+      'culturalBackground': culturalBackground,
+      'currentLocation': currentLocation.toJson(),
+      'behaviorPatterns': behaviorPatterns,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
+  }
 
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
@@ -48,7 +68,7 @@ class UserModel extends BaseModel {
 
   /// Create UserModel from Firebase Auth User
   /// Uses default values for fields not available in Firebase Auth
-  factory UserModel.fromFirebase(User user) {
+  factory UserModel.fromFirebase(User user, {String role = 'user'}) {
     final now = DateTime.now();
     // Default location: Kuala Lumpur, Malaysia (central location)
     const defaultLocation = Location(
@@ -73,6 +93,7 @@ class UserModel extends BaseModel {
       id: user.uid,
       name: user.displayName ?? email.split('@').first,
       email: email,
+      role: role,
       profileImageUrl: user.photoURL,
       dietaryRestrictions: const [],
       cuisinePreferences: const {},
@@ -122,6 +143,7 @@ class UserModel extends BaseModel {
     String? id,
     String? name,
     String? email,
+    String? role,
     String? profileImageUrl,
     List<String>? dietaryRestrictions,
     Map<String, double>? cuisinePreferences,
@@ -136,6 +158,7 @@ class UserModel extends BaseModel {
       id: id ?? this.id,
       name: name ?? this.name,
       email: email ?? this.email,
+      role: role ?? this.role,
       profileImageUrl: profileImageUrl ?? this.profileImageUrl,
       dietaryRestrictions: dietaryRestrictions ?? this.dietaryRestrictions,
       cuisinePreferences: cuisinePreferences ?? this.cuisinePreferences,
@@ -244,4 +267,52 @@ class UserInteraction extends BaseModel {
     context,
     timestamp,
   ];
+}
+
+// ============================================================================
+// Clean Architecture Extensions
+// ============================================================================
+
+/// Extension to convert UserModel to UserEntity (Domain layer)
+extension UserModelToEntity on UserModel {
+  /// Convert UserModel to UserEntity
+  UserEntity toEntity() {
+    return UserEntity(
+      id: id,
+      name: name,
+      email: email,
+      role: role,
+      profileImageUrl: profileImageUrl,
+      dietaryRestrictions: dietaryRestrictions,
+      cuisinePreferences: cuisinePreferences,
+      spiceTolerance: spiceTolerance,
+      culturalBackground: culturalBackground,
+      currentLocation: currentLocation,
+      behaviorPatterns: behaviorPatterns,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    );
+  }
+}
+
+/// Extension to convert UserEntity to UserModel
+extension UserEntityToModel on UserEntity {
+  /// Convert UserEntity to UserModel
+  UserModel toModel() {
+    return UserModel(
+      id: id,
+      name: name,
+      email: email,
+      role: role,
+      profileImageUrl: profileImageUrl,
+      dietaryRestrictions: dietaryRestrictions,
+      cuisinePreferences: cuisinePreferences,
+      spiceTolerance: spiceTolerance,
+      culturalBackground: culturalBackground,
+      currentLocation: currentLocation,
+      behaviorPatterns: behaviorPatterns,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    );
+  }
 }

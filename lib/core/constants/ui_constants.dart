@@ -131,3 +131,4 @@ class UIConstants {
   static const SizedBox gapLg = SizedBox(width: spacingLg, height: spacingLg);
   static const SizedBox gapXl = SizedBox(width: spacingXl, height: spacingXl);
 }
+

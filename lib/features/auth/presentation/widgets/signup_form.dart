@@ -1,6 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:makan_mate/services/auth_service.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:makan_mate/features/auth/presentation/bloc/auth_event.dart';
+import 'package:makan_mate/features/auth/presentation/bloc/auth_state.dart';
 
 class SignUpForm extends StatefulWidget {
   const SignUpForm({super.key});
@@ -15,10 +18,9 @@ class _SignUpFormState extends State<SignUpForm> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final AuthService _authService = AuthService();
+  String _selectedRole = 'user';
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
-  bool _isLoading = false;
   bool _agreeToTerms = false;
 
   @override
@@ -32,135 +34,171 @@ class _SignUpFormState extends State<SignUpForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Form(
-      key: _formKey,
-      child: Column(
-        children: [
-          // Name field
-          _buildGlassTextField(
-            controller: _nameController,
-            hintText: 'Full Name',
-            icon: Icons.person_outline,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your name';
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is Authenticated) {
+          if (mounted) {
+            _showSnackBar('Account created successfully!', isError: false);
+            // Navigate back to login after short delay
+            Future.delayed(const Duration(seconds: 1), () {
+              if (mounted) {
+                Navigator.pop(context);
               }
-              if (value.length < 2) {
-                return 'Name must be at least 2 characters';
-              }
-              return null;
-            },
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Email field
-          _buildGlassTextField(
-            controller: _emailController,
-            hintText: 'Email',
-            icon: Icons.email_outlined,
-            keyboardType: TextInputType.emailAddress,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your email';
-              }
-              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                return 'Please enter a valid email';
-              }
-              return null;
-            },
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Password field
-          _buildGlassTextField(
-            controller: _passwordController,
-            hintText: 'Password',
-            icon: Icons.lock_outline,
-            obscureText: !_isPasswordVisible,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your password';
-              }
-              if (value.length < 6) {
-                return 'Password must be at least 6 characters';
-              }
-              return null;
-            },
-            suffixIcon: IconButton(
-              icon: Icon(
-                _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
-                color: Colors.grey[700],
-              ),
-              onPressed: () {
-                setState(() {
-                  _isPasswordVisible = !_isPasswordVisible;
-                });
+            });
+          }
+        } else if (state is AuthError) {
+          if (mounted) {
+            _showSnackBar(state.message, isError: true);
+          }
+        }
+      },
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            // Name field
+            _buildGlassTextField(
+              controller: _nameController,
+              hintText: 'Full Name',
+              icon: Icons.person_outline,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your name';
+                }
+                if (value.length < 2) {
+                  return 'Name must be at least 2 characters';
+                }
+                return null;
               },
             ),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Confirm Password field
-          _buildGlassTextField(
-            controller: _confirmPasswordController,
-            hintText: 'Confirm Password',
-            icon: Icons.lock_outline,
-            obscureText: !_isConfirmPasswordVisible,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please confirm your password';
-              }
-              if (value != _passwordController.text) {
-                return 'Passwords do not match';
-              }
-              return null;
-            },
-            suffixIcon: IconButton(
-              icon: Icon(
-                _isConfirmPasswordVisible ? Icons.visibility_off : Icons.visibility,
-                color: Colors.grey[700],
-              ),
-              onPressed: () {
-                setState(() {
-                  _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
-                });
+
+            const SizedBox(height: 16),
+
+            // Email field
+            _buildGlassTextField(
+              controller: _emailController,
+              hintText: 'Email',
+              icon: Icons.email_outlined,
+              keyboardType: TextInputType.emailAddress,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your email';
+                }
+                if (!RegExp(
+                  r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                ).hasMatch(value)) {
+                  return 'Please enter a valid email';
+                }
+                return null;
               },
             ),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Terms and conditions checkbox
-          _buildTermsCheckbox(),
-          
-          const SizedBox(height: 24),
-          
-          // Sign up button
-          _buildGlassButton(
-            onPressed: (_isLoading || !_agreeToTerms) ? null : _handleSignUp,
-            child: _isLoading
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
-                    ),
-                  )
-                : const Text(
-                    'Sign Up',
-                    style: TextStyle(
-                      color: Colors.black87,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
-                    ),
-                  ),
-          ),
-        ],
+
+            const SizedBox(height: 16),
+
+            // Password field
+            _buildGlassTextField(
+              controller: _passwordController,
+              hintText: 'Password',
+              icon: Icons.lock_outline,
+              obscureText: !_isPasswordVisible,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your password';
+                }
+                if (value.length < 6) {
+                  return 'Password must be at least 6 characters';
+                }
+                return null;
+              },
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                  color: Colors.grey[700],
+                ),
+                onPressed: () {
+                  setState(() {
+                    _isPasswordVisible = !_isPasswordVisible;
+                  });
+                },
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Confirm Password field
+            _buildGlassTextField(
+              controller: _confirmPasswordController,
+              hintText: 'Confirm Password',
+              icon: Icons.lock_outline,
+              obscureText: !_isConfirmPasswordVisible,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please confirm your password';
+                }
+                if (value != _passwordController.text) {
+                  return 'Passwords do not match';
+                }
+                return null;
+              },
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _isConfirmPasswordVisible
+                      ? Icons.visibility_off
+                      : Icons.visibility,
+                  color: Colors.grey[700],
+                ),
+                onPressed: () {
+                  setState(() {
+                    _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                  });
+                },
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Role Select
+            _buildRoleSelector(),
+
+            const SizedBox(height: 16),
+            // Terms and conditions checkbox
+            _buildTermsCheckbox(),
+
+            const SizedBox(height: 24),
+
+            // Sign up button
+            BlocBuilder<AuthBloc, AuthState>(
+              builder: (context, state) {
+                final isLoading = state is AuthLoading;
+                return _buildGlassButton(
+                  onPressed: (isLoading || !_agreeToTerms)
+                      ? null
+                      : _handleSignUp,
+                  child: isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.orange,
+                            ),
+                          ),
+                        )
+                      : const Text(
+                          'Sign Up',
+                          style: TextStyle(
+                            color: Colors.black87,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -192,20 +230,11 @@ class _SignUpFormState extends State<SignUpForm> {
             obscureText: obscureText,
             keyboardType: keyboardType,
             validator: validator,
-            style: const TextStyle(
-              color: Colors.black87,
-              fontSize: 16,
-            ),
+            style: const TextStyle(color: Colors.black87, fontSize: 16),
             decoration: InputDecoration(
               hintText: hintText,
-              hintStyle: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 16,
-              ),
-              prefixIcon: Icon(
-                icon,
-                color: Colors.grey[700],
-              ),
+              hintStyle: TextStyle(color: Colors.grey[600], fontSize: 16),
+              prefixIcon: Icon(icon, color: Colors.grey[700]),
               suffixIcon: suffixIcon,
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(
@@ -259,10 +288,7 @@ class _SignUpFormState extends State<SignUpForm> {
             child: Text.rich(
               TextSpan(
                 text: 'I agree to the ',
-                style: TextStyle(
-                  color: Colors.grey[800],
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: Colors.grey[800], fontSize: 12),
                 children: [
                   TextSpan(
                     text: 'Terms & Conditions',
@@ -274,9 +300,7 @@ class _SignUpFormState extends State<SignUpForm> {
                   ),
                   TextSpan(
                     text: ' and ',
-                    style: TextStyle(
-                      color: Colors.grey[800],
-                    ),
+                    style: TextStyle(color: Colors.grey[800]),
                   ),
                   TextSpan(
                     text: 'Privacy Policy',
@@ -295,12 +319,101 @@ class _SignUpFormState extends State<SignUpForm> {
     );
   }
 
+  Widget _buildRoleSelector() {
+    final roles = ['user', 'vendor'];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Select your role:',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Column(
+          children: roles.map((role) {
+            final isSelected = _selectedRole == role;
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedRole = role;
+                });
+              },
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: isSelected
+                        ? Colors.orange.withValues(alpha: 0.7)
+                        : Colors.white.withValues(alpha: 0.5),
+                    width: 1.5,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    // Custom Radio Circle
+                    Container(
+                      height: 18,
+                      width: 18,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected
+                              ? Colors.orange.withValues(alpha: 0.8)
+                              : Colors.grey.withValues(alpha: 0.4),
+                          width: 2,
+                        ),
+                      ),
+                      child: isSelected
+                          ? Center(
+                              child: Container(
+                                height: 10,
+                                width: 10,
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withValues(alpha: 0.8),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            )
+                          : null,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      role[0].toUpperCase() + role.substring(1),
+                      style: TextStyle(
+                        color: Colors.black87,
+                        fontSize: 13,
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
   Widget _buildGlassButton({
     required VoidCallback? onPressed,
     required Widget child,
   }) {
     final isDisabled = onPressed == null;
-    
+
     return Container(
       width: double.infinity,
       height: 56,
@@ -355,46 +468,15 @@ class _SignUpFormState extends State<SignUpForm> {
       return;
     }
 
-    setState(() => _isLoading = true);
-
-    try {
-      // Use your AuthService
-      await _authService.signUpWithEmail(
+    // ✅ Use BLoC instead of AuthService
+    context.read<AuthBloc>().add(
+      SignUpRequested(
         email: _emailController.text.trim(),
         password: _passwordController.text,
-        name: _nameController.text.trim(),
-      );
-
-      if (mounted) {
-        _showSnackBar('Account created successfully!', isError: false);
-        
-        // Navigate back to login after short delay
-        await Future.delayed(const Duration(seconds: 2));
-        if (mounted) {
-          Navigator.pop(context);
-        }
-      }
-    } catch (e) {
-      String message = 'An error occurred';
-      
-      if (e.toString().contains('email-already-in-use')) {
-        message = 'This email is already registered';
-      } else if (e.toString().contains('invalid-email')) {
-        message = 'Invalid email address';
-      } else if (e.toString().contains('weak-password')) {
-        message = 'Password is too weak';
-      } else {
-        message = 'Sign up failed. Please try again.';
-      }
-
-      if (mounted) {
-        _showSnackBar(message, isError: true);
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
+        displayName: _nameController.text.trim(),
+        role: _selectedRole, // ✅ Pass selected role
+      ),
+    );
   }
 
   void _showSnackBar(String message, {required bool isError}) {
@@ -403,9 +485,7 @@ class _SignUpFormState extends State<SignUpForm> {
         content: Text(message),
         backgroundColor: isError ? Colors.red.shade400 : Colors.green.shade400,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }

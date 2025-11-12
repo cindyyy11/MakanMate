@@ -1,10 +1,12 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:makan_mate/core/theme/app_colors.dart';
 import 'package:makan_mate/core/constants/ui_constants.dart';
 import 'package:makan_mate/features/auth/presentation/widgets/signup_form.dart';
 import 'package:makan_mate/features/auth/presentation/widgets/social_auth_buttons.dart';
-import 'package:makan_mate/services/auth_service.dart';
+import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:makan_mate/features/auth/presentation/bloc/auth_event.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -18,8 +20,6 @@ class _SignUpPageState extends State<SignUpPage> with TickerProviderStateMixin {
   late AnimationController _slideController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
-  
-  final AuthService _authService = AuthService();
 
   @override
   void initState() {
@@ -361,30 +361,8 @@ class _SignUpPageState extends State<SignUpPage> with TickerProviderStateMixin {
     );
   }
 
-  Future<void> _handleGoogleSignUp() async {
-    try {
-      await _authService.signInWithGoogle();
-      // Navigation handled by auth state changes
-    } catch (e) {
-      if (mounted) {
-        _showErrorDialog('Google Sign-Up Failed', e.toString());
-      }
-    }
-  }
-
-  void _showErrorDialog(String title, String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
+  void _handleGoogleSignUp() {
+    // ✅ Use BLoC instead of AuthService
+    context.read<AuthBloc>().add(GoogleSignInRequested());
   }
 }
