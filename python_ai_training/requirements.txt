@@ -1,0 +1,26 @@
+# MakanMate AI Training Dependencies
+# Python 3.8+ required
+
+# Core ML libraries
+tensorflow
+numpy
+pandas
+scikit-learn
+
+# Firebase libraries
+firebase-admin
+google-cloud-firestore
+google-cloud-storage
+
+# Utilities
+python-dateutil
+pytz
+
+# Optional (for data visualization and analysis)
+matplotlib
+seaborn
+plotly
+
+# Optional (for Jupyter notebooks if you want to explore data)
+jupyter
+notebook
