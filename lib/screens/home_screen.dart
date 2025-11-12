@@ -13,6 +13,7 @@ import 'package:makan_mate/features/home/presentation/pages/categories_restauran
 import 'package:makan_mate/features/map/presentation/bloc/map_bloc.dart';
 import 'package:makan_mate/features/map/presentation/pages/map_page.dart';
 import 'package:makan_mate/features/map/presentation/bloc/map_event.dart' as map;
+import 'package:makan_mate/features/spinwheel/presentation/pages/spin_wheel_page.dart';
 
 
 class HomeScreen extends StatefulWidget {
@@ -66,9 +67,15 @@ class _HomeScreenState extends State<HomeScreen> {
               );
               break;
             case 2:
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Spin Wheel feature coming soon!')),
-              );
+              Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => BlocProvider.value(
+                  value: context.read<MapBloc>(), 
+                  child: const SpinWheelPage(),
+                ),
+              ),
+            );
               break;
             case 3:
               ScaffoldMessenger.of(context).showSnackBar(
@@ -250,12 +257,13 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       clipBehavior: Clip.hardEdge,
-      child: BlocProvider(
-        create: (_) => sl<MapBloc>()..add(map.LoadMapEvent()), 
+      child: BlocProvider.value(
+        value: context.read<MapBloc>()..add(map.LoadMapEvent()), 
         child: const MapPage(),
       ),
     );
   }
+
 
 
   Widget _buildCategoriesSection(List<RestaurantEntity> categories) {
