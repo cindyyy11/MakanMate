@@ -15,11 +15,13 @@ class VendorReviewsPage extends StatefulWidget {
 }
 
 class _VendorReviewsPageState extends State<VendorReviewsPage> {
+  // Local filter state
+  _ReviewFilter _selectedFilter = _ReviewFilter.latest;
+
   @override
   void initState() {
     super.initState();
-    // Load reviews when page is initialized
-    _loadReviews();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadReviews());
   }
 
   void _loadReviews() {
@@ -27,6 +29,30 @@ class _VendorReviewsPageState extends State<VendorReviewsPage> {
     if (user != null) {
       // Assuming vendorId == restaurantId
       context.read<VendorReviewBloc>().add(LoadVendorReviews(user.uid));
+    }
+  }
+
+  List<ReviewEntity> _applyFilter(List<ReviewEntity> reviews) {
+    switch (_selectedFilter) {
+      case _ReviewFilter.latest:
+        // Already sorted newest first by repository; ensure order
+        final sorted = [...reviews];
+        sorted.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        return sorted;
+      case _ReviewFilter.replied:
+        final replied = reviews
+            .where((r) => (r.vendorReplyText != null && r.vendorReplyText!.isNotEmpty))
+            .toList();
+        replied.sort((a, b) {
+          final aAt = a.vendorReplyAt ?? a.updatedAt;
+          final bAt = b.vendorReplyAt ?? b.updatedAt;
+          return bAt.compareTo(aAt);
+        });
+        return replied;
+      case _ReviewFilter.unreplied:
+        final unreplied = reviews.where((r) => r.vendorReplyText == null || r.vendorReplyText!.isEmpty).toList();
+        unreplied.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        return unreplied;
     }
   }
 
@@ -162,10 +188,22 @@ class _VendorReviewsPageState extends State<VendorReviewsPage> {
           }
         },
         builder: (context, state) {
-          if (state is VendorReviewLoading || state is VendorReviewInitial) {
-            return const Center(
-              child: CircularProgressIndicator(),
+          // Handle no signed-in user to avoid infinite spinner
+          final currentUser = FirebaseAuth.instance.currentUser;
+          if (currentUser == null) {
+            return _buildEmpty(
+              icon: Icons.person_off,
+              title: 'Not signed in',
+              subtitle: 'Sign in to view and manage reviews',
+              action: ElevatedButton(
+                onPressed: _loadReviews,
+                child: const Text('Retry'),
+              ),
             );
+          }
+
+          if (state is VendorReviewLoading || state is VendorReviewInitial) {
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (state is VendorReviewError) {
@@ -195,23 +233,21 @@ class _VendorReviewsPageState extends State<VendorReviewsPage> {
                   ? state.current
                   : <ReviewEntity>[];
 
-          if (reviews.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.star, size: 64, color: Colors.grey[400]),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No reviews yet',
-                    style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Customer reviews will appear here',
-                    style: TextStyle(color: Colors.grey[500]),
-                  ),
-                ],
+          final filtered = _applyFilter(reviews);
+
+          if (filtered.isEmpty) {
+            final emptySubtitle = _selectedFilter == _ReviewFilter.latest
+                ? 'There are no comments recently'
+                : _selectedFilter == _ReviewFilter.replied
+                    ? 'No replied reviews yet'
+                    : 'No reviews awaiting reply';
+            return _buildEmpty(
+              icon: Icons.star,
+              title: 'No reviews',
+              subtitle: emptySubtitle,
+              action: ElevatedButton(
+                onPressed: _loadReviews,
+                child: const Text('Refresh'),
               ),
             );
           }
@@ -230,6 +266,25 @@ class _VendorReviewsPageState extends State<VendorReviewsPage> {
                   ),
                 ),
               ),
+              // Filter Chips
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  children: [
+                    _buildFilterChip('Latest', _selectedFilter == _ReviewFilter.latest, () {
+                      setState(() => _selectedFilter = _ReviewFilter.latest);
+                    }),
+                    const SizedBox(width: 8),
+                    _buildFilterChip('Replied', _selectedFilter == _ReviewFilter.replied, () {
+                      setState(() => _selectedFilter = _ReviewFilter.replied);
+                    }),
+                    const SizedBox(width: 8),
+                    _buildFilterChip('Unreplied', _selectedFilter == _ReviewFilter.unreplied, () {
+                      setState(() => _selectedFilter = _ReviewFilter.unreplied);
+                    }),
+                  ],
+                ),
+              ),
               // Reviews List
               Expanded(
                 child: RefreshIndicator(
@@ -237,9 +292,9 @@ class _VendorReviewsPageState extends State<VendorReviewsPage> {
                     _loadReviews();
                   },
                   child: ListView.builder(
-                    itemCount: reviews.length,
+                    itemCount: filtered.length,
                     itemBuilder: (context, index) {
-                      final review = reviews[index];
+                      final review = filtered[index];
                       return ReviewCard(
                         review: review,
                         onReply: review.vendorReplyText == null
@@ -257,4 +312,41 @@ class _VendorReviewsPageState extends State<VendorReviewsPage> {
       ),
     );
   }
+
+  // Helpers
+  Widget _buildFilterChip(String label, bool selected, VoidCallback onTap) {
+    return ChoiceChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: (_) => onTap(),
+      selectedColor: Colors.orange,
+      labelStyle: TextStyle(color: selected ? Colors.white : Colors.black87),
+    );
+  }
+
+  Widget _buildEmpty({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    Widget? action,
+  }) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 64, color: Colors.grey[400]),
+          const SizedBox(height: 16),
+          Text(title, style: TextStyle(fontSize: 18, color: Colors.grey[600])),
+          const SizedBox(height: 8),
+          Text(subtitle, style: TextStyle(color: Colors.grey[500])),
+          if (action != null) ...[
+            const SizedBox(height: 12),
+            action,
+          ],
+        ],
+      ),
+    );
+  }
 }
+
+enum _ReviewFilter { latest, replied, unreplied }

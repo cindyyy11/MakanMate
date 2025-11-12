@@ -31,11 +31,27 @@ class VendorReviewBloc extends Bloc<VendorReviewEvent, VendorReviewState> {
   ) {
     emit(VendorReviewLoading());
     _subscription?.cancel();
+
+    try {
     _subscription = watchReviews(event.restaurantId).listen(
-      (reviews) => emit(VendorReviewLoaded(reviews)),
-      onError: (e) => emit(VendorReviewError(e.toString())),
+      (reviews) {
+        // ✅ Always emit something — even empty list
+        emit(VendorReviewLoaded(reviews));
+      },
+      onError: (e) {
+        emit(VendorReviewError(e.toString()));
+      },
+      onDone: () {
+        // Optional: handle stream closed
+        if (state is! VendorReviewLoaded) {
+          emit(const VendorReviewLoaded([]));
+        }
+      },
     );
+  } catch (e) {
+    emit(VendorReviewError(e.toString()));
   }
+}
 
   Future<void> _onReply(
     ReplyToVendorReview event,

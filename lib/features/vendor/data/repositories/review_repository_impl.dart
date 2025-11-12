@@ -12,15 +12,17 @@ class ReviewRepositoryImpl implements ReviewRepository {
       : firestore = firestore ?? BaseService.firestore;
 
   @override
-  Stream<List<ReviewEntity>> watchRestaurantReviews(String restaurantId) {
+  Stream<List<ReviewEntity>> watchRestaurantReviews(String restaurantId) async* {
     // Query without orderBy to avoid index requirement, then sort manually
-    return firestore
+    yield [];
+
+    yield* firestore
         .collection(reviewsCollection)
         .where('restaurantId', isEqualTo: restaurantId)
         .snapshots()
         .map((snap) {
+          print('Fetched ${snap.docs.length} reviews for $restaurantId');
           final reviews = snap.docs.map(_mapDocToEntity).toList();
-          // Sort by createdAt descending (newest first)
           reviews.sort((a, b) => b.createdAt.compareTo(a.createdAt));
           return reviews;
         });
