@@ -9,7 +9,7 @@ import 'package:makan_mate/features/map/presentation/bloc/map_bloc.dart';
 import 'package:makan_mate/features/map/presentation/pages/map_page.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -290,8 +290,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildFoodCard(RestaurantEntity food) {
-    final imageUrl = food.image?.isNotEmpty == true
-        ? food.image!
+    final imageUrl = food.image.isNotEmpty == true
+        ? food.image
         : 'assets/images/logos/image-not-found.jpg'; // fallback
 
     return Container(
@@ -341,7 +341,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       const Icon(Icons.star, color: Colors.amber, size: 16),
                       const SizedBox(width: 4),
-                      Text(food.rating?.toStringAsFixed(1) ?? '-', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                      Text(food.rating.toStringAsFixed(1) ?? '-', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
                       const Spacer(),
                       Text(food.priceRange ?? '-', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange)),
                     ],

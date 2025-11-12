@@ -53,18 +53,13 @@ class PromotionBloc extends Bloc<PromotionEvent, PromotionState> {
       FilterPromotionsByStatusEvent event, Emitter emit) async {
     emit(PromotionLoading());
     try {
-      List<PromotionEntity> filtered;
-      
-      if (event.status == null) {
-        // Load all promotions
-        filtered = await getPromotions();
-      } else {
-        // Load by status
-        filtered = await getPromotionsByStatus(event.status!);
-      }
-      
+      // Always fetch latest promotions first
+      final promotions = await getPromotions();
+
+      final filtered = _applyStatusFilter(promotions, event.status);
+
       emit(PromotionLoaded(
-        filtered,
+        promotions,
         filteredPromotions: filtered,
         selectedStatus: event.status,
       ));
@@ -171,6 +166,39 @@ class PromotionBloc extends Bloc<PromotionEvent, PromotionState> {
       add(LoadPromotionsEvent());
     } catch (e) {
       emit(PromotionError('Failed to deactivate promotion.'));
+    }
+  }
+
+  List<PromotionEntity> _applyStatusFilter(
+    List<PromotionEntity> promotions,
+    String? status,
+  ) {
+    if (status == null) return promotions;
+
+    switch (status) {
+      case 'active':
+        return promotions.where((promotion) => promotion.isActive).toList();
+      case 'expired':
+        return promotions.where((promotion) => promotion.isExpired).toList();
+      case 'pending':
+        return promotions
+            .where((promotion) => promotion.status == PromotionStatus.pending)
+            .toList();
+      case 'approved':
+        return promotions
+            .where((promotion) => promotion.status == PromotionStatus.approved)
+            .toList();
+      case 'rejected':
+        return promotions
+            .where((promotion) => promotion.status == PromotionStatus.rejected)
+            .toList();
+      case 'deactivated':
+        return promotions
+            .where(
+                (promotion) => promotion.status == PromotionStatus.deactivated)
+            .toList();
+      default:
+        return promotions;
     }
   }
 }

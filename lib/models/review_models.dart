@@ -18,6 +18,8 @@ class Review extends BaseModel {
   final int helpfulCount;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final String? vendorReplyText;
+  final DateTime? vendorReplyAt;
 
   const Review({
     required this.id,
@@ -32,6 +34,8 @@ class Review extends BaseModel {
     this.helpfulCount = 0,
     required this.createdAt,
     required this.updatedAt,
+    this.vendorReplyText,
+    this.vendorReplyAt,
   });
 
   factory Review.fromJson(Map<String, dynamic> json) => _$ReviewFromJson(json);
@@ -41,7 +45,27 @@ class Review extends BaseModel {
 
   factory Review.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-    return Review.fromJson({'id': doc.id, ...data});
+    final vendorReply = data['vendorReply'] as Map<String, dynamic>?;
+    
+    // Convert Firestore data to JSON format
+    final jsonData = {
+      'id': doc.id,
+      ...data,
+    };
+    
+    // Handle vendorReply if it exists
+    if (vendorReply != null) {
+      jsonData['vendorReplyText'] = vendorReply['text'];
+      if (vendorReply['createdAt'] != null) {
+        if (vendorReply['createdAt'] is Timestamp) {
+          jsonData['vendorReplyAt'] = (vendorReply['createdAt'] as Timestamp).toDate().toIso8601String();
+        } else {
+          jsonData['vendorReplyAt'] = vendorReply['createdAt'];
+        }
+      }
+    }
+    
+    return Review.fromJson(jsonData);
   }
 
   @override
@@ -58,5 +82,7 @@ class Review extends BaseModel {
     helpfulCount,
     createdAt,
     updatedAt,
+    vendorReplyText,
+    vendorReplyAt,
   ];
 }

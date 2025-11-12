@@ -204,7 +204,9 @@ class _AddEditPromotionPageState extends State<AddEditPromotionPage> {
     return BlocListener<PromotionBloc, PromotionState>(
       listener: (context, state) {
         if (state is PromotionLoaded) {
-          Navigator.pop(context);
+          if (Navigator.canPop(context)) {
+            Navigator.pop(context);
+          }
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
@@ -320,7 +322,7 @@ class _AddEditPromotionPageState extends State<AddEditPromotionPage> {
                     IgnorePointer(
                       ignoring: isLoading,
                       child: DropdownButtonFormField<PromotionType>(
-                        value: _selectedType,
+                        initialValue: _selectedType,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),

@@ -126,7 +126,9 @@ class _AddEditMenuPageState extends State<AddEditMenuPage> {
     return BlocListener<VendorBloc, VendorState>(
       listener: (context, state) {
         if (state is VendorLoaded) {
-          Navigator.pop(context);
+          if (Navigator.canPop(context)) {
+            Navigator.pop(context);
+          }
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
@@ -368,7 +370,7 @@ class _AddEditMenuPageState extends State<AddEditMenuPage> {
                                         _isAvailable = value;
                                       });
                                     },
-                              activeColor: Colors.orange[700],
+                              activeThumbColor: Colors.orange[700],
                             ),
                           ],
                         ),

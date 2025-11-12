@@ -26,39 +26,46 @@ class _PromotionManagementPageState extends State<PromotionManagementPage> {
   }
 
   void _navigateToAddEditPage({PromotionEntity? promotion}) {
+    // Capture the existing bloc from the current page's context
+    final bloc = context.read<PromotionBloc>();
+
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => BlocProvider.value(
-          value: context.read<PromotionBloc>(),
+        // Use a different parameter name or `_` to avoid shadowing the
+        // outer context. Pass the captured bloc instance forward.
+        builder: (_) => BlocProvider.value(
+          value: bloc,
           child: AddEditPromotionPage(promotion: promotion),
         ),
       ),
     ).then((_) {
       // Refresh promotions after returning
-      context.read<PromotionBloc>().add(LoadPromotionsEvent());
+      bloc.add(LoadPromotionsEvent());
     });
   }
 
   void _handleDeactivate(String promotionId) {
+    // Capture bloc from the current widget context so the dialog builder
+    // doesn't try to read from a context without the provider.
+    final bloc = context.read<PromotionBloc>();
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Deactivate Promotion'),
         content: const Text(
           'Are you sure you want to deactivate this promotion?',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () {
-              context
-                  .read<PromotionBloc>()
-                  .add(DeactivatePromotionEvent(promotionId));
-              Navigator.pop(context);
+              bloc.add(DeactivatePromotionEvent(promotionId));
+              Navigator.pop(dialogContext);
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Deactivate'),
@@ -93,14 +100,6 @@ class _PromotionManagementPageState extends State<PromotionManagementPage> {
                 backgroundColor: Colors.red,
               ),
             );
-          } else if (state is PromotionLoaded) {
-            // Show success message when promotion is deactivated
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Promotion deactivated successfully'),
-                backgroundColor: Colors.green,
-              ),
-            );
           }
         },
         child: BlocBuilder<PromotionBloc, PromotionState>(
@@ -118,41 +117,92 @@ class _PromotionManagementPageState extends State<PromotionManagementPage> {
                   // Filter Buttons
                   Padding(
                     padding: const EdgeInsets.all(16),
-                    child: Row(
+                    child: Column(
                       children: [
-                        Expanded(
-                          child: _buildFilterButton(
-                            'Active',
-                            selectedStatus == 'active',
-                            Colors.green,
-                            () {
-                              context.read<PromotionBloc>().add(
-                                    FilterPromotionsByStatusEvent('active'),
-                                  );
-                            },
-                          ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildFilterButton(
+                                'All',
+                                selectedStatus == null,
+                                Colors.blue,
+                                () {
+                                  context.read<PromotionBloc>().add(
+                                        FilterPromotionsByStatusEvent(null),
+                                      );
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildFilterButton(
+                                'Pending',
+                                selectedStatus == 'pending',
+                                Colors.orange,
+                                () {
+                                  context.read<PromotionBloc>().add(
+                                        FilterPromotionsByStatusEvent('pending'),
+                                      );
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildFilterButton(
+                                'Active',
+                                selectedStatus == 'active',
+                                Colors.green,
+                                () {
+                                  context.read<PromotionBloc>().add(
+                                        FilterPromotionsByStatusEvent('active'),
+                                      );
+                                },
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildFilterButton(
-                            'Expired',
-                            selectedStatus == 'expired',
-                            Colors.grey,
-                            () {
-                              context.read<PromotionBloc>().add(
-                                    FilterPromotionsByStatusEvent('expired'),
-                                  );
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildFilterButton(
-                            'Create',
-                            false,
-                            Colors.grey,
-                            () => _navigateToAddEditPage(),
-                          ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildFilterButton(
+                                'Approved',
+                                selectedStatus == 'approved',
+                                Colors.blue,
+                                () {
+                                  context.read<PromotionBloc>().add(
+                                        FilterPromotionsByStatusEvent('approved'),
+                                      );
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildFilterButton(
+                                'Rejected',
+                                selectedStatus == 'rejected',
+                                Colors.red,
+                                () {
+                                  context.read<PromotionBloc>().add(
+                                        FilterPromotionsByStatusEvent('rejected'),
+                                      );
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildFilterButton(
+                                'Expired',
+                                selectedStatus == 'expired',
+                                Colors.grey,
+                                () {
+                                  context.read<PromotionBloc>().add(
+                                        FilterPromotionsByStatusEvent('expired'),
+                                      );
+                                },
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),

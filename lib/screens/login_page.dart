@@ -7,7 +7,6 @@ import '../components/my_textfield.dart';
 import '../components/loginpage_button.dart';
 import '../components/square_tile.dart';
 import 'signup_page.dart';
-import 'package:google_sign_in/google_sign_in.dart' as g;
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});

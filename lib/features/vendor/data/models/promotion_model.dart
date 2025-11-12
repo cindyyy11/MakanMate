@@ -21,6 +21,15 @@ class PromotionModel extends PromotionEntity {
   });
 
   factory PromotionModel.fromMap(Map<String, dynamic> map) {
+    DateTime _parseDate(dynamic value, {DateTime? fallback}) {
+      try {
+        if (value is Timestamp) return value.toDate();
+        if (value is DateTime) return value;
+        if (value is String) return DateTime.parse(value);
+      } catch (_) {}
+      return fallback ?? DateTime.fromMillisecondsSinceEpoch(0);
+    }
+
     return PromotionModel(
       id: map['id'] ?? '',
       title: map['title'] ?? '',
@@ -32,11 +41,11 @@ class PromotionModel extends PromotionEntity {
       buyQuantity: map['buyQuantity'],
       getQuantity: map['getQuantity'],
       imageUrl: map['imageUrl'] ?? '',
-      startDate: (map['startDate'] as Timestamp).toDate(),
-      expiryDate: (map['expiryDate'] as Timestamp).toDate(),
-      createdAt: (map['createdAt'] as Timestamp).toDate(),
+      startDate: _parseDate(map['startDate'], fallback: DateTime.now()),
+      expiryDate: _parseDate(map['expiryDate'], fallback: DateTime.now()),
+      createdAt: _parseDate(map['createdAt'], fallback: DateTime.now()),
       approvedAt: map['approvedAt'] != null
-          ? (map['approvedAt'] as Timestamp).toDate()
+          ? _parseDate(map['approvedAt'])
           : null,
       approvedBy: map['approvedBy'],
     );
@@ -63,6 +72,8 @@ class PromotionModel extends PromotionEntity {
         return PromotionStatus.pending;
       case 'approved':
         return PromotionStatus.approved;
+      case 'rejected':
+        return PromotionStatus.rejected;
       case 'active':
         return PromotionStatus.active;
       case 'expired':
@@ -113,6 +124,8 @@ class PromotionModel extends PromotionEntity {
         return 'pending';
       case PromotionStatus.approved:
         return 'approved';
+      case PromotionStatus.rejected:
+        return 'rejected';
       case PromotionStatus.active:
         return 'active';
       case PromotionStatus.expired:

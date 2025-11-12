@@ -34,6 +34,12 @@ import '../../features/vendor/domain/usecases/delete_promotion_usecase.dart';
 import '../../features/vendor/domain/usecases/deactivate_promotion_usecase.dart';
 import '../../features/vendor/presentation/bloc/vendor_bloc.dart';
 import '../../features/vendor/presentation/bloc/promotion_bloc.dart';
+import '../../features/vendor/presentation/bloc/vendor_review_bloc.dart';
+import '../../features/vendor/data/repositories/review_repository_impl.dart';
+import '../../features/vendor/domain/repositories/review_repository.dart';
+import '../../features/vendor/domain/usecases/watch_vendor_reviews_usecase.dart';
+import '../../features/vendor/domain/usecases/reply_to_review_usecase.dart';
+import '../../features/vendor/domain/usecases/report_review_usecase.dart';
 
 final sl = GetIt.instance;
 
@@ -115,5 +121,20 @@ Future<void> init() async {
       deletePromotion: sl(),
       deactivatePromotion: sl(),
       storageService: sl(),
+    ));
+
+    // Review Feature
+    sl.registerLazySingleton<ReviewRepository>(
+      () => ReviewRepositoryImpl(),
+    );
+
+    sl.registerLazySingleton(() => WatchVendorReviewsUseCase(sl()));
+    sl.registerLazySingleton(() => ReplyToReviewUseCase(sl()));
+    sl.registerLazySingleton(() => ReportReviewUseCase(sl()));
+
+    sl.registerFactory(() => VendorReviewBloc(
+      watchReviews: sl(),
+      replyToReview: sl(),
+      reportReview: sl(),
     ));
 }

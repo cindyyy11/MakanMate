@@ -8,6 +8,7 @@ enum PromotionType {
 enum PromotionStatus {
   pending, // Waiting for admin approval
   approved, // Approved by admin
+  rejected, // Rejected by admin
   active, // Currently active
   expired, // Past expiry date
   deactivated, // Manually deactivated by vendor

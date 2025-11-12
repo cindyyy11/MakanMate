@@ -4,7 +4,7 @@ import 'package:makan_mate/components/logo_theme.dart';
 import 'package:makan_mate/components/searchbar.dart';
 
 class HomePage extends StatefulWidget {
-  HomePage({Key? key}) : super(key: key);
+  HomePage({super.key});
 
     final user = FirebaseAuth.instance.currentUser;
 

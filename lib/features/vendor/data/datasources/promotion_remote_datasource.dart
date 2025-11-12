@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/promotion_model.dart';
+import '../../domain/entities/promotion_entity.dart';
 
 abstract class PromotionRemoteDataSource {
   Future<List<PromotionModel>> getPromotions(String vendorId);
@@ -36,70 +37,94 @@ class PromotionRemoteDataSourceImpl implements PromotionRemoteDataSource {
   @override
   Future<List<PromotionModel>> getPromotionsByStatus(
       String vendorId, String status) async {
-    QuerySnapshot snapshot;
-    
-    if (status == 'active') {
-      // Active promotions: status is 'active' and not expired
-      final now = Timestamp.now();
-      snapshot = await firestore
-          .collection('vendors')
-          .doc(vendorId)
-          .collection('promotions')
-          .where('status', isEqualTo: 'active')
-          .where('expiryDate', isGreaterThan: now)
-          .orderBy('expiryDate')
-          .orderBy('createdAt', descending: true)
-          .get();
-    } else if (status == 'expired') {
-      // Expired promotions: past expiry date or status is expired
-      final now = Timestamp.now();
-      snapshot = await firestore
-          .collection('vendors')
-          .doc(vendorId)
-          .collection('promotions')
-          .where('expiryDate', isLessThan: now)
-          .orderBy('expiryDate', descending: true)
-          .get();
-    } else {
-      // Other statuses (pending, approved, deactivated)
-      snapshot = await firestore
-          .collection('vendors')
-          .doc(vendorId)
-          .collection('promotions')
-          .where('status', isEqualTo: status)
-          .orderBy('createdAt', descending: true)
-          .get();
-    }
+    // Use simple server-side filters (single-field) to avoid composite index requirements.
+    final col = firestore
+        .collection('vendors')
+        .doc(vendorId)
+        .collection('promotions');
 
-    return snapshot.docs
-        .map((doc) {
-          final data = doc.data() as Map<String, dynamic>? ?? {};
-          return PromotionModel.fromMap({
-            'id': doc.id,
-            ...data,
-          });
-        })
-        .toList();
+    final nowTs = Timestamp.fromDate(DateTime.now());
+
+    if (status == 'active') {
+      // Query by expiryDate only, filter status client-side to avoid composite index.
+      final snapshot = await col
+          .where('expiryDate', isGreaterThan: nowTs)
+          .get();
+
+      final items = snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>? ?? {};
+        return PromotionModel.fromMap({'id': doc.id, ...data});
+      }).toList();
+
+      final filtered = items.where((promo) {
+        final s = _statusToString(promo.status);
+        return s == 'active' || s == 'approved';
+      }).toList();
+
+      // Sort by expiry date ascending, then createdAt desc
+      filtered.sort((a, b) {
+        final cmp = a.expiryDate.compareTo(b.expiryDate);
+        if (cmp != 0) return cmp;
+        return b.createdAt.compareTo(a.createdAt);
+      });
+      return filtered;
+    } else if (status == 'expired') {
+      // Query by expiryDate only, then filter to include explicit expired status too.
+      final snapshot = await col
+          .where('expiryDate', isLessThan: nowTs)
+          .get();
+
+      final items = snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>? ?? {};
+        return PromotionModel.fromMap({'id': doc.id, ...data});
+      }).toList();
+
+      final filtered = items.where((promo) {
+        final s = _statusToString(promo.status);
+        return promo.expiryDate.isBefore(DateTime.now()) || s == 'expired';
+      }).toList();
+      filtered.sort((a, b) => b.expiryDate.compareTo(a.expiryDate));
+      return filtered;
+    } else {
+      // Single equality filter; sort client-side to avoid composite index.
+      final snapshot = await col
+          .where('status', isEqualTo: status)
+          .get();
+
+      final items = snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>? ?? {};
+        return PromotionModel.fromMap({'id': doc.id, ...data});
+      }).toList();
+
+      items.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return items;
+    }
   }
 
   @override
   Future<void> addPromotion(String vendorId, PromotionModel promotion) async {
+    // Create promotion map with vendorId
+    final promotionMap = promotion.toMap();
+    promotionMap.remove('id'); // Remove id as Firestore will generate it
+    
     // Add to vendor's promotions collection
-    await firestore
+    final docRef = await firestore
         .collection('vendors')
         .doc(vendorId)
         .collection('promotions')
-        .add(promotion.toMap());
+        .add(promotionMap);
     
-    // Also add to admin approval queue
-    final promotionMap = promotion.toMap();
-    promotionMap['vendorId'] = vendorId;
-    promotionMap['submittedAt'] = Timestamp.now();
+    // Also add to admin approval queue with the generated ID
+    final adminPromotionMap = Map<String, dynamic>.from(promotionMap);
+    adminPromotionMap['vendorId'] = vendorId;
+    adminPromotionMap['promotionId'] = docRef.id; // Link to vendor's promotion
+    adminPromotionMap['status'] = 'pending'; // Ensure status is pending
+    adminPromotionMap['submittedAt'] = Timestamp.now();
     await firestore
         .collection('admin')
         .doc('approvals')
         .collection('promotions')
-        .add(promotionMap);
+        .add(adminPromotionMap);
   }
 
   @override
@@ -132,6 +157,23 @@ class PromotionRemoteDataSourceImpl implements PromotionRemoteDataSource {
         .update({
       'status': 'deactivated',
     });
+  }
+
+  String _statusToString(PromotionStatus status) {
+    switch (status) {
+      case PromotionStatus.pending:
+        return 'pending';
+      case PromotionStatus.approved:
+        return 'approved';
+      case PromotionStatus.rejected:
+        return 'rejected';
+      case PromotionStatus.active:
+        return 'active';
+      case PromotionStatus.expired:
+        return 'expired';
+      case PromotionStatus.deactivated:
+        return 'deactivated';
+    }
   }
 }
 

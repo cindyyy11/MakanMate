@@ -11,12 +11,12 @@ class FoodItemCard extends StatefulWidget {
   final VoidCallback onBookmark;
 
   const FoodItemCard({
-    Key? key,
+    super.key,
     required this.recommendationItem,
     required this.onTap,
     required this.onLike,
     required this.onBookmark,
-  }) : super(key: key);
+  });
 
   @override
   State<FoodItemCard> createState() => _FoodItemCardState();

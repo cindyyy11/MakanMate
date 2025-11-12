@@ -201,7 +201,7 @@ class FoodService extends BaseService {
       final nameQuery = await BaseService.firestore
           .collection(FOOD_COLLECTION)
           .where('name', isGreaterThanOrEqualTo: searchQuery)
-          .where('name', isLessThan: searchQuery + 'z')
+          .where('name', isLessThan: '${searchQuery}z')
           .limit(50)
           .get();
 
@@ -287,14 +287,17 @@ class FoodService extends BaseService {
   // Get reviews for item
   Future<List<Review>> getItemReviews(String itemId) async {
     try {
+      // Query without orderBy to avoid index requirement, then sort manually
       final query = await BaseService.firestore
           .collection(REVIEWS_COLLECTION)
           .where('itemId', isEqualTo: itemId)
-          .orderBy('createdAt', descending: true)
           .limit(100)
           .get();
 
-      return query.docs.map((doc) => Review.fromFirestore(doc)).toList();
+      final reviews = query.docs.map((doc) => Review.fromFirestore(doc)).toList();
+      // Sort by createdAt descending (newest first)
+      reviews.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return reviews;
     } catch (e) {
       BaseService.logger.e('Error getting item reviews: $e');
       return [];

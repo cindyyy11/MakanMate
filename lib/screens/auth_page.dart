@@ -2,11 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:makan_mate/core/utils/role_router.dart';
-import 'package:makan_mate/core/di/injection_container.dart' as di;
 import 'package:makan_mate/features/vendor/presentation/pages/vendor_navigation_wrapper.dart';
 import 'package:makan_mate/features/vendor/presentation/bloc/vendor_bloc.dart';
-import 'package:makan_mate/features/vendor/presentation/bloc/promotion_bloc.dart';
-import 'package:makan_mate/features/vendor/presentation/bloc/promotion_event.dart';
+import 'package:makan_mate/features/admin/presentation/pages/admin_promotion_approval_page.dart';
 import 'package:makan_mate/screens/home_screen.dart';
 import '../screens/login_page.dart';
 
@@ -37,12 +35,11 @@ class AuthPage extends StatelessWidget {
                   return MultiBlocProvider(
                     providers: [
                       BlocProvider.value(value: context.read<VendorBloc>()),
-                      BlocProvider(
-                        create: (_) => di.sl<PromotionBloc>()..add(LoadPromotionsEvent()),
-                      ),
                     ],
                     child: const VendorNavigationWrapper(),
                   );
+                } else if (role == 'admin') {
+                  return const AdminPromotionApprovalPage();
                 } else {
                   return const HomeScreen();
                 }

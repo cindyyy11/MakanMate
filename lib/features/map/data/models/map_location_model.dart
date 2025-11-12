@@ -2,18 +2,12 @@ import '../../domain/entities/map_location_entity.dart';
 
 class MapLocationModel extends MapLocationEntity {
   MapLocationModel({
-    required String id,
-    required String name,
-    required String address,
-    required double latitude,
-    required double longitude,
-  }) : super(
-          id: id,
-          name: name,
-          address: address,
-          latitude: latitude,
-          longitude: longitude,
-        );
+    required super.id,
+    required super.name,
+    required super.address,
+    required super.latitude,
+    required super.longitude,
+  });
 
   factory MapLocationModel.fromJson(Map<String, dynamic> json) {
     return MapLocationModel(

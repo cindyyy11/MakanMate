@@ -18,7 +18,6 @@ class PromotionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('MMM dd, yyyy');
-    final isActive = promotion.status == PromotionStatus.active;
     final isExpired = promotion.isExpired;
 
     return Card(
@@ -69,23 +68,32 @@ class PromotionCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                // Status indicator
-                Row(
-                  children: [
-                    Icon(
-                      isActive ? Icons.check_circle : Icons.cancel,
-                      color: isActive ? Colors.green : Colors.grey,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      isActive ? 'Active' : (isExpired ? 'Expired' : promotion.status.name),
-                      style: TextStyle(
-                        color: isActive ? Colors.green : Colors.grey,
-                        fontWeight: FontWeight.w500,
+                // Status indicator with better colors
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(promotion.status, isExpired),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _getStatusIcon(promotion.status, isExpired),
+                        color: Colors.white,
+                        size: 16,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 4),
+                      Text(
+                        _getStatusText(promotion.status, isExpired),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -218,6 +226,60 @@ class PromotionCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Color _getStatusColor(PromotionStatus status, bool isExpired) {
+    if (isExpired) return Colors.grey;
+    switch (status) {
+      case PromotionStatus.pending:
+        return Colors.orange;
+      case PromotionStatus.approved:
+        return Colors.blue;
+      case PromotionStatus.active:
+        return Colors.green;
+      case PromotionStatus.rejected:
+        return Colors.red;
+      case PromotionStatus.deactivated:
+        return Colors.grey;
+      case PromotionStatus.expired:
+        return Colors.grey;
+    }
+  }
+
+  IconData _getStatusIcon(PromotionStatus status, bool isExpired) {
+    if (isExpired) return Icons.access_time;
+    switch (status) {
+      case PromotionStatus.pending:
+        return Icons.pending;
+      case PromotionStatus.approved:
+        return Icons.check_circle;
+      case PromotionStatus.active:
+        return Icons.check_circle;
+      case PromotionStatus.rejected:
+        return Icons.cancel;
+      case PromotionStatus.deactivated:
+        return Icons.block;
+      case PromotionStatus.expired:
+        return Icons.access_time;
+    }
+  }
+
+  String _getStatusText(PromotionStatus status, bool isExpired) {
+    if (isExpired) return 'Expired';
+    switch (status) {
+      case PromotionStatus.pending:
+        return 'Pending Approval';
+      case PromotionStatus.approved:
+        return 'Approved';
+      case PromotionStatus.active:
+        return 'Active';
+      case PromotionStatus.rejected:
+        return 'Rejected';
+      case PromotionStatus.deactivated:
+        return 'Deactivated';
+      case PromotionStatus.expired:
+        return 'Expired';
+    }
   }
 }
 

@@ -27,6 +27,10 @@ Review _$ReviewFromJson(Map<String, dynamic> json) => Review(
   helpfulCount: (json['helpfulCount'] as num?)?.toInt() ?? 0,
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: DateTime.parse(json['updatedAt'] as String),
+  vendorReplyText: json['vendorReplyText'] as String?,
+  vendorReplyAt: json['vendorReplyAt'] == null
+      ? null
+      : DateTime.parse(json['vendorReplyAt'] as String),
 );
 
 Map<String, dynamic> _$ReviewToJson(Review instance) => <String, dynamic>{
@@ -42,4 +46,6 @@ Map<String, dynamic> _$ReviewToJson(Review instance) => <String, dynamic>{
   'helpfulCount': instance.helpfulCount,
   'createdAt': instance.createdAt.toIso8601String(),
   'updatedAt': instance.updatedAt.toIso8601String(),
+  'vendorReplyText': instance.vendorReplyText,
+  'vendorReplyAt': instance.vendorReplyAt?.toIso8601String(),
 };

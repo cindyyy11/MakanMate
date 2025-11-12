@@ -44,7 +44,7 @@ Map<String, dynamic> _$UserModelToJson(UserModel instance) => <String, dynamic>{
   'cuisinePreferences': instance.cuisinePreferences,
   'spiceTolerance': instance.spiceTolerance,
   'culturalBackground': instance.culturalBackground,
-  'currentLocation': instance.currentLocation,
+  'currentLocation': instance.currentLocation.toJson(),
   'behaviorPatterns': instance.behaviorPatterns,
   'createdAt': instance.createdAt.toIso8601String(),
   'updatedAt': instance.updatedAt.toIso8601String(),
