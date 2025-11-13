@@ -24,10 +24,6 @@ class _MapPageState extends State<MapPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Nearby Restaurants'),
-        backgroundColor: Colors.orange,
-      ),
       body: BlocBuilder<MapBloc, MapState>(
         builder: (context, state) {
           if (state is MapLoading) {

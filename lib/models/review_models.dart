@@ -1,6 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:makan_mate/models/base_model.dart';
+import 'package:makan_mate/core/base_model.dart';
 
 part 'review_models.g.dart';
 
@@ -46,25 +46,24 @@ class Review extends BaseModel {
   factory Review.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     final vendorReply = data['vendorReply'] as Map<String, dynamic>?;
-    
+
     // Convert Firestore data to JSON format
-    final jsonData = {
-      'id': doc.id,
-      ...data,
-    };
-    
+    final jsonData = {'id': doc.id, ...data};
+
     // Handle vendorReply if it exists
     if (vendorReply != null) {
       jsonData['vendorReplyText'] = vendorReply['text'];
       if (vendorReply['createdAt'] != null) {
         if (vendorReply['createdAt'] is Timestamp) {
-          jsonData['vendorReplyAt'] = (vendorReply['createdAt'] as Timestamp).toDate().toIso8601String();
+          jsonData['vendorReplyAt'] = (vendorReply['createdAt'] as Timestamp)
+              .toDate()
+              .toIso8601String();
         } else {
           jsonData['vendorReplyAt'] = vendorReply['createdAt'];
         }
       }
     }
-    
+
     return Review.fromJson(jsonData);
   }
 

@@ -16,7 +16,13 @@ class MenuManagementPage extends StatefulWidget {
 
 class _MenuManagementPageState extends State<MenuManagementPage> {
   final TextEditingController _searchController = TextEditingController();
-  final List<String> _categories = ['All', 'Mains', 'Appetizers', 'Desserts', 'Drinks'];
+  final List<String> _categories = [
+    'All',
+    'Mains',
+    'Appetizers',
+    'Desserts',
+    'Drinks',
+  ];
 
   @override
   void initState() {
@@ -79,15 +85,14 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
         elevation: 0,
         title: const Text(
           'Menu Management',
-        style: TextStyle(
-          fontSize: 20, 
-          fontWeight: FontWeight.bold, 
-          color: Colors.black, 
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
         ),
-        ),
-        backgroundColor: Colors.orange, 
+        backgroundColor: Colors.orange,
         centerTitle: true, // optional: center the title
-        
       ),
       body: BlocListener<VendorBloc, VendorState>(
         listener: (context, state) {
@@ -102,7 +107,8 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
             // Show success message when item is deleted
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Menu item deleted successfully'),
+                // content: Text('Menu item deleted successfully'),
+                content: Text('No menu items found.'),
                 backgroundColor: Colors.green,
               ),
             );
@@ -133,7 +139,9 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
                                 icon: const Icon(Icons.clear),
                                 onPressed: () {
                                   _searchController.clear();
-                                  context.read<VendorBloc>().add(SearchMenuEvent(''));
+                                  context.read<VendorBloc>().add(
+                                    SearchMenuEvent(''),
+                                  );
                                 },
                               )
                             : null,
@@ -158,8 +166,11 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
                       itemCount: _categories.length,
                       itemBuilder: (context, index) {
                         final category = _categories[index];
-                        final isSelected = (category == 'All' && selectedCategory == null) ||
-                            (category != 'All' && selectedCategory?.toLowerCase() == category.toLowerCase());
+                        final isSelected =
+                            (category == 'All' && selectedCategory == null) ||
+                            (category != 'All' &&
+                                selectedCategory?.toLowerCase() ==
+                                    category.toLowerCase());
 
                         return Padding(
                           padding: const EdgeInsets.only(right: 8),
@@ -168,16 +179,18 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
                             selected: isSelected,
                             onSelected: (selected) {
                               context.read<VendorBloc>().add(
-                                    FilterByCategoryEvent(
-                                      category == 'All' ? null : category,
-                                    ),
-                                  );
+                                FilterByCategoryEvent(
+                                  category == 'All' ? null : category,
+                                ),
+                              );
                             },
                             selectedColor: Colors.orange[300],
                             checkmarkColor: Colors.white,
                             labelStyle: TextStyle(
                               color: isSelected ? Colors.white : Colors.black87,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                             ),
                           ),
                         );
@@ -194,11 +207,18 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.restaurant_menu, size: 64, color: Colors.grey[400]),
+                                Icon(
+                                  Icons.restaurant_menu,
+                                  size: 64,
+                                  color: Colors.grey[400],
+                                ),
                                 const SizedBox(height: 16),
                                 Text(
                                   'No menu items found.',
-                                  style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.grey[600],
+                                  ),
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
@@ -219,7 +239,8 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
                                 final item = menuItems[index];
                                 return MenuCard(
                                   item: item,
-                                  onEdit: () => _navigateToAddEditPage(item: item),
+                                  onEdit: () =>
+                                      _navigateToAddEditPage(item: item),
                                   onDelete: () => _handleDelete(item.id),
                                 );
                               },
@@ -254,9 +275,7 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
               );
             }
 
-            return const Center(
-              child: Text('Press + to add a menu item.'),
-            );
+            return const Center(child: Text('Press + to add a menu item.'));
           },
         ),
       ),
