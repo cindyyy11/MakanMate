@@ -1436,7 +1436,7 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
             // Certifications Section
             CertificationsSection(
               certifications: profile?.certifications ?? [],
-              isEditing: canEdit,
+              isEditing: false,
               isAdmin: false, // TODO: Check if user is admin
             ),
             const SizedBox(height: 32),

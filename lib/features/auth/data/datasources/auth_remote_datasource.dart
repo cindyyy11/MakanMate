@@ -162,11 +162,22 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           .set(userData);
 
       if (role == 'vendor') {
-        final vendorData = {'status': 'pending'};
-        await FirebaseFirestore.instance
+        final vendorRef = FirebaseFirestore.instance
             .collection('vendors')
-            .doc(userModel.id)
-            .set(vendorData);
+            .doc(userModel.id);
+
+        await vendorRef.set(
+          {
+            'ownerId': userModel.id,
+            'businessName': displayName ?? '',
+            'contactEmail': email,
+            'status': 'pending',
+            'approvalStatus': 'pending',
+            'createdAt': FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true),
+        );
       }
 
       await user.sendEmailVerification();

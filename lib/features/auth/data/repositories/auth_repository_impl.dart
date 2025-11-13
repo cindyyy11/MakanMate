@@ -86,6 +86,9 @@ class AuthRepositoryImpl implements AuthRepository {
 
       // ✅ Call infrastructure services from Repository (Data layer)
       await ActivityLogService().logUserSignUp(user.id, user.name);
+      if (user.role == 'vendor') {
+        await ActivityLogService().logVendorApplication(user.id, user.name);
+      }
       await MetricsService().updateUserActivity(user.id);
 
       return Right(_toUserEntity(user));

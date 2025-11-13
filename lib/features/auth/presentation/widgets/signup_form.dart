@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_event.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_state.dart';
+import 'package:makan_mate/features/vendor/presentation/pages/vendor_onboarding_page.dart';
 
 class SignUpForm extends StatefulWidget {
   const SignUpForm({super.key});
@@ -35,16 +36,24 @@ class _SignUpFormState extends State<SignUpForm> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
+      listener: (context, state) async {
         if (state is Authenticated) {
-          if (mounted) {
-            _showSnackBar('Account created successfully!', isError: false);
-            // Navigate back to login after short delay
-            Future.delayed(const Duration(seconds: 1), () {
-              if (mounted) {
-                Navigator.pop(context);
-              }
-            });
+          if (!mounted) return;
+          final isVendor = state.user.role == 'vendor';
+          _showSnackBar(
+            'Account created successfully!',
+            isError: false,
+          );
+
+          if (isVendor) {
+            await Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (_) => const VendorOnboardingPage(),
+              ),
+              (route) => route.isFirst,
+            );
+          } else {
+            Navigator.of(context).popUntil((route) => route.isFirst);
           }
         } else if (state is AuthError) {
           if (mounted) {

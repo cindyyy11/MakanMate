@@ -182,7 +182,7 @@ flutter:
     - assets/images/logos/
     # - assets/images/placeholders/
     # - assets/icons/
-    - assets/ml_models/
+    # - assets/ml_models/
     # - assets/lottie/
     - .env
 
