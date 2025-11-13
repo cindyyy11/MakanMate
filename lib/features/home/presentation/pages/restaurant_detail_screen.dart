@@ -6,37 +6,111 @@ class RestaurantDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final RestaurantEntity restaurant =
+    final RestaurantEntity r =
         ModalRoute.of(context)!.settings.arguments as RestaurantEntity;
 
+    final vendor = r.vendor;
+
+    final imageUrl = vendor.bannerImageUrl ??
+        vendor.businessLogoUrl ??
+        'assets/images/logos/image-not-found.jpg';
+
+    final rating = vendor.ratingAverage?.toStringAsFixed(1) ?? '-';
+
+    final hasHalal = vendor.certifications
+        .any((cert) => cert.type.toLowerCase() == "halal");
+
     return Scaffold(
-      appBar: AppBar(title: Text(restaurant.name)),
+      appBar: AppBar(
+        title: Text(vendor.businessName),
+        backgroundColor: Colors.orange,
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Image.network(restaurant.image, height: 200, width: double.infinity, fit: BoxFit.cover),
-            const SizedBox(height: 12),
-            Text(restaurant.name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            Text(restaurant.location, style: const TextStyle(color: Colors.grey)),
-            const SizedBox(height: 8),
-            Text("Cuisine: ${restaurant.cuisine}"),
-            Text("Price: ${restaurant.priceRange}"),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(Icons.star, color: Colors.amber),
-                Text(restaurant.rating.toString()),
-                if (restaurant.halal)
-                  const Padding(
-                    padding: EdgeInsets.only(left: 8),
-                    child: Text("Halal", style: TextStyle(color: Colors.green)),
-                  ),
-              ],
+            Image.network(
+              imageUrl,
+              height: 230,
+              width: double.infinity,
+              fit: BoxFit.cover,
             ),
-            const SizedBox(height: 16),
-            Text(restaurant.description),
+
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    vendor.businessName,
+                    style: const TextStyle(
+                        fontSize: 26, fontWeight: FontWeight.bold),
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  Text(
+                    vendor.businessAddress,
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  Text("Cuisine: ${vendor.cuisine ?? '-'}"),
+                  Text("Price Range: ${vendor.priceRange ?? '-'}"),
+
+                  const SizedBox(height: 12),
+
+                  Row(
+                    children: [
+                      const Icon(Icons.star,
+                          color: Colors.amber, size: 20),
+                      const SizedBox(width: 4),
+                      Text(rating),
+                      if (hasHalal)
+                        const Padding(
+                          padding: EdgeInsets.only(left: 8),
+                          child: Text(
+                            "Halal",
+                            style: TextStyle(
+                                color: Colors.green,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  Text(
+                    vendor.shortDescription,
+                    style: const TextStyle(fontSize: 16),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  const Text(
+                    "Menu Items",
+                    style:
+                        TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  Column(
+                    children: r.menuItems.map((m) {
+                      return ListTile(
+                        leading: CircleAvatar(
+                          backgroundImage: NetworkImage(m.imageUrl),
+                        ),
+                        title: Text(m.name),
+                        subtitle: Text(m.description),
+                        trailing: Text("RM ${m.price.toStringAsFixed(2)}"),
+                      );
+                    }).toList(),
+                  )
+                ],
+              ),
+            ),
           ],
         ),
       ),

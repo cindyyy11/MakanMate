@@ -1,23 +1,17 @@
-class RestaurantEntity {
-  final String id;
-  final String name;
-  final String cuisine;
-  final bool halal;
-  final double rating;
-  final String priceRange;
-  final String image;
-  final String location;
-  final String description;
+import '../../../vendor/domain/entities/vendor_profile_entity.dart';
 
-  RestaurantEntity({
-    required this.id,
-    required this.name,
-    required this.cuisine,
-    required this.halal,
-    required this.rating,
-    required this.priceRange,
-    required this.image,
-    required this.location,
-    required this.description,
+class RestaurantEntity {
+  final VendorProfileEntity vendor;
+  final List<MenuItemEntity> menuItems;
+  final String? cuisine;
+  final String? priceRange;
+  final double? ratingAverage;
+
+  const RestaurantEntity({
+    required this.vendor,
+    required this.menuItems,
+    this.cuisine,
+    this.priceRange,
+    this.ratingAverage,
   });
 }

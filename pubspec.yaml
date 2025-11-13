@@ -91,7 +91,7 @@ dependencies:
     flutter_riverpod: ^2.6.1
 
     # Voice & Audio
-    speech_to_text: ^7.3.0
+    # speech_to_text: ^7.3.0
     flutter_tts: ^4.2.3
 
     # Storage & Caching

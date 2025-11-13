@@ -1,0 +1,247 @@
+import 'package:equatable/equatable.dart';
+
+class VendorProfileEntity extends Equatable {
+  final String id;
+
+  // Images
+  final String? profilePhotoUrl;
+  final String? businessLogoUrl;
+  final String? bannerImageUrl;
+
+  // Business info
+  final String businessName;
+  final String contactNumber;
+  final String emailAddress;
+  final String businessAddress;
+  final String shortDescription;
+
+  // Restaurant-level info
+  final String? cuisine;
+  final String? priceRange;
+  final double? ratingAverage;
+
+  // Status
+  final String approvalStatus;
+
+  // Structure
+  final Map<String, OperatingHours> operatingHours;
+  final List<OutletEntity> outlets;
+  final List<CertificationEntity> certifications;
+
+  // Optionally attach menu items here if you want
+  final List<MenuItemEntity> menuItems;
+
+  // Timestamps
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  const VendorProfileEntity({
+    required this.id,
+    this.profilePhotoUrl,
+    this.businessLogoUrl,
+    this.bannerImageUrl,
+    required this.businessName,
+    required this.contactNumber,
+    required this.emailAddress,
+    required this.businessAddress,
+    required this.operatingHours,
+    required this.shortDescription,
+    this.cuisine,
+    this.priceRange,
+    this.ratingAverage,
+    this.approvalStatus = 'pending',
+    this.outlets = const [],
+    this.certifications = const [],
+    this.menuItems = const [],
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  VendorProfileEntity copyWith({
+    String? id,
+    String? profilePhotoUrl,
+    String? businessLogoUrl,
+    String? bannerImageUrl,
+    String? businessName,
+    String? contactNumber,
+    String? emailAddress,
+    String? businessAddress,
+    Map<String, OperatingHours>? operatingHours,
+    String? shortDescription,
+    String? cuisine,
+    String? priceRange,
+    double? ratingAverage,
+    String? approvalStatus,
+    List<OutletEntity>? outlets,
+    List<CertificationEntity>? certifications,
+    List<MenuItemEntity>? menuItems,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return VendorProfileEntity(
+      id: id ?? this.id,
+      profilePhotoUrl: profilePhotoUrl ?? this.profilePhotoUrl,
+      businessLogoUrl: businessLogoUrl ?? this.businessLogoUrl,
+      bannerImageUrl: bannerImageUrl ?? this.bannerImageUrl,
+      businessName: businessName ?? this.businessName,
+      contactNumber: contactNumber ?? this.contactNumber,
+      emailAddress: emailAddress ?? this.emailAddress,
+      businessAddress: businessAddress ?? this.businessAddress,
+      operatingHours: operatingHours ?? this.operatingHours,
+      shortDescription: shortDescription ?? this.shortDescription,
+      cuisine: cuisine ?? this.cuisine,
+      priceRange: priceRange ?? this.priceRange,
+      ratingAverage: ratingAverage ?? this.ratingAverage,
+      approvalStatus: approvalStatus ?? this.approvalStatus,
+      outlets: outlets ?? this.outlets,
+      certifications: certifications ?? this.certifications,
+      menuItems: menuItems ?? this.menuItems,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+        id,
+        profilePhotoUrl,
+        businessLogoUrl,
+        bannerImageUrl,
+        businessName,
+        contactNumber,
+        emailAddress,
+        businessAddress,
+        operatingHours,
+        shortDescription,
+        cuisine,
+        priceRange,
+        ratingAverage,
+        approvalStatus,
+        outlets,
+        certifications,
+        menuItems,
+        createdAt,
+        updatedAt,
+      ];
+}
+
+class CertificationEntity extends Equatable {
+  final String id;
+  final String type;
+  final String? certificateImageUrl;
+  final String? certificateNumber;
+  final DateTime? expiryDate;
+  final CertificationStatus status;
+  final String? verifiedBy;
+  final DateTime? verifiedAt;
+  final String? rejectionReason;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  const CertificationEntity({
+    required this.id,
+    required this.type,
+    this.certificateImageUrl,
+    this.certificateNumber,
+    this.expiryDate,
+    this.status = CertificationStatus.pending,
+    this.verifiedBy,
+    this.verifiedAt,
+    this.rejectionReason,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  @override
+  List<Object?> get props => [
+        id,
+        type,
+        certificateImageUrl,
+        certificateNumber,
+        expiryDate,
+        status,
+        verifiedBy,
+        verifiedAt,
+        rejectionReason,
+        createdAt,
+        updatedAt,
+      ];
+}
+
+enum CertificationStatus { pending, verified, rejected }
+
+class OperatingHours extends Equatable {
+  final String day;
+  final String? openTime;
+  final String? closeTime;
+  final bool isClosed;
+
+  const OperatingHours({
+    required this.day,
+    this.openTime,
+    this.closeTime,
+    this.isClosed = false,
+  });
+
+  @override
+  List<Object?> get props => [day, openTime, closeTime, isClosed];
+}
+
+class OutletEntity extends Equatable {
+  final String id;
+  final String name;
+  final String address;
+  final String contactNumber;
+  final Map<String, OperatingHours> operatingHours;
+  final double? latitude;
+  final double? longitude;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  const OutletEntity({
+    required this.id,
+    required this.name,
+    required this.address,
+    required this.contactNumber,
+    required this.operatingHours,
+    this.latitude,
+    this.longitude,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  @override
+  List<Object?> get props => [
+        id,
+        name,
+        address,
+        contactNumber,
+        operatingHours,
+        latitude,
+        longitude,
+        createdAt,
+        updatedAt,
+      ];
+}
+
+class MenuItemEntity {
+  final String id;
+  final String name;
+  final String description;
+  final String category;
+  final double price;
+  final String imageUrl;
+  final bool available;
+  final int calories;
+
+  const MenuItemEntity({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.category,
+    required this.price,
+    required this.imageUrl,
+    required this.available,
+    required this.calories,
+  });
+}

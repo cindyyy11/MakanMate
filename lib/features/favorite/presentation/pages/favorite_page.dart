@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:makan_mate/core/widgets/bottom_nav_widget.dart';
 import 'package:makan_mate/features/map/presentation/bloc/map_bloc.dart';
-import 'package:makan_mate/features/spinwheel/presentation/pages/spin_wheel_page.dart';
+import 'package:makan_mate/features/home/presentation/pages/spin_wheel_page.dart';
 import 'package:makan_mate/screens/home_screen.dart';
 
 class FavoritePage extends StatelessWidget {

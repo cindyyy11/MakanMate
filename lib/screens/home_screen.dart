@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:makan_mate/core/di/injection_container.dart';
 import 'package:makan_mate/core/widgets/bottom_nav_widget.dart';
 import 'package:makan_mate/features/favorite/presentation/pages/favorite_page.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_bloc.dart';
@@ -13,7 +12,7 @@ import 'package:makan_mate/features/home/presentation/pages/categories_restauran
 import 'package:makan_mate/features/map/presentation/bloc/map_bloc.dart';
 import 'package:makan_mate/features/map/presentation/pages/map_page.dart';
 import 'package:makan_mate/features/map/presentation/bloc/map_event.dart' as map;
-import 'package:makan_mate/features/spinwheel/presentation/pages/spin_wheel_page.dart';
+import 'package:makan_mate/features/home/presentation/pages/spin_wheel_page.dart';
 
 
 class HomeScreen extends StatefulWidget {
@@ -30,7 +29,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Trigger Firestore load
     context.read<HomeBloc>().add(LoadHomeDataEvent());
   }
 
@@ -285,7 +283,9 @@ class _HomeScreenState extends State<HomeScreen> {
             scrollDirection: Axis.horizontal,
             itemCount: categories.length,
             itemBuilder: (context, index) {
-              final cat = categories[index];
+              final restaurant = categories[index];
+              final cuisine = restaurant.vendor.cuisine ?? "Unknown";
+
               return Container(
                 width: 80,
                 margin: const EdgeInsets.only(right: 16),
@@ -295,13 +295,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       context,
                       MaterialPageRoute(
                         builder: (_) => BlocProvider.value(
-                          value: context.read<HomeBloc>(), 
-                          child: CategoryRestaurantPage(categoryName: cat.cuisine ?? 'Unknown'),
+                          value: context.read<HomeBloc>(),
+                          child: CategoryRestaurantPage(categoryName: cuisine),
                         ),
                       ),
                     );
                   },
-
                   child: Column(
                     children: [
                       Container(
@@ -311,16 +310,16 @@ class _HomeScreenState extends State<HomeScreen> {
                           color: Colors.orange.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: const Icon(Icons.fastfood, color: Colors.orange, size: 28),
+                        child: const Icon(Icons.fastfood, color: Colors.orange),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        cat.cuisine ?? 'Unknown',
+                        cuisine,
+                        textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                         ),
-                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),
@@ -372,10 +371,64 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildFavoriteButton(RestaurantEntity food) {
+    final vendor = food.vendor;
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('favorites')
+          .doc(FirebaseAuth.instance.currentUser?.uid)
+          .collection('items')
+          .doc(vendor.id)
+          .snapshots(),
+      builder: (context, snapshot) {
+        final isFavorited = snapshot.data?.exists ?? false;
+
+        return IconButton(
+          icon: Icon(
+            isFavorited ? Icons.favorite : Icons.favorite_border,
+            color: isFavorited ? Colors.red : Colors.grey,
+          ),
+          onPressed: () async {
+            final user = FirebaseAuth.instance.currentUser;
+            if (user == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Please log in to add favorites.')),
+              );
+              return;
+            }
+
+            final ref = FirebaseFirestore.instance
+                .collection('favorites')
+                .doc(user.uid)
+                .collection('items')
+                .doc(vendor.id);
+
+            if (isFavorited) {
+              await ref.delete();
+            } else {
+              await ref.set({
+                'id': vendor.id,
+                'name': vendor.businessName,
+                'cuisine': vendor.cuisine,
+                'rating': vendor.ratingAverage,
+                'priceRange': vendor.priceRange,
+                'image': vendor.businessLogoUrl,
+                'description': vendor.shortDescription,
+              });
+            }
+          },
+        );
+      },
+    );
+  }
+
   Widget _buildFoodCard(RestaurantEntity food) {
-    final imageUrl = food.image?.isNotEmpty == true
-        ? food.image!
-        : 'assets/images/logos/image-not-found.jpg'; // fallback
+    final vendor = food.vendor;
+
+    final image = vendor.businessLogoUrl?.isNotEmpty == true
+        ? vendor.businessLogoUrl!
+        : 'assets/images/logos/image-not-found.jpg';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -397,7 +450,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: Image.network(
-                imageUrl,
+                image,
                 width: 80,
                 height: 80,
                 fit: BoxFit.cover,
@@ -416,73 +469,45 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(food.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text(
+                    vendor.businessName,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  Text(food.description ?? '-', style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                  Text(
+                    vendor.shortDescription,
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
                       const Icon(Icons.star, color: Colors.amber, size: 16),
                       const SizedBox(width: 4),
-                      Text(food.rating?.toStringAsFixed(1) ?? '-', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                      Text(
+                        vendor.ratingAverage?.toStringAsFixed(1) ?? '-',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                       const Spacer(),
-                      Text(food.priceRange ?? '-', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange)),
+                      Text(
+                        vendor.priceRange ?? '-',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.orange,
+                        ),
+                      ),
                     ],
                   ),
                 ],
               ),
             ),
-            Column(
-              children: [
-                StreamBuilder<DocumentSnapshot>(
-                  stream: FirebaseFirestore.instance
-                      .collection('favorites')
-                      .doc(FirebaseAuth.instance.currentUser?.uid)
-                      .collection('items')
-                      .doc(food.name) // or food.id if available
-                      .snapshots(),
-                      builder: (context, snapshot) {
-                        final isFavorited = snapshot.data?.exists ?? false;
-
-                        return IconButton(
-                          icon: Icon(
-                            isFavorited ? Icons.favorite : Icons.favorite_border,
-                            color: isFavorited ? Colors.red : Colors.grey,
-                          ),
-                          onPressed: () async {
-                            final user = FirebaseAuth.instance.currentUser;
-                            if (user == null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Please log in to add favorites.')),
-                              );
-                              return;
-                            }
-
-                            final favRef = FirebaseFirestore.instance
-                                .collection('favorites')
-                                .doc(user.uid)
-                                .collection('items')
-                                .doc(food.name);
-
-                            if (isFavorited) {
-                              await favRef.delete();
-                            } else {
-                              await favRef.set({
-                                'id': food.name,
-                                'name': food.name,
-                                'cuisine': food.cuisine,
-                                'rating': food.rating,
-                                'priceRange': food.priceRange,
-                                'image': food.image,
-                                'description': food.description,
-                              });
-                            }
-                          },
-                        );
-                      },
-                    ),
-              ],
-            ),
+            _buildFavoriteButton(food),
           ],
         ),
       ),

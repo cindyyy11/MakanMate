@@ -16,12 +16,6 @@ class _MapPageState extends State<MapPage> {
   GoogleMapController? _controller;
 
   @override
-  void initState() {
-    super.initState();
-    context.read<MapBloc>().add(LoadMapEvent());
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: BlocBuilder<MapBloc, MapState>(

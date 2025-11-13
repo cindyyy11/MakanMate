@@ -1,31 +1,23 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../vendor/data/models/vendor_profile_model.dart';
+import '../../../vendor/data/models/menu_item_model.dart';
 import '../../domain/entities/restaurant_entity.dart';
 
-class RestaurantModel extends RestaurantEntity {
+class RestaurantModel {
+  final VendorProfileModel vendorModel;
+  final List<MenuItemModel> menuItemModels;
+
   RestaurantModel({
-    required super.id,
-    required super.name,
-    required super.cuisine,
-    required super.halal,
-    required super.rating,
-    required super.priceRange,
-    required super.image,
-    required super.location,
-    required super.description,
+    required this.vendorModel,
+    required this.menuItemModels,
   });
 
-  factory RestaurantModel.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    return RestaurantModel(
-      id: doc.id,
-      name: data['name'] ?? '',
-      cuisine: data['cuisine'] ?? '',
-      halal: data['halal'] ?? false,
-      rating: (data['rating'] ?? 0).toDouble(),
-      priceRange: data['priceRange'] ?? '',
-      image: data['image'] ?? '',
-      location: data['location'] ?? '',
-      description: data['description'] ?? '',
+  RestaurantEntity toEntity() {
+    return RestaurantEntity(
+      vendor: vendorModel.toEntity(),
+      menuItems: menuItemModels.map((m) => m.toEntity()).toList(),
+      cuisine: vendorModel.cuisine,
+      priceRange: vendorModel.priceRange,
+      ratingAverage: vendorModel.ratingAverage,
     );
   }
 }

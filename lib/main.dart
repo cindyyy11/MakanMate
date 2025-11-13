@@ -35,7 +35,7 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => di.sl<HomeBloc>()),
-        BlocProvider(create: (_) => di.sl<AuthBloc>()),
+        BlocProvider(create: (_) => AuthBloc()),
         BlocProvider(create: (_) => di.sl<MapBloc>()),
       ],
       child: MaterialApp(

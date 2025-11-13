@@ -3,17 +3,17 @@ import '../../domain/repositories/restaurant_repository.dart';
 import '../datasources/restaurant_remote_datasource.dart';
 
 class RestaurantRepositoryImpl implements RestaurantRepository {
-  final RestaurantRemoteDataSource remoteDataSource;
+  final RestaurantRemoteDataSource remote;
 
-  RestaurantRepositoryImpl(this.remoteDataSource);
+  RestaurantRepositoryImpl(this.remote);
 
   @override
-  Future<List<RestaurantEntity>> getCategories() async {
-    return await remoteDataSource.fetchCategories();
+  Future<List<RestaurantEntity>> getRestaurants() {
+    return remote.getRestaurants();
   }
 
   @override
-  Future<List<RestaurantEntity>> getRecommendations() async {
-    return await remoteDataSource.fetchRecommendations();
+  Future<RestaurantEntity> getRestaurantById(String id) {
+    return remote.getRestaurantById(id);
   }
 }

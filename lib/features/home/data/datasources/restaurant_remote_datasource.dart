@@ -1,36 +1,72 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '../../../vendor/data/models/vendor_profile_model.dart';
+import '../../../vendor/data/models/menu_item_model.dart';
+import '../../domain/entities/restaurant_entity.dart';
 import '../models/restaurant_model.dart';
 
-class RestaurantRemoteDataSource {
+abstract class RestaurantRemoteDataSource {
+  Future<List<RestaurantEntity>> getRestaurants();
+  Future<RestaurantEntity> getRestaurantById(String vendorId);
+}
+
+class RestaurantRemoteDataSourceImpl implements RestaurantRemoteDataSource {
   final FirebaseFirestore firestore;
 
-  RestaurantRemoteDataSource(this.firestore);
+  RestaurantRemoteDataSourceImpl(this.firestore);
 
-  // ✅ Fetch by category (grouped by cuisine)
-  Future<List<RestaurantModel>> fetchCategories() async {
-    final snapshot = await firestore.collection('restaurants').get();
-    final all = snapshot.docs.map((doc) => RestaurantModel.fromFirestore(doc)).toList();
-
-    // Optional: return one per cuisine
-    final seen = <String>{};
-    final uniqueByCuisine = <RestaurantModel>[];
-    for (final r in all) {
-      if (!seen.contains(r.cuisine)) {
-        seen.add(r.cuisine);
-        uniqueByCuisine.add(r);
-      }
-    }
-    return uniqueByCuisine;
-  }
-
-  // ✅ Fetch top-rated restaurants
-  Future<List<RestaurantModel>> fetchRecommendations() async {
+  @override
+  Future<List<RestaurantEntity>> getRestaurants() async {
     final snapshot = await firestore
-        .collection('restaurants')
-        .orderBy('rating', descending: true)
-        .limit(5)
+        .collection('vendors')
+        .where('approvalStatus', isEqualTo: 'approved')
         .get();
 
-    return snapshot.docs.map((doc) => RestaurantModel.fromFirestore(doc)).toList();
+    final List<RestaurantEntity> restaurants = [];
+
+    for (final doc in snapshot.docs) {
+      final vendorModel = VendorProfileModel.fromFirestore(doc);
+
+      final menuSnapshot = await firestore
+          .collection('vendors')
+          .doc(doc.id)
+          .collection('menu')
+          .get();
+
+      final menuModels =
+          menuSnapshot.docs.map((d) => MenuItemModel.fromFirestore(d)).toList();
+
+      final restaurantModel = RestaurantModel(
+        vendorModel: vendorModel,
+        menuItemModels: menuModels,
+      );
+
+      restaurants.add(restaurantModel.toEntity());
+    }
+
+    return restaurants;
+  }
+
+  @override
+  Future<RestaurantEntity> getRestaurantById(String vendorId) async {
+    final vendorDoc =
+        await firestore.collection('vendors').doc(vendorId).get();
+    final vendorModel = VendorProfileModel.fromFirestore(vendorDoc);
+
+    final menuSnapshot = await firestore
+        .collection('vendors')
+        .doc(vendorId)
+        .collection('menu')
+        .get();
+
+    final menuModels =
+        menuSnapshot.docs.map((d) => MenuItemModel.fromFirestore(d)).toList();
+
+    final restaurantModel = RestaurantModel(
+      vendorModel: vendorModel,
+      menuItemModels: menuModels,
+    );
+
+    return restaurantModel.toEntity();
   }
 }

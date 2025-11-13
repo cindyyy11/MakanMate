@@ -1,11 +1,16 @@
 import 'dart:async';
 import 'dart:math';
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_fortune_wheel/flutter_fortune_wheel.dart';
 import 'package:geolocator/geolocator.dart';
+
 import 'package:makan_mate/core/widgets/bottom_nav_widget.dart';
 import 'package:makan_mate/features/favorite/presentation/pages/favorite_page.dart';
+import 'package:makan_mate/features/home/presentation/bloc/home_bloc.dart';
+import 'package:makan_mate/features/home/presentation/bloc/home_state.dart';
+import 'package:makan_mate/features/home/domain/entities/restaurant_entity.dart';
 import 'package:makan_mate/screens/home_screen.dart';
 
 class SpinWheelPage extends StatefulWidget {
@@ -17,10 +22,10 @@ class SpinWheelPage extends StatefulWidget {
 
 class _SpinWheelPageState extends State<SpinWheelPage> {
   final StreamController<int> _selected = StreamController<int>();
-  List<Map<String, dynamic>> _restaurants = [];
+  List<RestaurantEntity> _nearbyRestaurants = [];
   bool _isLoading = true;
-  int _currentIndex = 2; 
   Position? _userPosition;
+  int _currentIndex = 2;
 
   @override
   void initState() {
@@ -28,111 +33,131 @@ class _SpinWheelPageState extends State<SpinWheelPage> {
     _getUserLocation();
   }
 
+  @override
+  void dispose() {
+    _selected.close();
+    super.dispose();
+  }
+
   Future<void> _getUserLocation() async {
     bool serviceEnabled;
     LocationPermission permission;
 
-    // Check if location service is enabled
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enable location services.')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enable location services.')),
+        );
+      }
       return;
     }
 
-    // Request permission
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Location permission denied.')),
-        );
-        return;
-      }
     }
 
-    if (permission == LocationPermission.deniedForever) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Location permission permanently denied.')),
-      );
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Location permission denied. Cannot load nearby restaurants.')),
+        );
+      }
       return;
     }
 
-    // Get user current location
     final position = await Geolocator.getCurrentPosition();
     setState(() {
       _userPosition = position;
     });
 
-    // Once we get location, load nearby restaurants
-    _loadNearbyRestaurants(position);
+    _filterNearbyRestaurants();
   }
 
-  Future<void> _loadNearbyRestaurants(Position position) async {
-    final snapshot = await FirebaseFirestore.instance.collection('restaurants').get();
+  void _filterNearbyRestaurants() {
+    final homeState = context.read<HomeBloc>().state;
 
-    const maxDistanceKm = 5.0; 
+    if (homeState is! HomeLoaded) {
+      // HomeBloc not ready
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
 
-    final nearby = snapshot.docs.where((doc) {
-      final data = doc.data();
-      final lat = data['latitude'];
-      final lon = data['longitude'];
-      if (lat == null || lon == null) return false;
+    final allRestaurants = homeState.recommendations;
+
+    const maxDistanceKm = 5.0;
+
+    final filtered = allRestaurants.where((r) {
+      if (_userPosition == null) return false;
+
+      final outlets = r.vendor.outlets;
+      if (outlets.isEmpty) return false;
+
+      // use first outlet as main location
+      final o = outlets.first;
+
+      if (o.latitude == null || o.longitude == null) return false;
 
       final distance = Geolocator.distanceBetween(
-        position.latitude,
-        position.longitude,
-        lat,
-        lon,
+        _userPosition!.latitude,
+        _userPosition!.longitude,
+        o.latitude!,
+        o.longitude!,
       );
+
       return distance / 1000 <= maxDistanceKm;
-    }).map((e) => e.data()).toList();
+    }).toList();
 
     setState(() {
-      _restaurants = nearby;
+      _nearbyRestaurants = filtered;
       _isLoading = false;
     });
   }
 
   void _spinWheel() {
-    if (_restaurants.isEmpty) {
+    if (_nearbyRestaurants.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No nearby restaurants found.')),
       );
       return;
     }
 
-    final randomIndex = Random().nextInt(_restaurants.length);
+    final randomIndex = Random().nextInt(_nearbyRestaurants.length);
     _selected.add(randomIndex);
 
     Future.delayed(const Duration(seconds: 4), () {
-      final restaurant = _restaurants[randomIndex];
+      final r = _nearbyRestaurants[randomIndex];
+      final vendor = r.vendor;
+
       showDialog(
         context: context,
         builder: (_) => AlertDialog(
-          title: Text(restaurant['name'] ?? 'Unknown'),
+          title: Text(vendor.businessName),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Image.network(
-                restaurant['image'] ?? '',
+                vendor.businessLogoUrl ?? '',
                 height: 120,
                 width: 120,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported, size: 60),
+                errorBuilder: (_, __, ___) =>
+                    const Icon(Icons.image_not_supported, size: 60),
               ),
               const SizedBox(height: 12),
-              Text(restaurant['cuisine'] ?? '-'),
-              const SizedBox(height: 4),
-              Text(restaurant['priceRange'] ?? '-'),
+              Text("Cuisine: ${vendor.cuisine ?? '-'}"),
+              Text("Price Range: ${vendor.priceRange ?? '-'}"),
               const SizedBox(height: 4),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(Icons.star, color: Colors.amber, size: 18),
-                  Text(restaurant['rating']?.toString() ?? '-'),
+                  Text(vendor.ratingAverage?.toStringAsFixed(1) ?? '-'),
                 ],
               ),
             ],
@@ -150,6 +175,8 @@ class _SpinWheelPageState extends State<SpinWheelPage> {
 
   @override
   Widget build(BuildContext context) {
+    final homeState = context.watch<HomeBloc>().state;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Spin the Wheel'),
@@ -157,7 +184,7 @@ class _SpinWheelPageState extends State<SpinWheelPage> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _restaurants.isEmpty
+          : _nearbyRestaurants.isEmpty
               ? const Center(child: Text('No nearby restaurants found.'))
               : Padding(
                   padding: const EdgeInsets.all(16),
@@ -173,10 +200,10 @@ class _SpinWheelPageState extends State<SpinWheelPage> {
                             ),
                           ],
                           items: [
-                            for (final r in _restaurants)
+                            for (final r in _nearbyRestaurants)
                               FortuneItem(
                                 child: Text(
-                                  r['name'] ?? 'Unknown',
+                                  r.vendor.businessName,
                                   style: const TextStyle(fontSize: 14),
                                 ),
                                 style: const FortuneItemStyle(
@@ -198,10 +225,11 @@ class _SpinWheelPageState extends State<SpinWheelPage> {
                         ),
                         onPressed: _spinWheel,
                         icon: const Icon(Icons.casino, color: Colors.white),
-                        label: const Text('SPIN NOW',
-                            style: TextStyle(fontSize: 18, color: Colors.white)),
+                        label: const Text(
+                          'SPIN NOW',
+                          style: TextStyle(fontSize: 18, color: Colors.white),
+                        ),
                       ),
-                      const SizedBox(height: 20),
                     ],
                   ),
                 ),
@@ -232,11 +260,5 @@ class _SpinWheelPageState extends State<SpinWheelPage> {
         },
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _selected.close();
-    super.dispose();
   }
 }

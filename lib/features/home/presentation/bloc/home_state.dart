@@ -1,19 +1,39 @@
+import 'package:equatable/equatable.dart';
 import 'package:makan_mate/features/home/domain/entities/restaurant_entity.dart';
 
-abstract class HomeState {}
+abstract class HomeState extends Equatable {
+  const HomeState();
 
-class HomeInitial extends HomeState {}
+  @override
+  List<Object?> get props => [];
+}
 
-class HomeLoading extends HomeState {}
+class HomeInitial extends HomeState {
+  const HomeInitial();
+}
+
+class HomeLoading extends HomeState {
+  const HomeLoading();
+}
 
 class HomeLoaded extends HomeState {
   final List<RestaurantEntity> categories;
   final List<RestaurantEntity> recommendations;
 
-  HomeLoaded({required this.categories, required this.recommendations});
+  const HomeLoaded({
+    required this.categories,
+    required this.recommendations,
+  });
+
+  @override
+  List<Object?> get props => [categories, recommendations];
 }
 
 class HomeError extends HomeState {
   final String message;
-  HomeError(this.message);
+
+  const HomeError(this.message);
+
+  @override
+  List<Object?> get props => [message];
 }
