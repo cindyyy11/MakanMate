@@ -41,7 +41,10 @@ class _VendorReviewsPageState extends State<VendorReviewsPage> {
         return sorted;
       case _ReviewFilter.replied:
         final replied = reviews
-            .where((r) => (r.vendorReplyText != null && r.vendorReplyText!.isNotEmpty))
+            .where(
+              (r) =>
+                  (r.vendorReplyText != null && r.vendorReplyText!.isNotEmpty),
+            )
             .toList();
         replied.sort((a, b) {
           final aAt = a.vendorReplyAt ?? a.updatedAt;
@@ -50,7 +53,11 @@ class _VendorReviewsPageState extends State<VendorReviewsPage> {
         });
         return replied;
       case _ReviewFilter.unreplied:
-        final unreplied = reviews.where((r) => r.vendorReplyText == null || r.vendorReplyText!.isEmpty).toList();
+        final unreplied = reviews
+            .where(
+              (r) => r.vendorReplyText == null || r.vendorReplyText!.isEmpty,
+            )
+            .toList();
         unreplied.sort((a, b) => b.createdAt.compareTo(a.createdAt));
         return unreplied;
     }
@@ -80,11 +87,8 @@ class _VendorReviewsPageState extends State<VendorReviewsPage> {
             onPressed: () {
               if (replyController.text.trim().isNotEmpty) {
                 context.read<VendorReviewBloc>().add(
-                      ReplyToVendorReview(
-                        review.id,
-                        replyController.text.trim(),
-                      ),
-                    );
+                  ReplyToVendorReview(review.id, replyController.text.trim()),
+                );
                 if (Navigator.canPop(context)) {
                   Navigator.pop(context);
                 }
@@ -136,11 +140,8 @@ class _VendorReviewsPageState extends State<VendorReviewsPage> {
             onPressed: () {
               if (reasonController.text.trim().isNotEmpty) {
                 context.read<VendorReviewBloc>().add(
-                      ReportVendorReview(
-                        review.id,
-                        reasonController.text.trim(),
-                      ),
-                    );
+                  ReportVendorReview(review.id, reasonController.text.trim()),
+                );
                 if (Navigator.canPop(context)) {
                   Navigator.pop(context);
                 }
@@ -230,8 +231,8 @@ class _VendorReviewsPageState extends State<VendorReviewsPage> {
           final reviews = state is VendorReviewLoaded
               ? state.reviews
               : state is VendorReviewActionInProgress
-                  ? state.current
-                  : <ReviewEntity>[];
+              ? state.current
+              : <ReviewEntity>[];
 
           final filtered = _applyFilter(reviews);
 
@@ -239,8 +240,8 @@ class _VendorReviewsPageState extends State<VendorReviewsPage> {
             final emptySubtitle = _selectedFilter == _ReviewFilter.latest
                 ? 'There are no comments recently'
                 : _selectedFilter == _ReviewFilter.replied
-                    ? 'No replied reviews yet'
-                    : 'No reviews awaiting reply';
+                ? 'No replied reviews yet'
+                : 'No reviews awaiting reply';
             return _buildEmpty(
               icon: Icons.star,
               title: 'No reviews',
@@ -260,10 +261,7 @@ class _VendorReviewsPageState extends State<VendorReviewsPage> {
                 padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: Text(
                   'Latest Customer Feedback',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
               // Filter Chips
@@ -271,17 +269,31 @@ class _VendorReviewsPageState extends State<VendorReviewsPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Row(
                   children: [
-                    _buildFilterChip('Latest', _selectedFilter == _ReviewFilter.latest, () {
-                      setState(() => _selectedFilter = _ReviewFilter.latest);
-                    }),
+                    _buildFilterChip(
+                      'Latest',
+                      _selectedFilter == _ReviewFilter.latest,
+                      () {
+                        setState(() => _selectedFilter = _ReviewFilter.latest);
+                      },
+                    ),
                     const SizedBox(width: 8),
-                    _buildFilterChip('Replied', _selectedFilter == _ReviewFilter.replied, () {
-                      setState(() => _selectedFilter = _ReviewFilter.replied);
-                    }),
+                    _buildFilterChip(
+                      'Replied',
+                      _selectedFilter == _ReviewFilter.replied,
+                      () {
+                        setState(() => _selectedFilter = _ReviewFilter.replied);
+                      },
+                    ),
                     const SizedBox(width: 8),
-                    _buildFilterChip('Unreplied', _selectedFilter == _ReviewFilter.unreplied, () {
-                      setState(() => _selectedFilter = _ReviewFilter.unreplied);
-                    }),
+                    _buildFilterChip(
+                      'Unreplied',
+                      _selectedFilter == _ReviewFilter.unreplied,
+                      () {
+                        setState(
+                          () => _selectedFilter = _ReviewFilter.unreplied,
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -291,16 +303,20 @@ class _VendorReviewsPageState extends State<VendorReviewsPage> {
                   onRefresh: () async {
                     _loadReviews();
                   },
-                  child: ListView.builder(
-                    itemCount: filtered.length,
-                    itemBuilder: (context, index) {
-                      final review = filtered[index];
-                      return ReviewCard(
-                        review: review,
-                        onReply: review.vendorReplyText == null
-                            ? () => _showReplyDialog(review)
-                            : null,
-                        onReport: () => _showReportDialog(review),
+                  child: BlocBuilder(
+                    builder: (context, state) {
+                      return ListView.builder(
+                        itemCount: filtered.length,
+                        itemBuilder: (context, index) {
+                          final review = filtered[index];
+                          return ReviewCard(
+                            review: review,
+                            onReply: review.vendorReplyText == null
+                                ? () => _showReplyDialog(review)
+                                : null,
+                            onReport: () => _showReportDialog(review),
+                          );
+                        },
                       );
                     },
                   ),
@@ -339,10 +355,7 @@ class _VendorReviewsPageState extends State<VendorReviewsPage> {
           Text(title, style: TextStyle(fontSize: 18, color: Colors.grey[600])),
           const SizedBox(height: 8),
           Text(subtitle, style: TextStyle(color: Colors.grey[500])),
-          if (action != null) ...[
-            const SizedBox(height: 12),
-            action,
-          ],
+          if (action != null) ...[const SizedBox(height: 12), action],
         ],
       ),
     );

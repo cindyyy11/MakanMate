@@ -1,99 +1,124 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import '../../../../services/auth_service.dart';
-import '../../../vendor/domain/repositories/vendor_profile_repository.dart';
-import '../../../vendor/domain/entities/vendor_profile_entity.dart';
-import 'auth_event.dart';
-import 'auth_state.dart';
+import 'package:makan_mate/features/auth/domain/usecases/forgot_password_usecase.dart';
+import 'package:makan_mate/features/auth/domain/usecases/google_sign_in_usecase.dart';
+import 'package:makan_mate/features/auth/domain/usecases/sign_in_usecase.dart';
+import 'package:makan_mate/features/auth/domain/usecases/sign_out_usecase.dart';
+import 'package:makan_mate/features/auth/domain/usecases/sign_up_usecase.dart';
+import 'package:makan_mate/features/auth/presentation/bloc/auth_event.dart';
+import 'package:makan_mate/features/auth/presentation/bloc/auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final AuthService _authService;
-  final VendorProfileRepository _vendorProfileRepository;
-
+  final SignInUseCase signIn;
+  final SignUpUseCase signUp;
+  final SignOutUseCase signOut;
+  final GoogleSignInUseCase googleSignIn;
+  final ForgotPasswordUseCase forgotPassword; 
+  
   AuthBloc({
-    AuthService? authService,
-    required VendorProfileRepository vendorProfileRepository,
-  })  : _authService = authService ?? AuthService(),
-        _vendorProfileRepository = vendorProfileRepository,
-        super(AuthInitial()) {
-    // Check user state at startup
-    on<AppStarted>((event, emit) async {
-      final user = _authService.currentUser;
-      if (user != null) {
-        await _handlePostLogin(user, emit);
-      } else {
-        emit(Unauthenticated());
-      }
-    });
-
-    // Email / Password login
-    on<SignInRequested>((event, emit) async {
-      emit(AuthLoading());
-      try {
-        final userCred = await _authService.signInWithEmail(
-          email: event.email,
-          password: event.password,
-        );
-        if (userCred?.user != null) {
-          await _handlePostLogin(userCred!.user!, emit);
-        } else {
-          emit(Unauthenticated());
-        }
-      } catch (e) {
-        emit(AuthError('Failed to sign in: $e'));
-        emit(Unauthenticated());
-      }
-    });
-
-    // Google Sign-In
-    on<GoogleSignInRequested>((event, emit) async {
-      emit(AuthLoading());
-      try {
-        final userCred = await _authService.signInWithGoogle();
-        if (userCred?.user != null) {
-          await _handlePostLogin(userCred!.user!, emit);
-        } else {
-          emit(Unauthenticated());
-        }
-      } catch (e) {
-        emit(AuthError('Google sign in failed: $e'));
-        emit(Unauthenticated());
-      }
-    });
-
-    // Sign out
-    on<SignOutRequested>((event, emit) async {
-      emit(AuthLoading());
-      await _authService.signOut();
-      emit(Unauthenticated());
-    });
-
-    on<AuthResetRequested>((event, emit) {
-      emit(Unauthenticated());
-    });
+    required this.signIn,
+    required this.signUp,
+    required this.signOut,
+    required this.googleSignIn,
+    required this.forgotPassword,
+  }) : super(AuthInitial()) {
+    on<AuthCheckRequested>(_onAuthCheckRequested);
+    on<SignInRequested>(_onSignInRequested);
+    on<SignUpRequested>(_onSignUpRequested);
+    on<GoogleSignInRequested>(_onGoogleSignInRequested);
+    on<SignOutRequested>(_onSignOutRequested);
+    on<ForgotPasswordRequested>(_onForgotPasswordRequested);
+  }
+  
+  Future<void> _onAuthCheckRequested(
+    AuthCheckRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    // Check if user is already signed in
+    // This would typically call a getCurrentUser use case
+    // For now, emit Unauthenticated
+    // TODO: wire a GetCurrentUserUseCase or authStateChanges stream
+    await Future.delayed(const Duration(milliseconds: 500));
+    emit(Unauthenticated());
+  }
+  
+  Future<void> _onSignInRequested(
+    SignInRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    
+    final result = await signIn(
+      email: event.email,
+      password: event.password,
+    );
+    
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (user) => emit(Authenticated(user)),
+    );
+  }
+  
+  Future<void> _onSignUpRequested(
+    SignUpRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    
+    final result = await signUp(
+      email: event.email,
+      password: event.password,
+      displayName: event.displayName,
+      role: event.role,
+    );
+    
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (user) => emit(Authenticated(user)),
+    );
+  }
+  
+  Future<void> _onGoogleSignInRequested(
+    GoogleSignInRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    
+    final result = await googleSignIn();
+    
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (user) => emit(Authenticated(user)),
+    );
+  }
+  
+  Future<void> _onSignOutRequested(
+    SignOutRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    
+    final result = await signOut();
+    
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (user) => emit(Unauthenticated()),
+    );
   }
 
-  Future<void> _handlePostLogin(User user, Emitter<AuthState> emit) async {
-    try {
-      final VendorProfileEntity? profile =
-          await _vendorProfileRepository.getVendorProfile();
-
-      final status = profile?.approvalStatus ?? 'pending';
-
-      if (status == 'approved') {
-        emit(Authenticated(user));
-      } else if (status == 'rejected') {
-        await _authService.signOut();
-        emit(AuthBlocked(
-            'Your account was rejected. Please contact support for assistance.'));
-      } else {
-        await _authService.signOut();
-        emit(AuthBlocked(
-            'Your account is pending admin approval. Please check back soon.'));
-      }
-    } catch (e) {
-      emit(AuthError('Failed to verify approval status: $e'));
-      emit(Unauthenticated());
-    }
+  Future<void> _onForgotPasswordRequested(
+    ForgotPasswordRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(ForgotPasswordLoading());
+    
+    final result = await forgotPassword(event.email);
+    
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (_) => emit(const ForgotPasswordSuccess(
+        'Password reset email sent! Please check your inbox.',
+      )),
+    );
   }
 }

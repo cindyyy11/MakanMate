@@ -1,0 +1,459 @@
+import 'dart:async';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:logger/logger.dart';
+import 'package:makan_mate/features/admin/domain/entities/activity_log_entity.dart';
+import 'package:makan_mate/features/admin/domain/entities/admin_notification_entity.dart';
+import 'package:makan_mate/features/admin/domain/entities/metric_trend_entity.dart';
+import 'package:makan_mate/features/admin/domain/entities/system_metrics_entity.dart';
+import 'package:makan_mate/features/admin/domain/usecases/export_metrics_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/get_activity_logs_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/get_metric_trend_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/get_notifications_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/get_platform_metrics_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/stream_system_metrics_usecase.dart';
+import 'package:makan_mate/features/admin/domain/repositories/admin_repository.dart';
+import 'package:makan_mate/features/admin/presentation/bloc/admin_event.dart';
+import 'package:makan_mate/features/admin/presentation/bloc/admin_state.dart';
+
+/// BLoC for managing admin dashboard state
+class AdminBloc extends Bloc<AdminEvent, AdminState> {
+  final GetPlatformMetricsUseCase getPlatformMetrics;
+  final GetMetricTrendUseCase getMetricTrend;
+  final GetActivityLogsUseCase getActivityLogs;
+  final GetNotificationsUseCase getNotifications;
+  final ExportMetricsUseCase exportMetrics;
+  final StreamSystemMetricsUseCase streamSystemMetrics;
+  final AdminRepository adminRepository;
+  final Logger logger;
+
+  StreamSubscription<SystemMetrics>? _systemMetricsSubscription;
+
+  AdminBloc({
+    required this.getPlatformMetrics,
+    required this.getMetricTrend,
+    required this.getActivityLogs,
+    required this.getNotifications,
+    required this.exportMetrics,
+    required this.streamSystemMetrics,
+    required this.adminRepository,
+    required this.logger,
+  }) : super(const AdminInitial()) {
+    on<LoadPlatformMetrics>(_onLoadPlatformMetrics);
+    on<RefreshPlatformMetrics>(_onRefreshPlatformMetrics);
+    on<LoadMetricTrend>(_onLoadMetricTrend);
+    on<LoadActivityLogs>(_onLoadActivityLogs);
+    on<LoadNotifications>(_onLoadNotifications);
+    on<MarkNotificationAsRead>(_onMarkNotificationAsRead);
+    on<ExportMetrics>(_onExportMetrics);
+    on<StartStreamingSystemMetrics>(_onStartStreamingSystemMetrics);
+    on<StopStreamingSystemMetrics>(_onStopStreamingSystemMetrics);
+  }
+
+  @override
+  Future<void> close() {
+    _systemMetricsSubscription?.cancel();
+    return super.close();
+  }
+
+  Future<void> _onLoadPlatformMetrics(
+    LoadPlatformMetrics event,
+    Emitter<AdminState> emit,
+  ) async {
+    try {
+      logger.i('Loading platform metrics');
+      emit(const AdminLoading());
+
+      final result = await getPlatformMetrics(
+        GetPlatformMetricsParams(
+          startDate: event.startDate,
+          endDate: event.endDate,
+        ),
+      );
+
+      await result.fold(
+        (failure) async {
+          logger.e('Failed to load metrics: ${failure.message}');
+          emit(AdminError(failure.message));
+        },
+        (metrics) async {
+          logger.i('Successfully loaded platform metrics');
+
+          // Load additional data in parallel
+          final trendResults = await Future.wait([
+            getMetricTrend(
+              GetMetricTrendParams(metricName: 'totalUsers', days: 7),
+            ),
+            getMetricTrend(
+              GetMetricTrendParams(metricName: 'totalVendors', days: 7),
+            ),
+            getActivityLogs(GetActivityLogsParams(limit: 50)),
+            getNotifications(
+              GetNotificationsParams(unreadOnly: true, limit: 10),
+            ),
+          ]);
+
+          MetricTrend? userTrend;
+          MetricTrend? vendorTrend;
+          List<ActivityLog>? activityLogs;
+          List<AdminNotification>? notifications;
+
+          trendResults[0].fold(
+            (_) {},
+            (trend) => userTrend = trend as MetricTrend,
+          );
+          trendResults[1].fold(
+            (_) {},
+            (trend) => vendorTrend = trend as MetricTrend,
+          );
+          trendResults[2].fold(
+            (_) {},
+            (logs) => activityLogs = logs as List<ActivityLog>,
+          );
+          trendResults[3].fold(
+            (_) {},
+            (notifs) => notifications = notifs as List<AdminNotification>,
+          );
+
+          if (!emit.isDone) {
+            emit(
+              AdminLoaded(
+                metrics,
+                userTrend: userTrend,
+                vendorTrend: vendorTrend,
+                activityLogs: activityLogs,
+                notifications: notifications,
+              ),
+            );
+          }
+        },
+      );
+    } catch (e, stackTrace) {
+      logger.e('Error loading platform metrics: $e', stackTrace: stackTrace);
+      emit(AdminError('Unexpected error: $e'));
+    }
+  }
+
+  Future<void> _onRefreshPlatformMetrics(
+    RefreshPlatformMetrics event,
+    Emitter<AdminState> emit,
+  ) async {
+    try {
+      logger.i('Refreshing platform metrics');
+
+      // Keep current metrics visible while refreshing
+      if (state is AdminLoaded) {
+        final currentMetrics = (state as AdminLoaded).metrics;
+        emit(AdminRefreshing(currentMetrics));
+      } else {
+        emit(const AdminLoading());
+      }
+
+      final result = await getPlatformMetrics(
+        GetPlatformMetricsParams(
+          startDate: event.startDate,
+          endDate: event.endDate,
+        ),
+      );
+
+      await result.fold(
+        (failure) async {
+          logger.e('Failed to refresh metrics: ${failure.message}');
+          // If we had cached metrics, show error with cache
+          if (state is AdminRefreshing) {
+            final cachedMetrics = (state as AdminRefreshing).metrics;
+            if (!emit.isDone) {
+              emit(
+                AdminError(
+                  'Failed to refresh: ${failure.message}',
+                  cachedMetrics: cachedMetrics,
+                ),
+              );
+            }
+          } else {
+            if (!emit.isDone) {
+              emit(AdminError(failure.message));
+            }
+          }
+        },
+        (metrics) async {
+          logger.i('Successfully refreshed platform metrics');
+
+          // Keep existing trends/logs if available
+          final currentState = state is AdminLoaded
+              ? state as AdminLoaded
+              : null;
+
+          if (!emit.isDone) {
+            emit(
+              AdminLoaded(
+                metrics,
+                userTrend: currentState?.userTrend,
+                vendorTrend: currentState?.vendorTrend,
+                activityLogs: currentState?.activityLogs,
+                notifications: currentState?.notifications,
+              ),
+            );
+          }
+        },
+      );
+    } catch (e, stackTrace) {
+      logger.e('Error refreshing platform metrics: $e', stackTrace: stackTrace);
+      emit(AdminError('Unexpected error: $e'));
+    }
+  }
+
+  Future<void> _onLoadMetricTrend(
+    LoadMetricTrend event,
+    Emitter<AdminState> emit,
+  ) async {
+    try {
+      logger.i('Loading metric trend: ${event.metricName}');
+
+      final result = await getMetricTrend(
+        GetMetricTrendParams(metricName: event.metricName, days: event.days),
+      );
+
+      result.fold(
+        (failure) {
+          logger.e('Failed to load trend: ${failure.message}');
+        },
+        (trend) {
+          logger.i('Successfully loaded metric trend');
+          if (state is AdminLoaded) {
+            final currentState = state as AdminLoaded;
+            emit(
+              AdminLoaded(
+                currentState.metrics,
+                userTrend: event.metricName == 'totalUsers'
+                    ? trend
+                    : currentState.userTrend,
+                vendorTrend: event.metricName == 'totalVendors'
+                    ? trend
+                    : currentState.vendorTrend,
+                activityLogs: currentState.activityLogs,
+                notifications: currentState.notifications,
+              ),
+            );
+          }
+        },
+      );
+    } catch (e, stackTrace) {
+      logger.e('Error loading metric trend: $e', stackTrace: stackTrace);
+    }
+  }
+
+  Future<void> _onLoadActivityLogs(
+    LoadActivityLogs event,
+    Emitter<AdminState> emit,
+  ) async {
+    try {
+      logger.i('Loading activity logs');
+
+      final result = await getActivityLogs(
+        GetActivityLogsParams(
+          startDate: event.startDate,
+          endDate: event.endDate,
+          userId: event.userId,
+          limit: event.limit,
+        ),
+      );
+
+      result.fold(
+        (failure) {
+          logger.e('Failed to load activity logs: ${failure.message}');
+        },
+        (logs) {
+          logger.i('Successfully loaded ${logs.length} activity logs');
+          if (state is AdminLoaded) {
+            final currentState = state as AdminLoaded;
+            emit(
+              AdminLoaded(
+                currentState.metrics,
+                userTrend: currentState.userTrend,
+                vendorTrend: currentState.vendorTrend,
+                activityLogs: logs,
+                notifications: currentState.notifications,
+              ),
+            );
+          }
+        },
+      );
+    } catch (e, stackTrace) {
+      logger.e('Error loading activity logs: $e', stackTrace: stackTrace);
+    }
+  }
+
+  Future<void> _onLoadNotifications(
+    LoadNotifications event,
+    Emitter<AdminState> emit,
+  ) async {
+    try {
+      logger.i('Loading notifications');
+
+      final result = await getNotifications(
+        GetNotificationsParams(
+          unreadOnly: event.unreadOnly,
+          limit: event.limit,
+        ),
+      );
+
+      result.fold(
+        (failure) {
+          logger.e('Failed to load notifications: ${failure.message}');
+        },
+        (notifications) {
+          logger.i('Successfully loaded ${notifications.length} notifications');
+          if (state is AdminLoaded) {
+            final currentState = state as AdminLoaded;
+            emit(
+              AdminLoaded(
+                currentState.metrics,
+                userTrend: currentState.userTrend,
+                vendorTrend: currentState.vendorTrend,
+                activityLogs: currentState.activityLogs,
+                notifications: notifications,
+              ),
+            );
+          }
+        },
+      );
+    } catch (e, stackTrace) {
+      logger.e('Error loading notifications: $e', stackTrace: stackTrace);
+    }
+  }
+
+  Future<void> _onMarkNotificationAsRead(
+    MarkNotificationAsRead event,
+    Emitter<AdminState> emit,
+  ) async {
+    try {
+      logger.i('Marking notification as read: ${event.notificationId}');
+
+      final result = await adminRepository.markNotificationAsRead(
+        event.notificationId,
+      );
+
+      result.fold(
+        (failure) {
+          logger.e('Failed to mark notification as read: ${failure.message}');
+        },
+        (_) {
+          logger.i('Successfully marked notification as read');
+          // Reload notifications to update state
+          add(const LoadNotifications(unreadOnly: true, limit: 10));
+        },
+      );
+    } catch (e, stackTrace) {
+      logger.e(
+        'Error marking notification as read: $e',
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  Future<void> _onExportMetrics(
+    ExportMetrics event,
+    Emitter<AdminState> emit,
+  ) async {
+    try {
+      logger.i('Exporting metrics to ${event.format}');
+      emit(AdminExporting(event.format));
+
+      final result = await exportMetrics(
+        ExportMetricsParams(
+          format: event.format,
+          startDate: event.startDate,
+          endDate: event.endDate,
+        ),
+      );
+
+      result.fold(
+        (failure) {
+          logger.e('Failed to export: ${failure.message}');
+          emit(AdminError('Export failed: ${failure.message}'));
+        },
+        (filePath) {
+          logger.i('Successfully exported to: $filePath');
+          // Store current state before emitting export success
+          final previousState = state is AdminLoaded
+              ? state as AdminLoaded
+              : null;
+          if (!emit.isDone) {
+            emit(AdminExportSuccess(filePath, event.format));
+            // Return to loaded state after a moment
+            Future.delayed(const Duration(seconds: 2), () {
+              if (previousState != null && !emit.isDone) {
+                emit(previousState);
+              }
+            });
+          }
+        },
+      );
+    } catch (e, stackTrace) {
+      logger.e('Error exporting metrics: $e', stackTrace: stackTrace);
+      emit(AdminError('Export failed: $e'));
+    }
+  }
+
+  Future<void> _onStartStreamingSystemMetrics(
+    StartStreamingSystemMetrics event,
+    Emitter<AdminState> emit,
+  ) async {
+    try {
+      logger.i('Starting real-time system metrics stream');
+
+      // Cancel existing subscription if any
+      await _systemMetricsSubscription?.cancel();
+
+      // Store subscription properly
+      _systemMetricsSubscription = streamSystemMetrics()
+          .map((either) => either.fold((l) => null, (r) => r))
+          .where((metrics) => metrics != null)
+          .cast<SystemMetrics>()
+          .listen(
+            (systemMetrics) {
+              logger.d('Received system metrics update');
+              if (state is AdminLoaded) {
+                final currentState = state as AdminLoaded;
+                if (!emit.isDone) {
+                  emit(
+                    AdminLoaded(
+                      currentState.metrics,
+                      userTrend: currentState.userTrend,
+                      vendorTrend: currentState.vendorTrend,
+                      activityLogs: currentState.activityLogs,
+                      notifications: currentState.notifications,
+                      systemMetrics: systemMetrics,
+                    ),
+                  );
+                }
+              }
+            },
+            onError: (error) {
+              logger.e('System metrics stream error: $error');
+            },
+          );
+    } catch (e, stackTrace) {
+      logger.e(
+        'Error starting system metrics stream: $e',
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  Future<void> _onStopStreamingSystemMetrics(
+    StopStreamingSystemMetrics event,
+    Emitter<AdminState> emit,
+  ) async {
+    try {
+      logger.i('Stopping real-time system metrics stream');
+      await _systemMetricsSubscription?.cancel();
+      _systemMetricsSubscription = null;
+    } catch (e, stackTrace) {
+      logger.e(
+        'Error stopping system metrics stream: $e',
+        stackTrace: stackTrace,
+      );
+    }
+  }
+}
