@@ -182,55 +182,55 @@ void _initAuth() {
   }
 }
 
-void _initAdmin() {
-  // Logger for admin
-  final logger = Logger(
-    printer: PrettyPrinter(
-      methodCount: 2,
-      errorMethodCount: 5,
-      lineLength: 80,
-      colors: true,
-      printEmojis: true,
-    ),
-  );
+// void _initAdmin() {
+//   // Logger for admin
+//   final logger = Logger(
+//     printer: PrettyPrinter(
+//       methodCount: 2,
+//       errorMethodCount: 5,
+//       lineLength: 80,
+//       colors: true,
+//       printEmojis: true,
+//     ),
+//   );
 
-  // BLoC
-  sl.registerFactory(
-    () => AdminBloc(
-      getPlatformMetrics: sl(),
-      getMetricTrend: sl(),
-      getActivityLogs: sl(),
-      getNotifications: sl(),
-      exportMetrics: sl(),
-      streamSystemMetrics: sl(),
-      adminRepository: sl(),
-      logger: logger,
-    ),
-  );
+//   // BLoC
+//   sl.registerFactory(
+//     () => AdminBloc(
+//       getPlatformMetrics: sl(),
+//       getMetricTrend: sl(),
+//       getActivityLogs: sl(),
+//       getNotifications: sl(),
+//       exportMetrics: sl(),
+//       streamSystemMetrics: sl(),
+//       adminRepository: sl(),
+//       logger: logger,
+//     ),
+//   );
 
-  // Use cases
-  sl.registerLazySingleton(() => GetPlatformMetricsUseCase(sl()));
-  sl.registerLazySingleton(() => GetMetricTrendUseCase(sl()));
-  sl.registerLazySingleton(() => GetActivityLogsUseCase(sl()));
-  sl.registerLazySingleton(() => GetNotificationsUseCase(sl()));
-  sl.registerLazySingleton(() => ExportMetricsUseCase(sl()));
-  sl.registerLazySingleton(() => StreamSystemMetricsUseCase(sl()));
+//   // Use cases
+//   sl.registerLazySingleton(() => GetPlatformMetricsUseCase(sl()));
+//   sl.registerLazySingleton(() => GetMetricTrendUseCase(sl()));
+//   sl.registerLazySingleton(() => GetActivityLogsUseCase(sl()));
+//   sl.registerLazySingleton(() => GetNotificationsUseCase(sl()));
+//   sl.registerLazySingleton(() => ExportMetricsUseCase(sl()));
+//   sl.registerLazySingleton(() => StreamSystemMetricsUseCase(sl()));
 
-  // Repository
-  sl.registerLazySingleton<AdminRepository>(
-    () => AdminRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
-  );
+//   // Repository
+//   sl.registerLazySingleton<AdminRepository>(
+//     () => AdminRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
+//   );
 
-  // Data sources
-  sl.registerLazySingleton<AdminRemoteDataSource>(
-    () => AdminRemoteDataSourceImpl(firestore: sl(), logger: logger),
-  );
+//   // Data sources
+//   sl.registerLazySingleton<AdminRemoteDataSource>(
+//     () => AdminRemoteDataSourceImpl(firestore: sl(), logger: logger),
+//   );
 
-  // Services
-  sl.registerLazySingleton<AuditLogService>(
-    () => AuditLogService(firestore: sl(), auth: sl(), logger: logger),
-  );
-}
+//   // Services
+//   sl.registerLazySingleton<AuditLogService>(
+//     () => AuditLogService(firestore: sl(), auth: sl(), logger: logger),
+//   );
+// }
 
 // ---------------------------
 // Home / Restaurants
@@ -359,22 +359,22 @@ Future<void> _initRecommendations() async {
   );
 }
 
-  // ---------------------------
-  // Admin
-  // ---------------------------
-  void _initAdmin() {
-    // Logger for admin
-    final logger = Logger(
-      printer: PrettyPrinter(
-        methodCount: 2,
-        errorMethodCount: 5,
-        lineLength: 80,
-        colors: true,
-        printEmojis: true,
-      ),
-    );
+// ---------------------------
+// Admin
+// ---------------------------
+void _initAdmin() {
+  // Logger for admin
+  final logger = Logger(
+    printer: PrettyPrinter(
+      methodCount: 2,
+      errorMethodCount: 5,
+      lineLength: 80,
+      colors: true,
+      printEmojis: true,
+    ),
+  );
 
-    // BLoC
+  // BLoC
   sl.registerFactory(
     () => AdminBloc(
       getPlatformMetrics: sl(),
@@ -404,6 +404,11 @@ Future<void> _initRecommendations() async {
   // Data sources
   sl.registerLazySingleton<AdminRemoteDataSource>(
     () => AdminRemoteDataSourceImpl(firestore: sl(), logger: logger),
+  );
+
+  // Services
+  sl.registerLazySingleton<AuditLogService>(
+    () => AuditLogService(firestore: sl(), auth: sl(), logger: logger),
   );
 }
 
