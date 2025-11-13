@@ -59,7 +59,8 @@ class VendorProfileBloc extends Bloc<VendorProfileEvent, VendorProfileState> {
             approvalStatus: 'pending',
             outlets: [],
             createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
+            updatedAt: DateTime.now(), 
+            cuisineType: '',
           );
           await createVendorProfile(defaultProfile);
           emit(VendorPendingApprovalState(defaultProfile));

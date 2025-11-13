@@ -11,6 +11,7 @@ class VendorProfileEntity extends Equatable {
 
   // Business info
   final String businessName;
+  final String? cuisineType;
   final String contactNumber;
   final String emailAddress;
   final String businessAddress;
@@ -42,6 +43,7 @@ class VendorProfileEntity extends Equatable {
     this.businessLogoUrl,
     this.bannerImageUrl,
     required this.businessName,
+    required this.cuisineType,
     required this.contactNumber,
     required this.emailAddress,
     required this.businessAddress,
@@ -64,6 +66,7 @@ class VendorProfileEntity extends Equatable {
     String? businessLogoUrl,
     String? bannerImageUrl,
     String? businessName,
+    String? cuisineType,
     String? contactNumber,
     String? emailAddress,
     String? businessAddress,
@@ -85,6 +88,7 @@ class VendorProfileEntity extends Equatable {
       businessLogoUrl: businessLogoUrl ?? this.businessLogoUrl,
       bannerImageUrl: bannerImageUrl ?? this.bannerImageUrl,
       businessName: businessName ?? this.businessName,
+      cuisineType: cuisineType ?? this.cuisineType,
       contactNumber: contactNumber ?? this.contactNumber,
       emailAddress: emailAddress ?? this.emailAddress,
       businessAddress: businessAddress ?? this.businessAddress,
@@ -109,6 +113,7 @@ class VendorProfileEntity extends Equatable {
     businessLogoUrl,
     bannerImageUrl,
     businessName,
+    cuisineType,
     contactNumber,
     emailAddress,
     businessAddress,
@@ -219,6 +224,7 @@ class OperatingHours extends Equatable {
 class OutletEntity extends Equatable {
   final String id;
   final String name;
+  final String? cuisineType;
   final String address;
   final String contactNumber;
   final Map<String, OperatingHours> operatingHours;
@@ -230,6 +236,7 @@ class OutletEntity extends Equatable {
   const OutletEntity({
     required this.id,
     required this.name,
+    required this.cuisineType,
     required this.address,
     required this.contactNumber,
     required this.operatingHours,
@@ -243,6 +250,7 @@ class OutletEntity extends Equatable {
   List<Object?> get props => [
     id,
     name,
+    cuisineType,
     address,
     contactNumber,
     operatingHours,
