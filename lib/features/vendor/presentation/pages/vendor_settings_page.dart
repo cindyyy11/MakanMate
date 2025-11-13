@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:makan_mate/features/auth/presentation/bloc/auth_event.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../bloc/vendor_profile_bloc.dart';
 import 'vendor_profile_page.dart';
@@ -140,14 +141,8 @@ class VendorSettingsPage extends StatelessWidget {
                 ),
               );
 
-              if (confirm == true) {
-                await FirebaseAuth.instance.signOut();
-                if (context.mounted) {
-                  Navigator.of(context).pushNamedAndRemoveUntil(
-                    '/auth',
-                    (route) => false,
-                  );
-                }
+              if (confirm == true && context.mounted) {
+                context.read<AuthBloc>().add(SignOutRequested());
               }
             },
           ),

@@ -28,6 +28,10 @@ import 'package:makan_mate/features/map/domain/repositories/map_repository.dart'
 import 'package:makan_mate/features/map/domain/repositories/map_repository_impl.dart';
 import 'package:makan_mate/features/map/domain/usecases/get_nearby_restaurants_usecase.dart';
 import 'package:makan_mate/features/map/presentation/bloc/map_bloc.dart';
+import 'package:makan_mate/features/recommendations/domain/usecases/get_contextual_recommendations_usecase.dart';
+import 'package:makan_mate/features/recommendations/domain/usecases/get_similar_items_usecase.dart';
+import 'package:makan_mate/features/recommendations/domain/usecases/track_interaction_usecase.dart';
+import 'package:makan_mate/features/recommendations/presentation/bloc/recommendation_bloc.dart';
 import 'package:makan_mate/features/restaurant/data/datasources/restaurant_remote_datasource.dart';
 import 'package:makan_mate/features/restaurant/data/repositories/restaurant_repository_impl.dart';
 import 'package:makan_mate/features/home/domain/repositories/restaurant_repository.dart';
@@ -339,6 +343,68 @@ Future<void> _initRecommendations() async {
 
   // Use cases
   sl.registerLazySingleton(() => GetRecommendationsUseCase(sl()));
+  sl.registerLazySingleton(() => GetContextualRecommendationsUseCase(sl()));
+  sl.registerLazySingleton(() => GetSimilarItemsUseCase(sl()));
+  sl.registerLazySingleton(() => TrackInteractionUseCase(sl()));
+
+  // Bloc
+  sl.registerFactory(
+    () => RecommendationBloc(
+      getRecommendations: sl(),
+      getContextualRecommendations: sl(),
+      getSimilarItems: sl(),
+      trackInteraction: sl(),
+      logger: logger,
+    ),
+  );
+}
+
+  // ---------------------------
+  // Admin
+  // ---------------------------
+  void _initAdmin() {
+    // Logger for admin
+    final logger = Logger(
+      printer: PrettyPrinter(
+        methodCount: 2,
+        errorMethodCount: 5,
+        lineLength: 80,
+        colors: true,
+        printEmojis: true,
+      ),
+    );
+
+    // BLoC
+  sl.registerFactory(
+    () => AdminBloc(
+      getPlatformMetrics: sl(),
+      getMetricTrend: sl(),
+      getActivityLogs: sl(),
+      getNotifications: sl(),
+      exportMetrics: sl(),
+      streamSystemMetrics: sl(),
+      adminRepository: sl(),
+      logger: logger,
+    ),
+  );
+
+  // Use cases
+  sl.registerLazySingleton(() => GetPlatformMetricsUseCase(sl()));
+  sl.registerLazySingleton(() => GetMetricTrendUseCase(sl()));
+  sl.registerLazySingleton(() => GetActivityLogsUseCase(sl()));
+  sl.registerLazySingleton(() => GetNotificationsUseCase(sl()));
+  sl.registerLazySingleton(() => ExportMetricsUseCase(sl()));
+  sl.registerLazySingleton(() => StreamSystemMetricsUseCase(sl()));
+
+  // Repository
+  sl.registerLazySingleton<AdminRepository>(
+    () => AdminRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
+  );
+
+  // Data sources
+  sl.registerLazySingleton<AdminRemoteDataSource>(
+    () => AdminRemoteDataSourceImpl(firestore: sl(), logger: logger),
+  );
 }
 
 // ---------------------------
