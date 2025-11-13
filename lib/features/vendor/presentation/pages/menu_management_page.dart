@@ -16,13 +16,6 @@ class MenuManagementPage extends StatefulWidget {
 
 class _MenuManagementPageState extends State<MenuManagementPage> {
   final TextEditingController _searchController = TextEditingController();
-  final List<String> _categories = [
-    'All',
-    'Mains',
-    'Appetizers',
-    'Desserts',
-    'Drinks',
-  ];
 
   @override
   void initState() {
@@ -145,11 +138,28 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
                                 },
                               )
                             : null,
-                        border: OutlineInputBorder(
+                        
+                        // Normal border
+                        enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Colors.orange,    // <- Visible border color
+                            width: 1.5,
+                          ),
                         ),
+
+                        // Border when clicked (focused)
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Colors.deepOrange, // <- Stronger focus color
+                            width: 2.0,
+                          ),
+                        ),
+
                         filled: true,
-                        fillColor: Colors.grey[100],
+                        fillColor: Colors.white, // Cleaner white background
+                        contentPadding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                       onChanged: (value) {
                         context.read<VendorBloc>().add(SearchMenuEvent(value));
@@ -157,48 +167,42 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
                     ),
                   ),
 
-                  // Category Filters
+                  // Dynamic Category Filters
                   SizedBox(
                     height: 50,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: _categories.length,
+                      itemCount: state.categories.length,
                       itemBuilder: (context, index) {
-                        final category = _categories[index];
+                        final category = state.categories[index];
                         final isSelected =
                             (category == 'All' && selectedCategory == null) ||
                             (category != 'All' &&
-                                selectedCategory?.toLowerCase() ==
-                                    category.toLowerCase());
+                                selectedCategory?.toLowerCase() == category.toLowerCase());
 
                         return Padding(
                           padding: const EdgeInsets.only(right: 8),
                           child: FilterChip(
                             label: Text(category),
                             selected: isSelected,
-                            onSelected: (selected) {
+                            onSelected: (_) {
                               context.read<VendorBloc>().add(
-                                FilterByCategoryEvent(
-                                  category == 'All' ? null : category,
-                                ),
-                              );
+                                    FilterByCategoryEvent(
+                                        category == 'All' ? null : category),
+                                  );
                             },
                             selectedColor: Colors.orange[300],
                             checkmarkColor: Colors.white,
                             labelStyle: TextStyle(
                               color: isSelected ? Colors.white : Colors.black87,
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                             ),
                           ),
                         );
                       },
                     ),
                   ),
-
-                  const SizedBox(height: 8),
 
                   // Menu Items List
                   Expanded(
