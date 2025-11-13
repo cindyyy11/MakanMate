@@ -28,7 +28,7 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const SignUpPage());
 
       case '/home':
-        return MaterialPageRoute(builder: (_) => const HomePage());
+        return MaterialPageRoute(builder: (_) => const HomeScreen());
 
       case '/recommendations':
         final user = FirebaseAuth.instance.currentUser;
