@@ -5,7 +5,9 @@ import 'package:makan_mate/features/admin/presentation/bloc/admin_bloc.dart';
 import 'package:makan_mate/features/admin/presentation/bloc/admin_event.dart';
 import 'package:makan_mate/features/admin/presentation/pages/admin_dashboard_page.dart';
 import 'package:makan_mate/features/auth/domain/entities/user_entity.dart';
+import 'package:makan_mate/features/favorite/presentation/pages/favorite_page.dart';
 import 'package:makan_mate/features/home/presentation/pages/home_page.dart';
+import 'package:makan_mate/features/home/presentation/widgets/home_screen.dart';
 import 'package:makan_mate/features/vendor/presentation/pages/menu_management_page.dart';
 import 'package:makan_mate/features/vendor/presentation/pages/promotion_management_page.dart';
 import 'package:makan_mate/features/vendor/presentation/pages/vendor_home_page.dart';
@@ -49,7 +51,7 @@ class _MainScaffoldState extends State<MainScaffold> {
         ];
       case 'user':
       default:
-        return [const HomePage()];
+        return [const HomeScreen(), const FavoritePage()];
     }
   }
 
@@ -88,7 +90,7 @@ class _MainScaffoldState extends State<MainScaffold> {
       bottomNavigationBar: widget.user.role == 'admin'
           ? null // Admin dashboard doesn't need bottom nav
           : BottomNavigationBar(
-              selectedItemColor: Colors.deepOrange,
+              selectedItemColor: Colors.orange,
               unselectedItemColor: Colors.grey,
               currentIndex: _currentIndex,
               onTap: (index) => setState(() => _currentIndex = index),
