@@ -7,6 +7,7 @@ class VendorProfileModel {
   final String? businessLogoUrl;
   final String? bannerImageUrl;
   final String businessName;
+  final String? cuisineType;
   final String contactNumber;
   final String emailAddress;
   final String businessAddress;
@@ -27,6 +28,7 @@ class VendorProfileModel {
     this.businessLogoUrl,
     this.bannerImageUrl,
     required this.businessName,
+    required this.cuisineType,
     required this.contactNumber,
     required this.emailAddress,
     required this.businessAddress,
@@ -48,6 +50,7 @@ class VendorProfileModel {
       'businessLogoUrl': businessLogoUrl,
       'bannerImageUrl': bannerImageUrl,
       'businessName': businessName,
+      'cuisineType': cuisineType,
       'contactNumber': contactNumber,
       'emailAddress': emailAddress,
       'businessAddress': businessAddress,
@@ -78,6 +81,7 @@ class VendorProfileModel {
       businessLogoUrl: entity.businessLogoUrl,
       bannerImageUrl: entity.bannerImageUrl,
       businessName: entity.businessName,
+      cuisineType: entity.cuisineType,
       contactNumber: entity.contactNumber,
       emailAddress: entity.emailAddress,
       businessAddress: entity.businessAddress,
@@ -118,6 +122,7 @@ class VendorProfileModel {
       businessLogoUrl: data['businessLogoUrl'],
       bannerImageUrl: data['bannerImageUrl'],
       businessName: data['businessName'] ?? '',
+      cuisineType: data['cuisineType'],
       contactNumber: data['contactNumber'] ?? '',
       emailAddress: data['emailAddress'] ?? '',
       businessAddress: data['businessAddress'] ?? '',
@@ -141,6 +146,7 @@ class VendorProfileModel {
       businessLogoUrl: businessLogoUrl,
       bannerImageUrl: bannerImageUrl,
       businessName: businessName,
+      cuisineType: cuisineType,
       contactNumber: contactNumber,
       emailAddress: emailAddress,
       businessAddress: businessAddress,
