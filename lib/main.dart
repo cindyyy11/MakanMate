@@ -16,7 +16,7 @@ import 'package:makan_mate/services/metrics_service.dart';
 // Local imports
 import 'firebase_options.dart';
 import 'core/di/injection_container.dart' as di;
-import 'features/home/presentation/bloc/home_bloc.dart';
+import 'features/home/presentation/bloc/home_bloc.dart'; 
 
 // Vendor Feature imports
 import 'features/vendor/presentation/bloc/vendor_bloc.dart';
