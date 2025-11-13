@@ -11,7 +11,7 @@ import 'package:makan_mate/features/favorite/presentation/pages/favorite_page.da
 import 'package:makan_mate/features/home/presentation/bloc/home_bloc.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_state.dart';
 import 'package:makan_mate/features/home/domain/entities/restaurant_entity.dart';
-import 'package:makan_mate/screens/home_screen.dart';
+import 'package:makan_mate/features/home/presentation/pages/home_page.dart';
 
 class SpinWheelPage extends StatefulWidget {
   const SpinWheelPage({Key? key}) : super(key: key);
@@ -233,7 +233,7 @@ class _SpinWheelPageState extends State<SpinWheelPage> {
                     ],
                   ),
                 ),
-      bottomNavigationBar: BottomNavWidget(
+      /* bottomNavigationBar: BottomNavWidget(
         currentIndex: _currentIndex,
         onTap: (index) {
           switch (index) {
@@ -258,7 +258,7 @@ class _SpinWheelPageState extends State<SpinWheelPage> {
               break;
           }
         },
-      ),
+      ), */
     );
   }
 }

@@ -24,6 +24,7 @@ class HomeLoaded extends HomeState {
   const HomeLoaded({
     required this.categories,
     required this.recommendations,
+    required this.restaurants,
   });
 
   @override

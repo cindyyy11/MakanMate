@@ -1,48 +1,40 @@
 import 'package:bloc/bloc.dart';
-import 'package:makan_mate/features/home/domain/usecases/get_categories_usecase.dart';
-import 'package:makan_mate/features/home/domain/usecases/get_recommendations_usecase.dart';
 import 'package:makan_mate/features/home/domain/usecases/get_restaurants_usecase.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_event.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:makan_mate/features/home/domain/entities/restaurant_entity.dart';
 import 'package:makan_mate/features/home/domain/usecases/get_restaurant_details_usecase.dart';
-import 'package:makan_mate/features/home/domain/usecases/get_categories_usecase.dart';
-
-import 'home_event.dart';
-import 'home_state.dart';
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final GetRestaurantsUseCase getRestaurants;
   final GetRestaurantDetailsUseCase getRestaurantDetails;
 
-  HomeBloc({
-    required this.getRestaurants,
-    required this.getRestaurantDetails,
-  }) : super(const HomeInitial()) {
+  HomeBloc({required this.getRestaurants, required this.getRestaurantDetails})
+    : super(const HomeInitial()) {
     on<LoadHomeDataEvent>(_onLoadHomeData);
     on<RefreshHomeDataEvent>(_onLoadHomeData);
   }
 
-  Future<void> _onLoadHomeData(
-    HomeEvent event,
-    Emitter<HomeState> emit,
-  ) async {
+  Future<void> _onLoadHomeData(HomeEvent event, Emitter<HomeState> emit) async {
     emit(const HomeLoading());
     try {
       // 1. Get all restaurants
       final restaurants = await getRestaurants();
 
       // 2. Build categories
-      final categories = _buildCuisineCategories(restaurants);
+      final categories = _buildCuisineCategories(await restaurants);
 
       // 3. Recommendations (for now same)
       final recommendations = restaurants;
 
-      emit(HomeLoaded(
-        categories: categories,
-        recommendations: recommendations,
-      ));
+      emit(
+        HomeLoaded(
+          categories: categories,
+          recommendations: await recommendations,
+          restaurants: await restaurants,
+        ),
+      );
     } catch (e) {
       emit(HomeError(e.toString()));
     }

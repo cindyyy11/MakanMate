@@ -7,7 +7,7 @@ import 'package:makan_mate/features/home/domain/repositories/restaurant_reposito
 class RestaurantRepositoryImpl implements RestaurantRepository {
   final RestaurantRemoteDataSource remote;
 
-  RestaurantRepositoryImpl(this.remote);
+  RestaurantRepositoryImpl({required this.remote});
 
   @override
   Future<List<RestaurantEntity>> getRestaurants() {

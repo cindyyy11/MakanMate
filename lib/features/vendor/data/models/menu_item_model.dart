@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../../domain/entities/menu_item_entity.dart';
 
 class MenuItemModel extends MenuItemEntity {
@@ -12,47 +14,73 @@ class MenuItemModel extends MenuItemEntity {
     required super.calories,
   });
 
+  MenuItemEntity toEntity() {
+    return MenuItemEntity(
+      id: id,
+      name: name,
+      description: description,
+      category: category,
+      price: price,
+      imageUrl: imageUrl,
+      available: available,
+      calories: calories,
+    );
+  }
+
+  factory MenuItemModel.fromFirestore(QueryDocumentSnapshot<Map<String, dynamic>> map) {
+    return MenuItemModel(
+      id: map['id'] ?? '',
+      name: map['name'] ?? '',
+      description: map['description'] ?? '',
+      category: map['category'] ?? '',
+      price: (map['price'] ?? 0).toDouble(),
+      imageUrl: map['imageUrl'] ?? '',
+      available: map['available'] ?? true,
+      calories: map['calories'] ?? 0,
+    );
+  }
+
   MenuItemModel copyWith({
-      String? id,
-      String? name,
-      String? description,
-      String? category,
-      double? price,
-      String? imageUrl,
-      bool? available,
-      int? calories,
-    }) {
-      return MenuItemModel(
-        id: id ?? this.id,
-        name: name ?? this.name,
-        description: description ?? this.description,
-        category: category ?? this.category,
-        price: price ?? this.price,
-        imageUrl: imageUrl ?? this.imageUrl,
-        available: available ?? this.available,
-        calories: calories ?? this.calories,
-      );
-    }
+    String? id,
+    String? name,
+    String? description,
+    String? category,
+    double? price,
+    String? imageUrl,
+    bool? available,
+    int? calories,
+  }) {
+    return MenuItemModel(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      category: category ?? this.category,
+      price: price ?? this.price,
+      imageUrl: imageUrl ?? this.imageUrl,
+      available: available ?? this.available,
+      calories: calories ?? this.calories,
+    );
+  }
 
   factory MenuItemModel.fromMap(Map<String, dynamic> map) => MenuItemModel(
-        id: map['id'] ?? '',
-        name: map['name'] ?? '',
-        description: map['description'] ?? '',
-        category: map['category'] ?? '',
-        price: (map['price'] ?? 0).toDouble(),
-        imageUrl: map['imageUrl'] ?? '',
-        available: map['available'] ?? true,
-        calories: map['calories'] ?? 0,
-      );
+    id: map['id'] ?? '',
+    name: map['name'] ?? '',
+    description: map['description'] ?? '',
+    category: map['category'] ?? '',
+    price: (map['price'] ?? 0).toDouble(),
+    imageUrl: map['imageUrl'] ?? '',
+    available: map['available'] ?? true,
+    calories: map['calories'] ?? 0,
+  );
 
   Map<String, dynamic> toMap() => {
-        'id': id,
-        'name': name,
-        'description': description,
-        'category': category,
-        'price': price,
-        'imageUrl': imageUrl,
-        'available': available,
-        'calories': calories,
-      };
+    'id': id,
+    'name': name,
+    'description': description,
+    'category': category,
+    'price': price,
+    'imageUrl': imageUrl,
+    'available': available,
+    'calories': calories,
+  };
 }

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:makan_mate/features/vendor/domain/entities/menu_item_entity.dart';
 
 class VendorProfileEntity extends Equatable {
   final String id;
@@ -13,11 +14,25 @@ class VendorProfileEntity extends Equatable {
   final String contactNumber;
   final String emailAddress;
   final String businessAddress;
-  final Map<String, OperatingHours> operatingHours; // Day -> OperatingHours
   final String shortDescription;
+
+  // Restaurant-level info
+  final String? cuisine;
+  final String? priceRange;
+  final double? ratingAverage;
+
+  // Status
   final String approvalStatus;
+
+  // Structure
+  final Map<String, OperatingHours> operatingHours;
   final List<OutletEntity> outlets;
   final List<CertificationEntity> certifications;
+
+  // Optionally attach menu items here if you want
+  final List<MenuItemEntity> menuItems;
+
+  // Timestamps
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -32,9 +47,13 @@ class VendorProfileEntity extends Equatable {
     required this.businessAddress,
     required this.operatingHours,
     required this.shortDescription,
+    this.cuisine,
+    this.priceRange,
+    this.ratingAverage,
     this.approvalStatus = 'pending',
     this.outlets = const [],
     this.certifications = const [],
+    this.menuItems = const [],
     required this.createdAt,
     required this.updatedAt,
   });
@@ -50,9 +69,13 @@ class VendorProfileEntity extends Equatable {
     String? businessAddress,
     Map<String, OperatingHours>? operatingHours,
     String? shortDescription,
+    String? cuisine,
+    String? priceRange,
+    double? ratingAverage,
     String? approvalStatus,
     List<OutletEntity>? outlets,
     List<CertificationEntity>? certifications,
+    List<MenuItemEntity>? menuItems,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -67,9 +90,13 @@ class VendorProfileEntity extends Equatable {
       businessAddress: businessAddress ?? this.businessAddress,
       operatingHours: operatingHours ?? this.operatingHours,
       shortDescription: shortDescription ?? this.shortDescription,
+      cuisine: cuisine ?? this.cuisine,
+      priceRange: priceRange ?? this.priceRange,
+      ratingAverage: ratingAverage ?? this.ratingAverage,
       approvalStatus: approvalStatus ?? this.approvalStatus,
       outlets: outlets ?? this.outlets,
       certifications: certifications ?? this.certifications,
+      menuItems: menuItems ?? this.menuItems,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -87,9 +114,13 @@ class VendorProfileEntity extends Equatable {
     businessAddress,
     operatingHours,
     shortDescription,
+    cuisine,
+    priceRange,
+    ratingAverage,
     approvalStatus,
     outlets,
     certifications,
+    menuItems,
     createdAt,
     updatedAt,
   ];
@@ -97,13 +128,12 @@ class VendorProfileEntity extends Equatable {
 
 class CertificationEntity extends Equatable {
   final String id;
-  final String
-  type; // 'Halal', 'Vegetarian', 'Alcohol-Free', 'Gluten-Free', etc.
-  final String? certificateImageUrl; // URL to uploaded certificate image
+  final String type;
+  final String? certificateImageUrl;
   final String? certificateNumber;
   final DateTime? expiryDate;
-  final CertificationStatus status; // pending, verified, rejected
-  final String? verifiedBy; // Admin user ID who verified
+  final CertificationStatus status;
+  final String? verifiedBy;
   final DateTime? verifiedAt;
   final String? rejectionReason;
   final DateTime createdAt;
@@ -171,8 +201,8 @@ enum CertificationStatus { pending, verified, rejected }
 
 class OperatingHours extends Equatable {
   final String day;
-  final String? openTime; // Format: "HH:mm"
-  final String? closeTime; // Format: "HH:mm"
+  final String? openTime;
+  final String? closeTime;
   final bool isClosed;
 
   const OperatingHours({

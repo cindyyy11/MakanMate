@@ -14,7 +14,7 @@ abstract class RestaurantRemoteDataSource {
 class RestaurantRemoteDataSourceImpl implements RestaurantRemoteDataSource {
   final FirebaseFirestore firestore;
 
-  RestaurantRemoteDataSourceImpl(this.firestore);
+  RestaurantRemoteDataSourceImpl({required this.firestore});
 
   @override
   Future<List<RestaurantEntity>> getRestaurants() async {
@@ -34,8 +34,9 @@ class RestaurantRemoteDataSourceImpl implements RestaurantRemoteDataSource {
           .collection('menu')
           .get();
 
-      final menuModels =
-          menuSnapshot.docs.map((d) => MenuItemModel.fromFirestore(d)).toList();
+      final menuModels = menuSnapshot.docs
+          .map((d) => MenuItemModel.fromFirestore(d))
+          .toList();
 
       final restaurantModel = RestaurantModel(
         vendorModel: vendorModel,
@@ -50,8 +51,7 @@ class RestaurantRemoteDataSourceImpl implements RestaurantRemoteDataSource {
 
   @override
   Future<RestaurantEntity> getRestaurantById(String vendorId) async {
-    final vendorDoc =
-        await firestore.collection('vendors').doc(vendorId).get();
+    final vendorDoc = await firestore.collection('vendors').doc(vendorId).get();
     final vendorModel = VendorProfileModel.fromFirestore(vendorDoc);
 
     final menuSnapshot = await firestore
@@ -60,8 +60,9 @@ class RestaurantRemoteDataSourceImpl implements RestaurantRemoteDataSource {
         .collection('menu')
         .get();
 
-    final menuModels =
-        menuSnapshot.docs.map((d) => MenuItemModel.fromFirestore(d)).toList();
+    final menuModels = menuSnapshot.docs
+        .map((d) => MenuItemModel.fromFirestore(d))
+        .toList();
 
     final restaurantModel = RestaurantModel(
       vendorModel: vendorModel,

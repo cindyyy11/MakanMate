@@ -1,8 +1,8 @@
 import '../entities/vendor_profile_entity.dart';
-import '../repositories/vendor_repository.dart';
+import 'package:makan_mate/features/vendor/domain/repositories/vendor_profile_repository.dart';
 
 class GetAllApprovedVendorsUseCase {
-  final VendorRepository repository;
+  final VendorProfileRepository repository;
 
   GetAllApprovedVendorsUseCase(this.repository);
 

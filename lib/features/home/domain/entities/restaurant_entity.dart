@@ -1,3 +1,5 @@
+import 'package:makan_mate/features/vendor/domain/entities/menu_item_entity.dart';
+
 import '../../../vendor/domain/entities/vendor_profile_entity.dart';
 
 class RestaurantEntity {
@@ -15,20 +17,11 @@ class RestaurantEntity {
     this.ratingAverage,
   });
 
-  @override
   List<Object> get props => [
-    id,
-    name,
-    rating,
-    description,
-    imageUrl,
-    address,
-    cuisineType,
-    priceRange,
-    isVegetarian,
-    isHalal,
-    latitude,
-    longitude,
-    openingHours,
+    vendor,
+    menuItems,
+    cuisine ?? '',
+    priceRange ?? '',
+    ratingAverage ?? 0.0,
   ];
 }

@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:makan_mate/core/widgets/bottom_nav_widget.dart';
 import 'package:makan_mate/features/map/presentation/bloc/map_bloc.dart';
 import 'package:makan_mate/features/home/presentation/pages/spin_wheel_page.dart';
-import 'package:makan_mate/screens/home_screen.dart';
+import 'package:makan_mate/features/home/presentation/pages/home_page.dart';
 
 class FavoritePage extends StatelessWidget {
   const FavoritePage({Key? key}) : super(key: key);
@@ -24,7 +24,10 @@ class FavoritePage extends StatelessWidget {
   }
 
   Future<void> _confirmAndDelete(
-      BuildContext context, String docId, String name) async {
+    BuildContext context,
+    String docId,
+    String name,
+  ) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
@@ -40,10 +43,7 @@ class FavoritePage extends StatelessWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text(
-              'Remove',
-              style: TextStyle(color: Colors.red),
-            ),
+            child: const Text('Remove', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -78,9 +78,7 @@ class FavoritePage extends StatelessWidget {
 
           final docs = snapshot.data?.docs ?? [];
           if (docs.isEmpty) {
-            return const Center(
-              child: Text('No favorites added yet.'),
-            );
+            return const Center(child: Text('No favorites added yet.'));
           }
 
           return ListView.builder(
@@ -89,7 +87,8 @@ class FavoritePage extends StatelessWidget {
             itemBuilder: (context, index) {
               final fav = docs[index].data();
               final docId = docs[index].id;
-              final imageUrl = fav['image'] ?? 'assets/images/logos/image-not-found.jpg';
+              final imageUrl =
+                  fav['image'] ?? 'assets/images/logos/image-not-found.jpg';
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 16),
@@ -117,12 +116,14 @@ class FavoritePage extends StatelessWidget {
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) =>
                               Container(
-                            color: Colors.grey[200],
-                            width: 80,
-                            height: 80,
-                            child: const Icon(Icons.image_not_supported,
-                                color: Colors.grey),
-                          ),
+                                color: Colors.grey[200],
+                                width: 80,
+                                height: 80,
+                                child: const Icon(
+                                  Icons.image_not_supported,
+                                  color: Colors.grey,
+                                ),
+                              ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -130,38 +131,51 @@ class FavoritePage extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(fav['name'] ?? '-',
-                                style: const TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.bold)),
+                            Text(
+                              fav['name'] ?? '-',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                             const SizedBox(height: 4),
                             Row(
                               children: [
-                                const Icon(Icons.star,
-                                    color: Colors.amber, size: 16),
+                                const Icon(
+                                  Icons.star,
+                                  color: Colors.amber,
+                                  size: 16,
+                                ),
                                 const SizedBox(width: 4),
                                 Text(
                                   fav['rating']?.toString() ?? '-',
                                   style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                                 const Spacer(),
-                                Text(fav['priceRange'] ?? '-',
-                                    style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.orange)),
+                                Text(
+                                  fav['priceRange'] ?? '-',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.orange,
+                                  ),
+                                ),
                               ],
                             ),
                           ],
                         ),
                       ),
                       IconButton(
-                        icon:
-                            const Icon(Icons.delete_outline, color: Colors.grey),
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.grey,
+                        ),
                         onPressed: () =>
                             _confirmAndDelete(context, docId, fav['name']),
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -170,7 +184,7 @@ class FavoritePage extends StatelessWidget {
           );
         },
       ),
-      bottomNavigationBar: BottomNavWidget(
+      /* bottomNavigationBar: BottomNavWidget(
         currentIndex: 1,
         onTap: (index) {
           switch (index) {
@@ -192,7 +206,7 @@ class FavoritePage extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (_) => BlocProvider.value(
-                    value: context.read<MapBloc>(), 
+                    value: context.read<MapBloc>(),
                     child: const SpinWheelPage(),
                   ),
                 ),
@@ -205,7 +219,7 @@ class FavoritePage extends StatelessWidget {
               break;
           }
         },
-      ),
+      ), */
     );
   }
 }

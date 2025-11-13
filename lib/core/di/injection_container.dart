@@ -7,7 +7,6 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:makan_mate/core/network/network_info.dart';
 import 'package:makan_mate/features/auth/data/datasources/auth_local_datasource.dart';
 import 'package:makan_mate/features/auth/data/datasources/auth_local_secure_datasource.dart';
@@ -20,9 +19,9 @@ import 'package:makan_mate/features/auth/domain/usecases/sign_in_usecase.dart';
 import 'package:makan_mate/features/auth/domain/usecases/sign_out_usecase.dart';
 import 'package:makan_mate/features/auth/domain/usecases/sign_up_usecase.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:makan_mate/features/home/domain/usecases/get_categories_usecase.dart';
-import 'package:makan_mate/features/home/domain/usecases/get_recommendations_usecase.dart'
-    as HomeGetRecommendationsUseCase;
+import 'package:makan_mate/features/home/data/datasources/restaurant_remote_datasource.dart';
+import 'package:makan_mate/features/home/data/repositories/restaurant_repository_impl.dart';
+import 'package:makan_mate/features/home/domain/usecases/get_restaurants_usecase.dart';
 import 'package:makan_mate/features/home/domain/usecases/get_restaurant_details_usecase.dart';
 import 'package:makan_mate/features/map/data/datasources/map_remote_datasource.dart';
 import 'package:makan_mate/features/map/domain/repositories/map_repository.dart';
@@ -35,19 +34,15 @@ import 'package:makan_mate/features/home/domain/repositories/restaurant_reposito
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:logger/logger.dart';
 import 'package:makan_mate/ai_engine/recommendation_engine.dart';
-import 'package:makan_mate/features/home/domain/usecases/get_restaurants_usecase.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_bloc.dart';
 import 'package:makan_mate/features/recommendations/data/datasources/recommendation_local_datasource.dart';
 import 'package:makan_mate/features/recommendations/data/datasources/recommendation_remote_datasource.dart';
 import 'package:makan_mate/features/recommendations/data/repositories/recommendation_repository_impl.dart';
 import 'package:makan_mate/features/recommendations/domain/repositories/recommendation_repository.dart';
-import 'package:makan_mate/features/recommendations/domain/usecases/get_contextual_recommendations_usecase.dart';
 import 'package:makan_mate/features/recommendations/domain/usecases/get_recommendations_usecase.dart';
-import 'package:makan_mate/features/recommendations/domain/usecases/get_similar_items_usecase.dart';
-import 'package:makan_mate/features/recommendations/domain/usecases/track_interaction_usecase.dart';
-import 'package:makan_mate/features/recommendations/presentation/bloc/recommendation_bloc.dart';
 import 'package:makan_mate/features/admin/data/datasources/admin_remote_datasource.dart';
 import 'package:makan_mate/features/admin/data/repositories/admin_repository_impl.dart';
+import 'package:makan_mate/features/admin/data/services/audit_log_service.dart';
 import 'package:makan_mate/features/admin/domain/repositories/admin_repository.dart';
 import 'package:makan_mate/features/admin/domain/usecases/export_metrics_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_activity_logs_usecase.dart';
@@ -79,58 +74,40 @@ import 'package:makan_mate/features/user/domain/usecases/update_behavioral_patte
 import 'package:makan_mate/features/vendor/data/datasources/vendor_remote_datasource.dart';
 import 'package:makan_mate/features/vendor/data/repositories/vendor_repository_impl.dart';
 import 'package:makan_mate/features/vendor/domain/repositories/vendor_repository.dart';
-import 'package:makan_mate/features/vendor/domain/usecases/create_vendor_application_usecase.dart';
-import 'package:makan_mate/features/vendor/domain/usecases/get_vendor_application_usecase.dart';
-import 'package:makan_mate/features/vendor/domain/usecases/approve_vendor_application_usecase.dart';
-import 'package:makan_mate/features/vendor/domain/usecases/reject_vendor_application_usecase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Vendor Feature imports
-import '../../features/vendor/data/datasources/vendor_remote_datasource.dart';
-import '../../features/vendor/data/datasources/promotion_remote_datasource.dart';
-import '../../features/vendor/data/repositories/vendor_repository_impl.dart';
-import '../../features/vendor/data/repositories/promotion_repository_impl.dart';
-import '../../features/vendor/data/services/storage_service.dart';
-import '../../features/vendor/domain/repositories/vendor_repository.dart';
-import '../../features/vendor/domain/repositories/promotion_repository.dart';
-import '../../features/vendor/domain/usecases/add_menu_item_usecase.dart';
-import '../../features/vendor/domain/usecases/delete_menu_item_usecase.dart';
-import '../../features/vendor/domain/usecases/get_menu_items_usecase.dart';
-import '../../features/vendor/domain/usecases/update_menu_item_usecase.dart';
-import '../../features/vendor/domain/usecases/get_promotions_usecase.dart';
-import '../../features/vendor/domain/usecases/get_promotions_by_status_usecase.dart';
-import '../../features/vendor/domain/usecases/add_promotion_usecase.dart';
-import '../../features/vendor/domain/usecases/update_promotion_usecase.dart';
-import '../../features/vendor/domain/usecases/delete_promotion_usecase.dart';
-import '../../features/vendor/domain/usecases/deactivate_promotion_usecase.dart';
-import '../../features/vendor/presentation/bloc/vendor_bloc.dart';
-import '../../features/vendor/presentation/bloc/promotion_bloc.dart';
-import '../../features/vendor/presentation/bloc/vendor_review_bloc.dart';
-import '../../features/vendor/data/repositories/review_repository_impl.dart';
-import '../../features/vendor/domain/repositories/review_repository.dart';
-import '../../features/vendor/domain/usecases/watch_vendor_reviews_usecase.dart';
-import '../../features/vendor/domain/usecases/reply_to_review_usecase.dart';
-import '../../features/vendor/domain/usecases/report_review_usecase.dart';
-import '../../features/vendor/data/datasources/vendor_profile_remote_datasource.dart';
-import '../../features/vendor/data/repositories/vendor_profile_repository_impl.dart';
-import '../../features/vendor/domain/repositories/vendor_profile_repository.dart';
-import '../../features/vendor/domain/usecases/get_vendor_profile_usecase.dart';
-import '../../features/vendor/domain/usecases/update_vendor_profile_usecase.dart';
-import '../../features/vendor/domain/usecases/create_vendor_profile_usecase.dart';
-import '../../features/vendor/presentation/bloc/vendor_profile_bloc.dart';
-import '../../features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:makan_mate/features/vendor/data/datasources/vendor_remote_datasource.dart';
-import 'package:makan_mate/features/vendor/data/repositories/vendor_repository_impl.dart';
-import 'package:makan_mate/features/vendor/domain/repositories/vendor_repository.dart';
+import 'package:makan_mate/features/vendor/data/datasources/promotion_remote_datasource.dart';
+import 'package:makan_mate/features/vendor/data/repositories/promotion_repository_impl.dart';
+import 'package:makan_mate/features/vendor/data/services/storage_service.dart';
+import 'package:makan_mate/features/vendor/domain/repositories/promotion_repository.dart';
+import 'package:makan_mate/features/vendor/domain/usecases/add_menu_item_usecase.dart';
+import 'package:makan_mate/features/vendor/domain/usecases/delete_menu_item_usecase.dart';
+import 'package:makan_mate/features/vendor/domain/usecases/get_menu_items_usecase.dart';
+import 'package:makan_mate/features/vendor/domain/usecases/update_menu_item_usecase.dart';
+import 'package:makan_mate/features/vendor/domain/usecases/get_promotions_usecase.dart';
+import 'package:makan_mate/features/vendor/domain/usecases/get_promotions_by_status_usecase.dart';
+import 'package:makan_mate/features/vendor/domain/usecases/add_promotion_usecase.dart';
+import 'package:makan_mate/features/vendor/domain/usecases/update_promotion_usecase.dart';
+import 'package:makan_mate/features/vendor/domain/usecases/delete_promotion_usecase.dart';
+import 'package:makan_mate/features/vendor/domain/usecases/deactivate_promotion_usecase.dart';
+import 'package:makan_mate/features/vendor/presentation/bloc/vendor_bloc.dart';
+import 'package:makan_mate/features/vendor/presentation/bloc/promotion_bloc.dart';
+import 'package:makan_mate/features/vendor/presentation/bloc/vendor_review_bloc.dart';
+import 'package:makan_mate/features/vendor/data/repositories/review_repository_impl.dart';
+import 'package:makan_mate/features/vendor/domain/repositories/review_repository.dart';
+import 'package:makan_mate/features/vendor/domain/usecases/watch_vendor_reviews_usecase.dart';
+import 'package:makan_mate/features/vendor/domain/usecases/reply_to_review_usecase.dart';
+import 'package:makan_mate/features/vendor/domain/usecases/report_review_usecase.dart';
+import 'package:makan_mate/features/vendor/data/datasources/vendor_profile_remote_datasource.dart';
+import 'package:makan_mate/features/vendor/data/repositories/vendor_profile_repository_impl.dart';
+import 'package:makan_mate/features/vendor/domain/repositories/vendor_profile_repository.dart';
+import 'package:makan_mate/features/vendor/domain/usecases/get_vendor_profile_usecase.dart';
+import 'package:makan_mate/features/vendor/domain/usecases/update_vendor_profile_usecase.dart';
+import 'package:makan_mate/features/vendor/domain/usecases/create_vendor_profile_usecase.dart';
+import 'package:makan_mate/features/vendor/presentation/bloc/vendor_profile_bloc.dart';
 import 'package:makan_mate/features/vendor/domain/usecases/get_all_approved_vendors_usecase.dart';
 import 'package:makan_mate/features/vendor/domain/usecases/get_vendor_menu_items_usecase.dart';
-import 'package:makan_mate/features/vendor/domain/usecases/get_vendor_profile_usecase.dart';
-import 'package:makan_mate/features/vendor/presentation/bloc/vendor_bloc.dart';
-import '../../features/home/data/datasources/restaurant_remote_datasource.dart';
-import '../../features/home/data/repositories/restaurant_repository_impl.dart';
-import '../../features/home/domain/repositories/restaurant_repository.dart';
-import '../../features/home/domain/usecases/get_categories_usecase.dart';
-import '../../features/home/presentation/bloc/home_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -201,35 +178,76 @@ void _initAuth() {
   }
 }
 
-// ---------------------------
-// Home / Restaurants
-// ---------------------------
-void _initHome() {
-  // Bloc
+void _initAdmin() {
+  // Logger for admin
+  final logger = Logger(
+    printer: PrettyPrinter(
+      methodCount: 2,
+      errorMethodCount: 5,
+      lineLength: 80,
+      colors: true,
+      printEmojis: true,
+    ),
+  );
+
+  // BLoC
   sl.registerFactory(
-    () => HomeBloc(
-      getCategoriesUseCase: sl(),
-      getRecommendationsUseCase: sl(),
-      getRestaurants: sl(),
+    () => AdminBloc(
+      getPlatformMetrics: sl(),
+      getMetricTrend: sl(),
+      getActivityLogs: sl(),
+      getNotifications: sl(),
+      exportMetrics: sl(),
+      streamSystemMetrics: sl(),
+      adminRepository: sl(),
+      logger: logger,
     ),
   );
 
   // Use cases
-  sl.registerLazySingleton(() => GetRestaurantsUseCase(sl()));
-  sl.registerLazySingleton(
-    () => HomeGetRecommendationsUseCase.GetRecommendationsUseCase(sl()),
-  );
-
-  sl.registerLazySingleton(() => GetCategoriesUseCase(sl()));
+  sl.registerLazySingleton(() => GetPlatformMetricsUseCase(sl()));
+  sl.registerLazySingleton(() => GetMetricTrendUseCase(sl()));
+  sl.registerLazySingleton(() => GetActivityLogsUseCase(sl()));
+  sl.registerLazySingleton(() => GetNotificationsUseCase(sl()));
+  sl.registerLazySingleton(() => ExportMetricsUseCase(sl()));
+  sl.registerLazySingleton(() => StreamSystemMetricsUseCase(sl()));
 
   // Repository
+  sl.registerLazySingleton<AdminRepository>(
+    () => AdminRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
+  );
+
+  // Data sources
+  sl.registerLazySingleton<AdminRemoteDataSource>(
+    () => AdminRemoteDataSourceImpl(firestore: sl(), logger: logger),
+  );
+
+  // Services
+  sl.registerLazySingleton<AuditLogService>(
+    () => AuditLogService(firestore: sl(), auth: sl(), logger: logger),
+  );
+}
+
+// ---------------------------
+// Home / Restaurants
+// ---------------------------
+void _initHome() {
+  // Repository
   sl.registerLazySingleton<RestaurantRepository>(
-    () => RestaurantRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
+    () => RestaurantRepositoryImpl(remote: sl()),
   );
 
   // Data sources
   sl.registerLazySingleton<RestaurantRemoteDataSource>(
     () => RestaurantRemoteDataSourceImpl(firestore: sl()),
+  );
+
+  // Use cases
+  sl.registerLazySingleton(() => GetRestaurantsUseCase(sl()));
+
+  // Bloc
+  sl.registerFactory(
+    () => HomeBloc(getRestaurantDetails: sl(), getRestaurants: sl()),
   );
 }
 
@@ -321,22 +339,6 @@ Future<void> _initRecommendations() async {
 
   // Use cases
   sl.registerLazySingleton(() => GetRecommendationsUseCase(sl()));
-
-  // Bloc
-  sl.registerFactory(() => HomeBloc(
-        getCategoriesUseCase: sl(),
-        getRecommendationsUseCase: sl(),
-      ));
-
-  // Repository
-  sl.registerLazySingleton<AdminRepository>(
-    () => AdminRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
-  );
-
-  // Data sources
-  sl.registerLazySingleton<AdminRemoteDataSource>(
-    () => AdminRemoteDataSourceImpl(firestore: sl(), logger: logger),
-  );
 }
 
 // ---------------------------
@@ -521,44 +523,15 @@ void _initVendor() {
       storageService: sl(),
     ),
   );
-  // Data source
-  sl.registerLazySingleton<VendorRemoteDataSource>(
-      () => VendorRemoteDataSourceImpl(sl()));
-  sl.registerLazySingleton<MapRemoteDataSource>(
-      () => MapRemoteDataSourceImpl());
-  sl.registerLazySingleton<RestaurantRemoteDataSource>(
-    () => RestaurantRemoteDataSourceImpl(sl()));
-
-  // Repository
-  sl.registerLazySingleton<RestaurantRepository>(
-      () => RestaurantRepositoryImpl(sl()));
-    sl.registerLazySingleton<MapRepository>(() => MapRepositoryImpl(sl()));
-    sl.registerLazySingleton<VendorRepository>(
-      () => VendorRepositoryImpl(sl()));
 
   // Use cases
-  sl.registerLazySingleton<GetNearbyRestaurantsUseCase>(
-    () => GetNearbyRestaurantsUseCase(sl()));
   sl.registerLazySingleton<GetVendorMenuItemsUseCase>(
-    () => GetVendorMenuItemsUseCase(sl()));
-  sl.registerLazySingleton<GetVendorProfileUseCase>(
-    () => GetVendorProfileUseCase(sl()));
+    () => GetVendorMenuItemsUseCase(sl()),
+  );
   sl.registerLazySingleton<GetAllApprovedVendorsUseCase>(
-    () => GetAllApprovedVendorsUseCase(sl()));
-  sl.registerLazySingleton<GetRestaurantsUseCase>(
-    () => GetRestaurantsUseCase(sl()));
+    () => GetAllApprovedVendorsUseCase(sl()),
+  );
   sl.registerLazySingleton<GetRestaurantDetailsUseCase>(
-    () => GetRestaurantDetailsUseCase(sl()));
-
-  // Bloc
-  sl.registerFactory<VendorBloc>(() => VendorBloc(
-    getVendorProfile: sl(),
-    getVendorMenuItems: sl(),
-  ));
-  sl.registerFactory<HomeBloc>(() => HomeBloc(
-      getRestaurants: sl(),
-      getRestaurantDetails: sl(),
-    ));
-  sl.registerFactory(() => MapBloc(sl()));
-   
+    () => GetRestaurantDetailsUseCase(sl()),
+  );
 }

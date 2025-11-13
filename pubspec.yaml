@@ -105,7 +105,7 @@ dependencies:
 
     # Voice & Audio
     # speech_to_text: ^7.3.0
-    flutter_tts: ^4.2.3
+  flutter_tts: ^4.2.3
 
   # Storage & Caching
   path_provider: ^2.1.5

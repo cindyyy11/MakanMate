@@ -7,6 +7,7 @@ import 'package:makan_mate/features/admin/presentation/pages/admin_dashboard_pag
 import 'package:makan_mate/features/auth/domain/entities/user_entity.dart';
 import 'package:makan_mate/features/favorite/presentation/pages/favorite_page.dart';
 import 'package:makan_mate/features/home/presentation/pages/home_page.dart';
+import 'package:makan_mate/features/home/presentation/pages/spin_wheel_page.dart';
 import 'package:makan_mate/features/vendor/presentation/pages/menu_management_page.dart';
 import 'package:makan_mate/features/vendor/presentation/pages/promotion_management_page.dart';
 import 'package:makan_mate/features/vendor/presentation/pages/vendor_home_page.dart';
@@ -53,7 +54,7 @@ class _MainScaffoldState extends State<MainScaffold> {
         ];
       case 'user':
       default:
-        return [const HomeScreen(), const FavoritePage()];
+        return [const HomeScreen(), const FavoritePage(), const SpinWheelPage()];
     }
   }
 
@@ -85,6 +86,7 @@ class _MainScaffoldState extends State<MainScaffold> {
             icon: Icon(Icons.favorite),
             label: 'Favorites',
           ),
+          BottomNavigationBarItem(icon: Icon(Icons.casino), label: 'Spin Wheel'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ];
     }
