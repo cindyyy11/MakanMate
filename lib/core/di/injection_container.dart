@@ -47,6 +47,7 @@ import '../../features/vendor/domain/usecases/get_vendor_profile_usecase.dart';
 import '../../features/vendor/domain/usecases/update_vendor_profile_usecase.dart';
 import '../../features/vendor/domain/usecases/create_vendor_profile_usecase.dart';
 import '../../features/vendor/presentation/bloc/vendor_profile_bloc.dart';
+import '../../features/auth/presentation/bloc/auth_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -71,6 +72,7 @@ Future<void> init() async {
         getCategoriesUseCase: sl(),
         getRecommendationsUseCase: sl(),
       ));
+  sl.registerFactory(() => AuthBloc(vendorProfileRepository: sl()));
 
   // Map Feature
     sl.registerLazySingleton<MapRemoteDataSource>(() => MapRemoteDataSourceImpl());

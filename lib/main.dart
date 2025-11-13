@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:makan_mate/features/auth/presentation/bloc/auth_event.dart';
 
 // Local imports
 import 'firebase_options.dart';
@@ -12,18 +13,17 @@ import 'screens/auth_page.dart';
 // Vendor Feature imports
 import 'features/vendor/presentation/bloc/vendor_bloc.dart';
 import 'features/vendor/presentation/bloc/vendor_event.dart';
+import 'features/vendor/presentation/pages/pending_approval_page.dart';
+import 'features/vendor/presentation/pages/vendor_onboarding_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   await di.init();
 
   runApp(const MyApp());
 }
-
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -33,15 +33,23 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => di.sl<HomeBloc>()),
-        BlocProvider(create: (_) => di.sl<AuthBloc>()),
+        BlocProvider(create: (_) => di.sl<AuthBloc>()..add(AppStarted())),
         BlocProvider(create: (_) => di.sl<VendorBloc>()..add(LoadMenuEvent())),
       ],
       child: MaterialApp(
         title: 'MakanMate',
         debugShowCheckedModeBanner: false,
+        routes: {
+          '/vendorOnboarding': (_) => const VendorOnboardingPage(),
+          '/pendingApproval': (_) => PendingApprovalPage(
+            onBackToLogin: () {
+              // This route is used only for navigation overview; the actual
+              // AuthBloc listener will handle resetting state.
+            },
+          ),
+        },
         home: const AuthPage(), // Use AuthPage for proper authentication flow
       ),
     );
   }
 }
-

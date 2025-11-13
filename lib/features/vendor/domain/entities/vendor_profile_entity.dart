@@ -10,6 +10,7 @@ class VendorProfileEntity extends Equatable {
   final String businessAddress;
   final Map<String, OperatingHours> operatingHours; // Day -> OperatingHours
   final String shortDescription;
+  final String approvalStatus;
   final List<OutletEntity> outlets;
   final List<CertificationEntity> certifications;
   final DateTime createdAt;
@@ -25,6 +26,7 @@ class VendorProfileEntity extends Equatable {
     required this.businessAddress,
     required this.operatingHours,
     required this.shortDescription,
+    this.approvalStatus = 'pending',
     this.outlets = const [],
     this.certifications = const [],
     required this.createdAt,
@@ -41,6 +43,7 @@ class VendorProfileEntity extends Equatable {
     String? businessAddress,
     Map<String, OperatingHours>? operatingHours,
     String? shortDescription,
+    String? approvalStatus,
     List<OutletEntity>? outlets,
     List<CertificationEntity>? certifications,
     DateTime? createdAt,
@@ -56,6 +59,7 @@ class VendorProfileEntity extends Equatable {
       businessAddress: businessAddress ?? this.businessAddress,
       operatingHours: operatingHours ?? this.operatingHours,
       shortDescription: shortDescription ?? this.shortDescription,
+      approvalStatus: approvalStatus ?? this.approvalStatus,
       outlets: outlets ?? this.outlets,
       certifications: certifications ?? this.certifications,
       createdAt: createdAt ?? this.createdAt,
@@ -65,25 +69,27 @@ class VendorProfileEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        profilePhotoUrl,
-        businessLogoUrl,
-        businessName,
-        contactNumber,
-        emailAddress,
-        businessAddress,
-        operatingHours,
-        shortDescription,
-        outlets,
-        certifications,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    profilePhotoUrl,
+    businessLogoUrl,
+    businessName,
+    contactNumber,
+    emailAddress,
+    businessAddress,
+    operatingHours,
+    shortDescription,
+    approvalStatus,
+    outlets,
+    certifications,
+    createdAt,
+    updatedAt,
+  ];
 }
 
 class CertificationEntity extends Equatable {
   final String id;
-  final String type; // 'Halal', 'Vegetarian', 'Alcohol-Free', 'Gluten-Free', etc.
+  final String
+  type; // 'Halal', 'Vegetarian', 'Alcohol-Free', 'Gluten-Free', etc.
   final String? certificateImageUrl; // URL to uploaded certificate image
   final String? certificateNumber;
   final DateTime? expiryDate;
@@ -138,25 +144,21 @@ class CertificationEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        type,
-        certificateImageUrl,
-        certificateNumber,
-        expiryDate,
-        status,
-        verifiedBy,
-        verifiedAt,
-        rejectionReason,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    type,
+    certificateImageUrl,
+    certificateNumber,
+    expiryDate,
+    status,
+    verifiedBy,
+    verifiedAt,
+    rejectionReason,
+    createdAt,
+    updatedAt,
+  ];
 }
 
-enum CertificationStatus {
-  pending,
-  verified,
-  rejected,
-}
+enum CertificationStatus { pending, verified, rejected }
 
 class OperatingHours extends Equatable {
   final String day;
@@ -200,15 +202,14 @@ class OutletEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        address,
-        contactNumber,
-        operatingHours,
-        latitude,
-        longitude,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    name,
+    address,
+    contactNumber,
+    operatingHours,
+    latitude,
+    longitude,
+    createdAt,
+    updatedAt,
+  ];
 }
-

@@ -22,19 +22,23 @@ class VendorRemoteDataSourceImpl implements VendorRemoteDataSource {
 
     return snapshot.docs
         .map((doc) => MenuItemModel.fromMap({
-              'id': doc.id, // include Firestore document ID
               ...doc.data(),
+              'id': doc.id, // force Firestore document ID to override stale values
             }))
         .toList();
   }
 
   @override
   Future<void> addMenuItem(String vendorId, MenuItemModel item) async {
-    await firestore
+    final docRef = firestore
         .collection('vendors')
         .doc(vendorId)
         .collection('menus')
-        .add(item.toMap());
+        .doc(); // auto-ID
+
+    final model = item.copyWith(id: docRef.id);
+
+    await docRef.set(model.toMap());
   }
 
   @override

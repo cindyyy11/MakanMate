@@ -12,7 +12,29 @@ class MenuItemModel extends MenuItemEntity {
     required super.calories,
   });
 
-   factory MenuItemModel.fromMap(Map<String, dynamic> map) => MenuItemModel(
+  MenuItemModel copyWith({
+      String? id,
+      String? name,
+      String? description,
+      String? category,
+      double? price,
+      String? imageUrl,
+      bool? available,
+      int? calories,
+    }) {
+      return MenuItemModel(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        description: description ?? this.description,
+        category: category ?? this.category,
+        price: price ?? this.price,
+        imageUrl: imageUrl ?? this.imageUrl,
+        available: available ?? this.available,
+        calories: calories ?? this.calories,
+      );
+    }
+
+  factory MenuItemModel.fromMap(Map<String, dynamic> map) => MenuItemModel(
         id: map['id'] ?? '',
         name: map['name'] ?? '',
         description: map['description'] ?? '',

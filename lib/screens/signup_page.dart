@@ -1,9 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import '../components/my_textfield.dart';
-import '../components/loginpage_button.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:country_code_picker/country_code_picker.dart';
+import '../components/loginpage_button.dart';
+import '../components/my_textfield.dart';
 
 
 class SignupPage extends StatefulWidget {
@@ -78,19 +78,43 @@ class _SignupPageState extends State<SignupPage> {
 
       String uid = userCredential.user!.uid;
 
+      final timestamp = Timestamp.now();
+
       await FirebaseFirestore.instance.collection('users').doc(uid).set({
-      'firstName': firstNameController.text.trim(),
-      'lastName': lastNameController.text.trim(),
-      'email': emailController.text.trim(),
-      'phone': '$selectedCountryCode ${phoneController.text.trim()}',
-      'birthDate': birthDate!.toIso8601String(),
-      'createdAt': Timestamp.now(),
-      'isGuest': false,
-      'role': selectedRole, // 'customer' or 'vendor'
-    });
+        'firstName': firstNameController.text.trim(),
+        'lastName': lastNameController.text.trim(),
+        'email': emailController.text.trim(),
+        'phone': '$selectedCountryCode ${phoneController.text.trim()}',
+        'birthDate': birthDate!.toIso8601String(),
+        'createdAt': timestamp,
+        'isGuest': false,
+        'role': selectedRole, // 'customer' or 'vendor'
+      });
 
-      print('Account created successfully!');
+      if (selectedRole == 'vendor') {
+        await FirebaseFirestore.instance.collection('vendors').doc(uid).set({
+          'vendorId': uid,
+          'profilePhotoUrl': null,
+          'businessLogoUrl': null,
+          'businessName': '',
+          'contactNumber': '',
+          'emailAddress': emailController.text.trim(),
+          'businessAddress': '',
+          'operatingHours': <String, dynamic>{},
+          'shortDescription': '',
+          'outlets': <Map<String, dynamic>>[],
+          'certifications': <Map<String, dynamic>>[],
+          'approvalStatus': 'pending',
+          'createdAt': timestamp,
+          'updatedAt': timestamp,
+        });
 
+        if (!mounted) return;
+        Navigator.pushReplacementNamed(context, '/vendorOnboarding');
+        return;
+      }
+
+      if (!mounted) return;
       Navigator.pop(context);
     } on FirebaseAuthException catch (e) {
       String message = '';

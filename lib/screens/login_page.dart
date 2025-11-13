@@ -1,10 +1,10 @@
-// ignore_for_file: avoid_print
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:makan_mate/services/auth_service.dart';
-import '../components/my_textfield.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:makan_mate/features/auth/presentation/bloc/auth_event.dart';
 import '../components/loginpage_button.dart';
+import '../components/my_textfield.dart';
 import '../components/square_tile.dart';
 import 'signup_page.dart';
 
@@ -16,47 +16,44 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  //tex editing controllers
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
-  //sign user in method
-void wrongCredentialMessage() {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Login failed'),
-      content: const Text('Email or password is incorrect.'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('OK'),
-        ),
-      ],
-    ),
-  );
-}
-
-  void signUserIn() async{
-    //try sign in
-    try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: emailController.text,
-        password: passwordController.text,
-      );
-    } 
-    on FirebaseAuthException catch (e) {
-      print('Login error: ${e.code}');
-      wrongCredentialMessage();
-    }
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
   }
 
-  void signInAsGuest() async {
+  void _signUserIn() {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter your email and password.'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
+    context
+        .read<AuthBloc>()
+        .add(SignInRequested(email: email, password: password));
+  }
+
+  Future<void> _signInAsGuest() async {
     try {
       await FirebaseAuth.instance.signInAnonymously();
-      print('Signed in as guest!');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Signed in as guest.'),
+        ),
+      );
     } on FirebaseAuthException catch (e) {
-      print('Guest login failed: ${e.code}');
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -80,14 +77,10 @@ void wrongCredentialMessage() {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            //logo
             Image.asset('assets/images/logos/makanmate_logo.jpg'),
-        
-            SizedBox(height: 20),
-        
-            //Welcome
-            Text(
-              "Login",
+            const SizedBox(height: 20),
+            const Text(
+              'Login',
               style: TextStyle(
                 color: Colors.black,
                 fontSize: 24,
@@ -95,56 +88,46 @@ void wrongCredentialMessage() {
               ),
             ),
             Text(
-              "Welcome to MakanMate!",
+              'Welcome to MakanMate!',
               style: TextStyle(
                 color: Colors.grey[700],
                 fontSize: 16,
               ),
             ),
-        
-            SizedBox(height: 25),
-        
-            //email textfield
+            const SizedBox(height: 25),
             MyTextfield(
               controller: emailController,
               hintText: 'Email',
               obscureText: false,
             ),
-            SizedBox(height: 10),
-        
-            //password textfield
+            const SizedBox(height: 10),
             MyTextfield(
               controller: passwordController,
               hintText: 'Password',
               obscureText: true,
             ),
-        
-            SizedBox(height: 10),
-        
-            //forgot password
-            Padding(padding:  const EdgeInsets.symmetric(horizontal: 25.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Text("Forgot Password?",
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 25.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text(
+                    'Forgot Password?',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 14,
+                    ),
                   ),
-                ),
-              ]),
+                ],
+              ),
             ),
-        
-            SizedBox(height: 25),
-            
-            //Log in
+            const SizedBox(height: 25),
             LoginpageButton(
-              onTap: signUserIn,
+              onTap: _signUserIn,
               text: 'Log In',
             ),
-        
-            SizedBox(height: 40),
-        
+            const SizedBox(height: 40),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 25.0),
               child: Row(
@@ -157,8 +140,9 @@ void wrongCredentialMessage() {
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                    child: Text("  Or login with  ",
-                    style: TextStyle(color: Colors.grey[700])
+                    child: Text(
+                      '  Or login with  ',
+                      style: TextStyle(color: Colors.grey[700]),
                     ),
                   ),
                   Expanded(
@@ -170,42 +154,20 @@ void wrongCredentialMessage() {
                 ],
               ),
             ),
-        
-            SizedBox(height: 30),
-        
-            //gmail
-            // Row(
-            //   mainAxisAlignment: MainAxisAlignment.center,
-            //   children: [
-            //     SquareTile(imagePath: "assets/images/logos/gmail_logo.jpg"),
-            //   ],
-            // ),
-        
+            const SizedBox(height: 30),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 GestureDetector(
-                  onTap: () async {
-                    try {
-                      final userCredential = await AuthService().signInWithGoogle();
-                      if (userCredential != null) {
-                        // User logged in successfully
-                        print("Google login: ${userCredential.user?.displayName}");
-                        // Example: navigate to homepage
-                        // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomePage()));
-                      }
-                    } catch (e) {
-                      print("Google sign-in failed: $e");
-                    }
-                  },
-                  child: SquareTile(imagePath: "assets/images/logos/gmail_logo.jpg"),
+                  onTap: () =>
+                      context.read<AuthBloc>().add(GoogleSignInRequested()),
+                  child: SquareTile(
+                    imagePath: 'assets/images/logos/gmail_logo.jpg',
+                  ),
                 ),
               ],
             ),
-        
-            SizedBox(height: 30),
-        
-            //not a member? register now
+            const SizedBox(height: 30),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -215,16 +177,18 @@ void wrongCredentialMessage() {
                     color: Colors.grey[700],
                   ),
                 ),
-                SizedBox(width: 4),
+                const SizedBox(width: 4),
                 GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const SignupPage()),
-                      );
-                    },
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SignupPage(),
+                      ),
+                    );
+                  },
                   child: Text(
-                    "Sign Up",
+                    'Sign Up',
                     style: TextStyle(
                       color: Colors.blue[700],
                       fontWeight: FontWeight.bold,
@@ -234,19 +198,20 @@ void wrongCredentialMessage() {
               ],
             ),
             Row(
-              mainAxisAlignment: MainAxisAlignment.center, 
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-              TextButton(
-                onPressed: signInAsGuest,
-                child: Text(
-                  "Continue as Guest",
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    decoration: TextDecoration.underline,
+                TextButton(
+                  onPressed: _signInAsGuest,
+                  child: Text(
+                    'Continue as Guest',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      decoration: TextDecoration.underline,
+                    ),
                   ),
                 ),
-              ),
-            ]),
+              ],
+            ),
           ],
         ),
       ),

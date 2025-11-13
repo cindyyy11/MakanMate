@@ -47,5 +47,14 @@ class VendorProfileRepositoryImpl implements VendorProfileRepository {
       throw Exception('Failed to update vendor profile: $e');
     }
   }
+
+  @override
+  Future<void> updateApprovalStatus(String vendorId, String status) async {
+    try {
+      await remoteDataSource.updateApprovalStatus(vendorId, status);
+    } catch (e) {
+      throw Exception('Failed to update approval status: $e');
+    }
+  }
 }
 

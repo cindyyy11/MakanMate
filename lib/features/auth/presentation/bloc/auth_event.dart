@@ -24,3 +24,5 @@ class FacebookSignInRequested extends AuthEvent {}
 
 // When a user logs out
 class SignOutRequested extends AuthEvent {}
+
+class AuthResetRequested extends AuthEvent {}

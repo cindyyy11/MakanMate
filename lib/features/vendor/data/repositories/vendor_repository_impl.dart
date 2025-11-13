@@ -26,7 +26,7 @@ class VendorRepositoryImpl implements VendorRepository {
   @override
   Future<void> addMenuItem(MenuItemEntity item) async {
     final model = MenuItemModel(
-      id: item.id,
+      id: '', // Firestore will replace this
       name: item.name,
       description: item.description,
       category: item.category,
@@ -52,6 +52,7 @@ class VendorRepositoryImpl implements VendorRepository {
     );
     await remoteDataSource.updateMenuItem(vendorId, model);
   }
+  
 
   @override
   Future<void> deleteMenuItem(String id) async {

@@ -13,6 +13,7 @@ class VendorProfileModel {
   final String shortDescription;
   final List<Map<String, dynamic>> outlets;
   final List<Map<String, dynamic>> certifications;
+  final String approvalStatus;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -28,14 +29,14 @@ class VendorProfileModel {
     required this.shortDescription,
     this.outlets = const [],
     this.certifications = const [],
+    this.approvalStatus = 'pending',
     required this.createdAt,
     required this.updatedAt,
   });
 
-  factory VendorProfileModel.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+  factory VendorProfileModel.fromMap(Map<String, dynamic> data, {required String id}) {
     return VendorProfileModel(
-      id: doc.id,
+      id: id,
       profilePhotoUrl: data['profilePhotoUrl'] as String?,
       businessLogoUrl: data['businessLogoUrl'] as String?,
       businessName: data['businessName'] as String? ?? '',
@@ -51,12 +52,18 @@ class VendorProfileModel {
       certifications: (data['certifications'] as List<dynamic>? ?? [])
           .map((e) => e as Map<String, dynamic>)
           .toList(),
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      approvalStatus: data['approvalStatus'] as String? ?? 'pending',
+      createdAt: _parseTimestamp(data['createdAt']),
+      updatedAt: _parseTimestamp(data['updatedAt']),
     );
   }
 
-  Map<String, dynamic> toFirestore() {
+  factory VendorProfileModel.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return VendorProfileModel.fromMap(data, id: doc.id);
+  }
+
+  Map<String, dynamic> toMap() {
     return {
       'profilePhotoUrl': profilePhotoUrl,
       'businessLogoUrl': businessLogoUrl,
@@ -68,9 +75,17 @@ class VendorProfileModel {
       'shortDescription': shortDescription,
       'outlets': outlets,
       'certifications': certifications,
-      'createdAt': Timestamp.fromDate(createdAt),
-      'updatedAt': Timestamp.fromDate(updatedAt),
+      'approvalStatus': approvalStatus,
+      'createdAt': createdAt,
+      'updatedAt': updatedAt,
     };
+  }
+
+  Map<String, dynamic> toFirestore() {
+    final data = toMap();
+    data['createdAt'] = Timestamp.fromDate(createdAt);
+    data['updatedAt'] = Timestamp.fromDate(updatedAt);
+    return data;
   }
 
   VendorProfileEntity toEntity() {
@@ -129,6 +144,7 @@ class VendorProfileModel {
           updatedAt: (cert['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
         );
       }).toList(),
+      approvalStatus: approvalStatus,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );
@@ -187,6 +203,7 @@ class VendorProfileModel {
           'updatedAt': Timestamp.fromDate(cert.updatedAt),
         };
       }).toList(),
+      approvalStatus: entity.approvalStatus,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     );
@@ -202,6 +219,16 @@ class VendorProfileModel {
       default:
         return CertificationStatus.pending;
     }
+  }
+
+  static DateTime _parseTimestamp(dynamic value) {
+    if (value is Timestamp) {
+      return value.toDate();
+    }
+    if (value is DateTime) {
+      return value;
+    }
+    return DateTime.now();
   }
 }
 

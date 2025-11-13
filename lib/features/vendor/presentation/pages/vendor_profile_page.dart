@@ -31,6 +31,9 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
   File? _selectedProfilePhoto;
   Map<String, OperatingHours> _operatingHours = {};
   List<OutletEntity> _outlets = [];
+  String _approvalStatus = 'pending';
+
+  bool get _isProfileEditable => _approvalStatus.toLowerCase() != 'rejected';
 
   @override
   void initState() {
@@ -56,6 +59,7 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
     _shortDescriptionController.text = profile.shortDescription;
     _operatingHours = Map.from(profile.operatingHours);
     _outlets = List.from(profile.outlets);
+    _approvalStatus = profile.approvalStatus;
   }
 
   Future<void> _pickImage(ImageSource source) async {
@@ -111,9 +115,11 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
     final currentState = context.read<VendorProfileBloc>().state;
     String? profilePhotoUrl;
     List<CertificationEntity> certifications = [];
-    if (currentState is VendorProfileLoaded) {
+    DateTime createdAt = DateTime.now();
+    if (currentState is VendorProfileReadyState) {
       profilePhotoUrl = currentState.profile.profilePhotoUrl;
       certifications = currentState.profile.certifications;
+      createdAt = currentState.profile.createdAt;
     }
 
     final profile = VendorProfileEntity(
@@ -125,9 +131,10 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
       businessAddress: _businessAddressController.text.trim(),
       operatingHours: _operatingHours,
       shortDescription: _shortDescriptionController.text.trim(),
+      approvalStatus: _approvalStatus,
       outlets: _outlets,
       certifications: certifications,
-      createdAt: DateTime.now(),
+      createdAt: createdAt,
       updatedAt: DateTime.now(),
     );
 
@@ -734,9 +741,7 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
   Widget build(BuildContext context) {
     return BlocListener<VendorProfileBloc, VendorProfileState>(
       listener: (context, state) {
-        if (state is VendorProfileLoaded && !_isEditing) {
-          _populateFields(state.profile);
-        } else if (state is VendorProfileUpdated) {
+        if (state is VendorProfileUpdated) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Profile updated successfully!'),
@@ -746,6 +751,8 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
           setState(() {
             _isEditing = false;
           });
+        } else if (state is VendorProfileReadyState && !_isEditing) {
+          _populateFields(state.profile);
         } else if (state is VendorProfileError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -783,7 +790,7 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
           centerTitle: true,
           elevation: 0,
           actions: [
-            if (!_isEditing)
+            if (!_isEditing && _isProfileEditable)
               IconButton(
                 icon: const Icon(Icons.edit),
                 tooltip: 'Edit Profile',
@@ -801,7 +808,10 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
               return const Center(child: CircularProgressIndicator());
             }
 
-            if (state is VendorProfileError && state is! VendorProfileLoaded) {
+            final profileState =
+                state is VendorProfileReadyState ? state : null;
+
+            if (state is VendorProfileError && profileState == null) {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -812,7 +822,9 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () {
-                        context.read<VendorProfileBloc>().add(LoadVendorProfileEvent());
+                        context
+                            .read<VendorProfileBloc>()
+                            .add(LoadVendorProfileEvent());
                       },
                       child: const Text('Retry'),
                     ),
@@ -821,13 +833,14 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
               );
             }
 
-            final profile = state is VendorProfileLoaded ? state.profile : null;
-            final isLoading = state is ImageUploading || state is VendorProfileUpdating;
+            final profile = profileState?.profile;
+            final isLoading =
+                state is ImageUploading || state is VendorProfileUpdating;
 
             if (_isEditing) {
               return _buildEditView(profile, isLoading);
             } else {
-              return _buildViewMode(profile);
+              return _buildViewMode(profileState);
             }
           },
         ),
@@ -835,16 +848,74 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
     );
   }
 
-  Widget _buildViewMode(VendorProfileEntity? profile) {
-    if (profile == null) {
+  Widget _buildViewMode(VendorProfileReadyState? state) {
+    if (state == null) {
       return const Center(child: Text('No profile data available'));
     }
+
+    final profile = state.profile;
+    final status = profile.approvalStatus.toLowerCase();
+    final bool isPending = status != 'approved' && status != 'rejected';
+    final bool isRejected = status == 'rejected';
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (isPending || isRejected) ...[
+            Card(
+              color: isRejected ? Colors.red[50] : Colors.orange[50],
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      isRejected ? Icons.block : Icons.hourglass_bottom,
+                      color: isRejected ? Colors.red[400] : Colors.orange[400],
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isRejected
+                                ? 'Profile Rejected'
+                                : 'Approval Pending',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: isRejected
+                                  ? Colors.red[700]
+                                  : Colors.orange[700],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            isRejected
+                                ? 'Your submission was rejected. Please contact support for assistance.'
+                                : 'An admin is reviewing your submission. You will be notified once it is approved.',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[700],
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
+
           // Profile Photo
           Center(
             child: Stack(
@@ -1061,6 +1132,8 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
   }
 
   Widget _buildEditView(VendorProfileEntity? profile, bool isLoading) {
+    final bool canEdit = _isProfileEditable && !isLoading;
+
     return Form(
       key: _formKey,
       child: SingleChildScrollView(
@@ -1095,7 +1168,7 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                       backgroundColor: Colors.orange,
                       child: IconButton(
                         icon: const Icon(Icons.camera_alt, size: 24, color: Colors.white),
-                        onPressed: isLoading ? null : _showImagePickerDialog,
+                    onPressed: canEdit ? _showImagePickerDialog : null,
                       ),
                     ),
                   ),
@@ -1107,16 +1180,46 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
               child: TextButton.icon(
                 icon: const Icon(Icons.photo_camera),
                 label: const Text('Change Photo'),
-                onPressed: isLoading ? null : _showImagePickerDialog,
+                onPressed: canEdit ? _showImagePickerDialog : null,
               ),
             ),
             const SizedBox(height: 32),
+
+          if (!canEdit) ...[
+            Card(
+              color: Colors.orange[50],
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.lock, color: Colors.orange[600]),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Profile editing is available once your account is approved.',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.orange[800],
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
 
             // Business Name
             _buildTextField(
               label: 'Business Name',
               controller: _businessNameController,
-              enabled: !isLoading,
+              enabled: canEdit,
               icon: Icons.business,
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
@@ -1131,7 +1234,7 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
             _buildTextField(
               label: 'Contact Number',
               controller: _contactNumberController,
-              enabled: !isLoading,
+              enabled: canEdit,
               icon: Icons.phone,
               keyboardType: TextInputType.phone,
               validator: (value) {
@@ -1147,7 +1250,7 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
             _buildTextField(
               label: 'Email Address',
               controller: _emailController,
-              enabled: !isLoading,
+              enabled: canEdit,
               icon: Icons.email,
               keyboardType: TextInputType.emailAddress,
               validator: (value) {
@@ -1166,7 +1269,7 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
             _buildTextField(
               label: 'Business Address',
               controller: _businessAddressController,
-              enabled: !isLoading,
+              enabled: canEdit,
               icon: Icons.location_on,
               maxLines: 3,
               validator: (value) {
@@ -1206,7 +1309,8 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                         TextButton.icon(
                           icon: const Icon(Icons.edit),
                           label: const Text('Edit'),
-                          onPressed: isLoading ? null : _showOperatingHoursDialog,
+                          onPressed:
+                              canEdit ? _showOperatingHoursDialog : null,
                         ),
                       ],
                     ),
@@ -1244,7 +1348,7 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
             _buildTextField(
               label: 'Short Description',
               controller: _shortDescriptionController,
-              enabled: !isLoading,
+              enabled: canEdit,
               icon: Icons.description,
               maxLines: 4,
               validator: (value) {
@@ -1284,7 +1388,8 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                         ElevatedButton.icon(
                           icon: const Icon(Icons.add),
                           label: const Text('Add Outlet'),
-                          onPressed: isLoading ? null : () => _showOutletDialog(),
+                          onPressed:
+                              canEdit ? () => _showOutletDialog() : null,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.orange,
                             foregroundColor: Colors.white,
@@ -1316,9 +1421,9 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                               subtitle: Text(outlet.address),
                               trailing: IconButton(
                                 icon: const Icon(Icons.edit),
-                                onPressed: isLoading
-                                    ? null
-                                    : () => _showOutletDialog(outlet: outlet),
+                                onPressed: canEdit
+                                    ? () => _showOutletDialog(outlet: outlet)
+                                    : null,
                               ),
                             ),
                           )),
@@ -1331,7 +1436,7 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
             // Certifications Section
             CertificationsSection(
               certifications: profile?.certifications ?? [],
-              isEditing: true,
+              isEditing: canEdit,
               isAdmin: false, // TODO: Check if user is admin
             ),
             const SizedBox(height: 32),
@@ -1360,7 +1465,7 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                 Expanded(
                   flex: 2,
                   child: ElevatedButton(
-                    onPressed: isLoading ? null : _saveProfile,
+                    onPressed: canEdit ? _saveProfile : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orange,
                       foregroundColor: Colors.white,
@@ -1401,10 +1506,12 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
     TextInputType? keyboardType,
     int maxLines = 1,
     String? Function(String?)? validator,
+    bool readOnly = false,
   }) {
     return TextFormField(
       controller: controller,
       enabled: enabled,
+      readOnly: readOnly,
       keyboardType: keyboardType,
       maxLines: maxLines,
       decoration: InputDecoration(
