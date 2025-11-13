@@ -39,7 +39,7 @@ class ThemeInitial extends ThemeState {
 }
 
 class ThemeLoaded extends ThemeState {
-  const ThemeLoaded(ThemeMode themeMode) : super(themeMode);
+  const ThemeLoaded(super.themeMode);
 }
 
 /// Theme BLoC for managing app theme

@@ -8,10 +8,10 @@ class AnimatedBackground extends StatefulWidget {
   final int particleCount;
 
   const AnimatedBackground({
-    Key? key,
+    super.key,
     required this.child,
     this.particleCount = 20,
-  }) : super(key: key);
+  });
 
   @override
   State<AnimatedBackground> createState() => _AnimatedBackgroundState();

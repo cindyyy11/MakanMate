@@ -7,9 +7,9 @@ class RestaurantCard extends StatelessWidget {
   final RestaurantEntity restaurant;
   
   const RestaurantCard({
-    Key? key,
+    super.key,
     required this.restaurant,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

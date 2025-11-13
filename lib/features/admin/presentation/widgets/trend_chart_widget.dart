@@ -14,11 +14,11 @@ class TrendChartWidget extends StatelessWidget {
   final String title;
 
   const TrendChartWidget({
-    Key? key,
+    super.key,
     required this.trend,
     required this.lineColor,
     required this.title,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

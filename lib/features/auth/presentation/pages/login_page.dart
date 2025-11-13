@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:makan_mate/core/theme/app_colors.dart';
 import 'package:makan_mate/core/constants/ui_constants.dart';
-import 'package:makan_mate/features/auth/data/datasources/auth_remote_datasource.dart';
-import 'package:makan_mate/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_event.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_state.dart';

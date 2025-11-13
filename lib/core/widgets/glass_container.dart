@@ -15,7 +15,7 @@ class GlassContainer extends StatelessWidget {
   final List<BoxShadow>? boxShadow;
 
   const GlassContainer({
-    Key? key,
+    super.key,
     required this.child,
     this.width,
     this.height,
@@ -25,7 +25,7 @@ class GlassContainer extends StatelessWidget {
     this.borderColor,
     this.borderWidth = 1.0,
     this.boxShadow,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:makan_mate/core/di/injection_container.dart' as di;
 import 'package:makan_mate/features/admin/presentation/bloc/admin_bloc.dart';
 import 'package:makan_mate/features/admin/presentation/bloc/admin_event.dart';
-import 'package:makan_mate/features/admin/presentation/pages/admin_dashboard_page.dart';
+import 'package:makan_mate/features/admin/presentation/pages/admin_main_page.dart';
 import 'package:makan_mate/features/auth/domain/entities/user_entity.dart';
 import 'package:makan_mate/features/home/presentation/pages/home_page.dart';
 
@@ -31,7 +31,7 @@ class _MainScaffoldState extends State<MainScaffold> {
         return [
           BlocProvider(
             create: (_) => di.sl<AdminBloc>()..add(const LoadPlatformMetrics()),
-            child: const AdminDashboardPage(),
+            child: const AdminMainPage(),
           ),
         ];
       case 'vendor':
@@ -66,3 +66,4 @@ class _MainScaffoldState extends State<MainScaffold> {
     );
   }
 }
+

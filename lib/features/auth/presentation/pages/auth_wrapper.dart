@@ -6,7 +6,7 @@ import 'package:makan_mate/features/auth/presentation/bloc/auth_state.dart';
 import 'package:makan_mate/features/auth/presentation/pages/login_page.dart';
 
 class AuthWrapper extends StatelessWidget {
-  const AuthWrapper({Key? key}) : super(key: key);
+  const AuthWrapper({super.key});
 
   @override
   Widget build(BuildContext context) {

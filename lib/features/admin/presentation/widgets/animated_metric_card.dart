@@ -11,6 +11,7 @@ class AnimatedMetricCard extends StatefulWidget {
   final LinearGradient? gradient;
   final String? subtitle;
   final VoidCallback? onTap;
+  final Widget? trailing;
 
   const AnimatedMetricCard({
     Key? key,
@@ -21,6 +22,7 @@ class AnimatedMetricCard extends StatefulWidget {
     this.gradient,
     this.subtitle,
     this.onTap,
+    this.trailing,
   }) : super(key: key);
 
   @override
@@ -128,9 +130,11 @@ class _AnimatedMetricCardState extends State<AnimatedMetricCard>
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Enhanced icon container
                         AnimatedContainer(
@@ -185,22 +189,35 @@ class _AnimatedMetricCardState extends State<AnimatedMetricCard>
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Expanded(
-                          child: Text(
-                            widget.value,
-                            style: Theme.of(context).textTheme.headlineMedium
-                                ?.copyWith(
-                                  color: hasGradient
-                                      ? Colors.white
-                                      : AppColorsExtension.getTextPrimary(
-                                          context,
-                                        ),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: UIConstants.fontSize3Xl,
-                                  letterSpacing: -0.5,
-                                ),
+                        Flexible(
+                          flex: widget.trailing != null ? 2 : 1,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              widget.value,
+                              style: Theme.of(context).textTheme.headlineMedium
+                                  ?.copyWith(
+                                    color: hasGradient
+                                        ? Colors.white
+                                        : AppColorsExtension.getTextPrimary(
+                                            context,
+                                          ),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: UIConstants.fontSize3Xl,
+                                    letterSpacing: -0.5,
+                                  ),
+                              maxLines: 1,
+                            ),
                           ),
                         ),
+                        if (widget.trailing != null) ...[
+                          const SizedBox(width: UIConstants.spacingSm),
+                          Flexible(
+                            flex: 1,
+                            child: widget.trailing!,
+                          ),
+                        ],
                       ],
                     ),
                     if (widget.subtitle != null) ...[
@@ -274,3 +291,6 @@ class _AnimatedMetricCardState extends State<AnimatedMetricCard>
     );
   }
 }
+
+
+

@@ -8,7 +8,6 @@ import 'package:makan_mate/features/recommendations/presentation/bloc/recommenda
 import 'package:makan_mate/features/recommendations/presentation/bloc/recommendation_state.dart';
 import 'package:makan_mate/core/di/injection_container.dart' as di;
 import 'package:makan_mate/features/food/domain/usecases/get_food_item_usecase.dart';
-import 'package:makan_mate/features/food/data/models/food_models.dart';
 import 'package:makan_mate/core/theme/app_colors.dart';
 import 'package:makan_mate/core/constants/ui_constants.dart';
 import 'package:cached_network_image/cached_network_image.dart';

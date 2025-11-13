@@ -42,36 +42,57 @@ class HomePage extends StatelessWidget {
                 // Navigate to search page
               },
             ),
-            PopupMenuButton<String>(
-              onSelected: (value) {
-                if (value == 'test_model') {
-                  Navigator.pushNamed(context, '/model-testing');
-                } else if (value == 'logout') {
-                  context.read<AuthBloc>().add(SignOutRequested());
-                }
+            BlocBuilder<AuthBloc, AuthState>(
+              builder: (context, authState) {
+                final isAdmin =
+                    authState is Authenticated &&
+                    authState.user.role == 'admin';
+
+                return PopupMenuButton<String>(
+                  onSelected: (value) {
+                    if (value == 'admin') {
+                      Navigator.pushNamed(context, '/admin');
+                    } else if (value == 'test_model') {
+                      Navigator.pushNamed(context, '/model-testing');
+                    } else if (value == 'logout') {
+                      context.read<AuthBloc>().add(SignOutRequested());
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    if (isAdmin)
+                      const PopupMenuItem(
+                        value: 'admin',
+                        child: Row(
+                          children: [
+                            Icon(Icons.admin_panel_settings, size: 20),
+                            SizedBox(width: 8),
+                            Text('Admin Panel'),
+                          ],
+                        ),
+                      ),
+                    const PopupMenuItem(
+                      value: 'test_model',
+                      child: Row(
+                        children: [
+                          Icon(Icons.science, size: 20),
+                          SizedBox(width: 8),
+                          Text('Test AI Model'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'logout',
+                      child: Row(
+                        children: [
+                          Icon(Icons.logout, size: 20),
+                          SizedBox(width: 8),
+                          Text('Logout'),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
               },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'test_model',
-                  child: Row(
-                    children: [
-                      Icon(Icons.science, size: 20),
-                      SizedBox(width: 8),
-                      Text('Test AI Model'),
-                    ],
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'logout',
-                  child: Row(
-                    children: [
-                      Icon(Icons.logout, size: 20),
-                      SizedBox(width: 8),
-                      Text('Logout'),
-                    ],
-                  ),
-                ),
-              ],
             ),
           ],
         ),

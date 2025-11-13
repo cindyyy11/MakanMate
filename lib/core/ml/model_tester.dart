@@ -368,4 +368,3 @@ class ModelTestResult {
     return buffer.toString();
   }
 }
-

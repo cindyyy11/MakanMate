@@ -9,7 +9,7 @@ import 'package:intl/intl.dart';
 class ActivityLogItem extends StatelessWidget {
   final ActivityLog log;
 
-  const ActivityLogItem({Key? key, required this.log}) : super(key: key);
+  const ActivityLogItem({super.key, required this.log});
 
   @override
   Widget build(BuildContext context) {

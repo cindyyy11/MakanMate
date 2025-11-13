@@ -4,7 +4,7 @@ import 'package:makan_mate/core/theme/theme_bloc.dart';
 
 /// Theme toggle button with smooth animation - reusable across the app
 class ThemeToggleButton extends StatelessWidget {
-  const ThemeToggleButton({Key? key}) : super(key: key);
+  const ThemeToggleButton({super.key});
 
   @override
   Widget build(BuildContext context) {

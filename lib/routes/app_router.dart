@@ -8,6 +8,7 @@ import 'package:makan_mate/features/home/presentation/pages/home_page.dart';
 import 'package:makan_mate/features/recommendations/presentation/pages/recommendations_page.dart';
 import 'package:makan_mate/features/recommendations/presentation/bloc/recommendation_bloc.dart';
 import 'package:makan_mate/features/admin/presentation/pages/admin_dashboard_page.dart';
+import 'package:makan_mate/features/admin/presentation/pages/admin_main_page.dart';
 import 'package:makan_mate/features/admin/presentation/bloc/admin_bloc.dart';
 import 'package:makan_mate/features/admin/presentation/bloc/admin_event.dart';
 import 'package:makan_mate/core/ml/model_testing_screen.dart';
@@ -48,7 +49,7 @@ class AppRouter {
         return MaterialPageRoute(
           builder: (_) => BlocProvider(
             create: (_) => di.sl<AdminBloc>()..add(const LoadPlatformMetrics()),
-            child: const AdminDashboardPage(),
+            child: const AdminMainPage(),
           ),
         );
 

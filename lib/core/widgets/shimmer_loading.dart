@@ -9,11 +9,11 @@ class ShimmerLoading extends StatelessWidget {
   final BorderRadius? borderRadius;
 
   const ShimmerLoading({
-    Key? key,
+    super.key,
     required this.width,
     required this.height,
     this.borderRadius,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +33,7 @@ class ShimmerLoading extends StatelessWidget {
 }
 
 class RestaurantCardShimmer extends StatelessWidget {
-  const RestaurantCardShimmer({Key? key}) : super(key: key);
+  const RestaurantCardShimmer({super.key});
 
   @override
   Widget build(BuildContext context) {

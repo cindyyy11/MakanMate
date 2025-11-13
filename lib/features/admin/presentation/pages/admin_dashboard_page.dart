@@ -13,10 +13,19 @@ import 'package:makan_mate/features/admin/presentation/widgets/activity_log_item
 import 'package:makan_mate/features/admin/presentation/widgets/animated_metric_card.dart';
 import 'package:makan_mate/core/widgets/date_range_filter.dart';
 import 'package:makan_mate/core/widgets/loading_animation.dart';
-import 'package:makan_mate/core/widgets/theme_toggle_button.dart';
+import 'package:makan_mate/core/theme/theme_bloc.dart';
 import 'package:makan_mate/features/admin/presentation/widgets/notification_badge.dart';
 import 'package:makan_mate/features/admin/presentation/widgets/realtime_monitoring_widget.dart';
 import 'package:makan_mate/features/admin/presentation/widgets/trend_chart_widget.dart';
+import 'package:makan_mate/features/admin/presentation/widgets/fairness_dashboard_widget.dart';
+import 'package:makan_mate/features/admin/presentation/widgets/data_quality_dashboard_widget.dart';
+import 'package:makan_mate/features/admin/presentation/widgets/quick_action_card.dart';
+import 'package:makan_mate/features/admin/presentation/widgets/metric_trend_indicator.dart';
+import 'package:makan_mate/features/admin/presentation/widgets/3d_card.dart';
+import 'package:makan_mate/features/admin/presentation/widgets/animated_background.dart';
+import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:makan_mate/features/auth/presentation/bloc/auth_event.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:share_plus/share_plus.dart';
@@ -33,7 +42,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   Timer? _refreshTimer;
   DateTime? _startDate;
   DateTime? _endDate;
-  int _selectedTab = 0; // 0: Overview, 1: Trends, 2: Activity, 3: Real-time
+  int _selectedTab =
+      0; // 0: Overview, 1: Trends, 2: Activity, 3: Real-time, 4: Fairness, 5: Data Quality
 
   @override
   void initState() {
@@ -61,29 +71,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
       endDrawer: _buildAlertsDrawer(context),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark
-                ? [
-                    const Color(0xFF0A0E27),
-                    const Color(0xFF1A1F3A),
-                    const Color(0xFF121212),
-                  ]
-                : [
-                    AppColors.primary.withValues(alpha: 0.03),
-                    AppColors.secondary.withValues(alpha: 0.03),
-                    AppColors.background,
-                    AppColors.backgroundLight,
-                  ],
-          ),
-        ),
+      body: AnimatedBackground(
         child: SafeArea(
           child: Column(
             children: [
@@ -99,10 +89,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
   Widget _buildEnhancedAppBar(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: UIConstants.spacingLg,
+      padding: EdgeInsets.symmetric(
+        horizontal: isSmallScreen
+            ? UIConstants.spacingMd
+            : UIConstants.spacingLg,
         vertical: UIConstants.spacingMd,
       ),
       decoration: BoxDecoration(
@@ -134,10 +128,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         children: [
           // Logo/Icon with animation
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: EdgeInsets.all(isSmallScreen ? 8 : 12),
             decoration: BoxDecoration(
               gradient: AppColors.primaryGradient,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
               boxShadow: [
                 BoxShadow(
                   color: AppColors.primary.withValues(alpha: 0.4),
@@ -146,45 +140,295 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 ),
               ],
             ),
-            child: const Icon(Icons.analytics, color: Colors.white, size: 24),
+            child: Icon(
+              Icons.dashboard_rounded,
+              color: Colors.white,
+              size: isSmallScreen ? 20 : 28,
+            ),
           ),
-          const SizedBox(width: UIConstants.spacingMd),
+          SizedBox(
+            width: isSmallScreen
+                ? UIConstants.spacingSm
+                : UIConstants.spacingMd,
+          ),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  'Admin Dashboard',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColorsExtension.getTextPrimary(context),
-                    letterSpacing: -0.5,
-                  ),
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        'Admin Dashboard',
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppColorsExtension.getTextPrimary(context),
+                              letterSpacing: -0.5,
+                              fontSize: isSmallScreen ? 18 : null,
+                            ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (!isSmallScreen) ...[
+                      const SizedBox(width: UIConstants.spacingSm),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: AppColors.success,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Live',
+                              style: TextStyle(
+                                color: AppColors.success,
+                                fontSize: UIConstants.fontSizeXs,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  'Platform Analytics & Insights',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColorsExtension.getTextSecondary(context),
-                    fontSize: UIConstants.fontSizeSm,
+                if (!isSmallScreen) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.analytics_rounded,
+                        size: 14,
+                        color: AppColorsExtension.getTextSecondary(context),
+                      ),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          'Platform Analytics & Insights',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: AppColorsExtension.getTextSecondary(
+                                  context,
+                                ),
+                                fontSize: UIConstants.fontSizeSm,
+                              ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
+                ],
               ],
             ),
           ),
-          _buildAppBarActions(context),
+          SizedBox(
+            width: isSmallScreen
+                ? UIConstants.spacingXs
+                : UIConstants.spacingMd,
+          ),
+          _buildAppBarActions(context, isSmallScreen),
         ],
       ),
     );
   }
 
-  Widget _buildAppBarActions(BuildContext context) {
+  Widget _buildAppBarActions(BuildContext context, bool isSmallScreen) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return BlocBuilder<AdminBloc, AdminState>(
       builder: (context, state) {
+        final unreadCount = state is AdminLoaded && state.notifications != null
+            ? state.notifications!.where((n) => !n.isRead).length
+            : 0;
+
+        if (isSmallScreen) {
+          // On small screens, show theme toggle + popup menu
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Theme Toggle Button
+              _buildThemeToggleButton(context, isDark),
+              const SizedBox(width: UIConstants.spacingSm),
+              // Popup Menu Button
+              PopupMenuButton<String>(
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white.withOpacity(0.1)
+                        : AppColors.grey100,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.white.withOpacity(0.1)
+                          : AppColors.grey300,
+                      width: 1,
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.more_vert_rounded,
+                    size: 20,
+                    color: AppColorsExtension.getTextPrimary(context),
+                  ),
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: UIConstants.borderRadiusMd,
+                ),
+                onSelected: (value) {
+                  switch (value) {
+                    case 'refresh':
+                      context.read<AdminBloc>().add(
+                        const LoadPlatformMetrics(),
+                      );
+                      break;
+                    case 'export':
+                      showModalBottomSheet(
+                        context: context,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) => _buildExportBottomSheet(context),
+                      );
+                      break;
+                    case 'notifications':
+                      showModalBottomSheet(
+                        context: context,
+                        backgroundColor: Colors.transparent,
+                        isScrollControlled: true,
+                        builder: (context) =>
+                            _buildAlertsBottomSheet(context, state),
+                      );
+                      break;
+                    case 'logout':
+                      _showLogoutDialog(context);
+                      break;
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'refresh',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.refresh_rounded,
+                          size: 20,
+                          color: AppColorsExtension.getTextPrimary(context),
+                        ),
+                        const SizedBox(width: UIConstants.spacingSm),
+                        const Text('Refresh'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'export',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.download_rounded,
+                          size: 20,
+                          color: AppColorsExtension.getTextPrimary(context),
+                        ),
+                        const SizedBox(width: UIConstants.spacingSm),
+                        const Text('Export Data'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'notifications',
+                    child: Row(
+                      children: [
+                        Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Icon(
+                              Icons.notifications_rounded,
+                              size: 20,
+                              color: AppColorsExtension.getTextPrimary(context),
+                            ),
+                            if (unreadCount > 0)
+                              Positioned(
+                                right: -4,
+                                top: -4,
+                                child: Container(
+                                  padding: const EdgeInsets.all(2),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.error,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 12,
+                                    minHeight: 12,
+                                  ),
+                                  child: Text(
+                                    unreadCount > 9 ? '9+' : '$unreadCount',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(width: UIConstants.spacingSm),
+                        const Text('Notifications'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                    value: 'logout',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.logout_rounded,
+                          size: 20,
+                          color: AppColors.error,
+                        ),
+                        const SizedBox(width: UIConstants.spacingSm),
+                        const Text('Logout'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        }
+
+        // On larger screens, show all buttons
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Export button with better styling
+            // Refresh button
+            _buildActionButton(
+              context: context,
+              icon: Icons.refresh_rounded,
+              tooltip: 'Refresh',
+              onTap: () {
+                context.read<AdminBloc>().add(const LoadPlatformMetrics());
+              },
+            ),
+            const SizedBox(width: UIConstants.spacingXs),
+            // Export button
             _buildActionButton(
               context: context,
               icon: Icons.download_rounded,
@@ -198,12 +442,170 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               },
             ),
             const SizedBox(width: UIConstants.spacingXs),
-            // Theme toggle button
-            const ThemeToggleButton(),
+            // Alerts button with badge
+            _buildActionButton(
+              context: context,
+              icon: unreadCount > 0
+                  ? Icons.notifications_rounded
+                  : Icons.notifications_outlined,
+              tooltip: 'Alerts & Notifications',
+              badge: unreadCount > 0 ? unreadCount : null,
+              onTap: () {
+                final screenWidth = MediaQuery.of(context).size.width;
+                if (screenWidth > 600) {
+                  Scaffold.of(context).openEndDrawer();
+                } else {
+                  showModalBottomSheet(
+                    context: context,
+                    backgroundColor: Colors.transparent,
+                    isScrollControlled: true,
+                    builder: (context) =>
+                        _buildAlertsBottomSheet(context, state),
+                  );
+                }
+              },
+            ),
             const SizedBox(width: UIConstants.spacingXs),
-            // Alerts button
-            _buildAlertsButton(context, state),
+            // Theme toggle button
+            _buildThemeToggleButton(context, isDark),
+            const SizedBox(width: UIConstants.spacingXs),
+            // More menu with logout
+            PopupMenuButton<String>(
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.1)
+                      : AppColors.grey100,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withOpacity(0.1)
+                        : AppColors.grey300,
+                    width: 1,
+                  ),
+                ),
+                child: Icon(
+                  Icons.more_vert_rounded,
+                  size: 20,
+                  color: AppColorsExtension.getTextPrimary(context),
+                ),
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: UIConstants.borderRadiusMd,
+              ),
+              onSelected: (value) {
+                if (value == 'logout') {
+                  _showLogoutDialog(context);
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'logout',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.logout_rounded,
+                        size: 20,
+                        color: AppColors.error,
+                      ),
+                      const SizedBox(width: UIConstants.spacingSm),
+                      const Text('Logout'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ],
+        );
+      },
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: UIConstants.borderRadiusLg),
+        title: const Row(
+          children: [
+            Icon(Icons.logout_rounded, color: AppColors.error),
+            SizedBox(width: UIConstants.spacingSm),
+            Text('Logout'),
+          ],
+        ),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.read<AuthBloc>().add(SignOutRequested());
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildThemeToggleButton(BuildContext context, bool isDark) {
+    return BlocBuilder<ThemeBloc, ThemeState>(
+      builder: (context, themeState) {
+        final currentMode = themeState.themeMode;
+        final isCurrentlyDark =
+            currentMode == ThemeMode.dark ||
+            (currentMode == ThemeMode.system &&
+                MediaQuery.of(context).platformBrightness == Brightness.dark);
+
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              final newMode = isCurrentlyDark
+                  ? ThemeMode.light
+                  : ThemeMode.dark;
+              context.read<ThemeBloc>().add(ThemeChanged(newMode));
+              HapticFeedback.lightImpact();
+            },
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? Colors.white.withOpacity(0.1)
+                    : AppColors.grey100,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.1)
+                      : AppColors.grey300,
+                  width: 1,
+                ),
+              ),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                transitionBuilder: (child, animation) {
+                  return RotationTransition(
+                    turns: animation,
+                    child: ScaleTransition(scale: animation, child: child),
+                  );
+                },
+                child: Icon(
+                  key: ValueKey(isCurrentlyDark),
+                  isCurrentlyDark
+                      ? Icons.light_mode_rounded
+                      : Icons.dark_mode_rounded,
+                  size: 20,
+                  color: AppColorsExtension.getTextPrimary(context),
+                ),
+              ),
+            ),
+          ),
         );
       },
     );
@@ -286,41 +688,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 ),
         ),
       ),
-    );
-  }
-
-  Widget _buildAlertsButton(BuildContext context, AdminState state) {
-    return BlocBuilder<AdminBloc, AdminState>(
-      builder: (context, state) {
-        final unreadCount = state is AdminLoaded && state.notifications != null
-            ? state.notifications!.where((n) => !n.isRead).length
-            : 0;
-
-        return _buildActionButton(
-          context: context,
-          icon: unreadCount > 0
-              ? Icons.notifications_rounded
-              : Icons.notifications_outlined,
-          tooltip: 'Alerts & Notifications',
-          badge: unreadCount > 0 ? unreadCount : null,
-          onTap: () {
-            // Use side drawer on larger screens, bottom sheet on mobile
-            final screenWidth = MediaQuery.of(context).size.width;
-            if (screenWidth > 600) {
-              // Desktop/Tablet: Use side drawer
-              Scaffold.of(context).openEndDrawer();
-            } else {
-              // Mobile: Use bottom sheet
-              showModalBottomSheet(
-                context: context,
-                backgroundColor: Colors.transparent,
-                isScrollControlled: true,
-                builder: (context) => _buildAlertsBottomSheet(context, state),
-              );
-            }
-          },
-        );
-      },
     );
   }
 
@@ -957,52 +1324,153 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
   Widget _buildGlassTabBar() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
 
     return Container(
-      padding: const EdgeInsets.all(6),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.1)
-            : Colors.white.withValues(alpha: 0.9),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [
+                  Colors.white.withValues(alpha: 0.08),
+                  Colors.white.withValues(alpha: 0.05),
+                ]
+              : [
+                  Colors.white.withValues(alpha: 0.95),
+                  Colors.white.withValues(alpha: 0.9),
+                ],
+        ),
         borderRadius: UIConstants.borderRadiusLg,
         border: Border.all(
           color: isDark
               ? Colors.white.withValues(alpha: 0.15)
-              : AppColors.grey200,
+              : AppColors.grey200.withOpacity(0.5),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
             color: isDark
-                ? Colors.black.withValues(alpha: 0.4)
+                ? Colors.black.withValues(alpha: 0.5)
                 : Colors.black.withValues(alpha: 0.08),
-            blurRadius: 20,
+            blurRadius: 25,
             spreadRadius: 0,
-            offset: const Offset(0, 4),
+            offset: const Offset(0, 5),
           ),
         ],
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildEnhancedTab(0, 'Overview', Icons.dashboard_rounded),
-          ),
-          Expanded(
-            child: _buildEnhancedTab(1, 'Trends', Icons.trending_up_rounded),
-          ),
-          Expanded(
-            child: _buildEnhancedTab(2, 'Activity', Icons.history_rounded),
-          ),
-          Expanded(
-            child: _buildEnhancedTab(3, 'Real-time', Icons.sensors_rounded),
-          ),
-        ],
-      ),
+      child: isSmallScreen
+          ? SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Row(
+                children: [
+                  _buildEnhancedTab(
+                    0,
+                    'Overview',
+                    Icons.dashboard_rounded,
+                    'Key metrics',
+                  ),
+                  _buildEnhancedTab(
+                    1,
+                    'Trends',
+                    Icons.trending_up_rounded,
+                    'Growth patterns',
+                  ),
+                  _buildEnhancedTab(
+                    2,
+                    'Activity',
+                    Icons.history_rounded,
+                    'Recent actions',
+                  ),
+                  _buildEnhancedTab(
+                    3,
+                    'Live',
+                    Icons.sensors_rounded,
+                    'Real-time',
+                  ),
+                  _buildEnhancedTab(
+                    4,
+                    'Fairness',
+                    Icons.balance_rounded,
+                    'AI equity',
+                  ),
+                  _buildEnhancedTab(
+                    5,
+                    'Quality',
+                    Icons.verified_user_rounded,
+                    'Data health',
+                  ),
+                ],
+              ),
+            )
+          : Row(
+              children: [
+                Expanded(
+                  child: _buildEnhancedTab(
+                    0,
+                    'Overview',
+                    Icons.dashboard_rounded,
+                    'Key metrics',
+                  ),
+                ),
+                Expanded(
+                  child: _buildEnhancedTab(
+                    1,
+                    'Trends',
+                    Icons.trending_up_rounded,
+                    'Growth patterns',
+                  ),
+                ),
+                Expanded(
+                  child: _buildEnhancedTab(
+                    2,
+                    'Activity',
+                    Icons.history_rounded,
+                    'Recent actions',
+                  ),
+                ),
+                Expanded(
+                  child: _buildEnhancedTab(
+                    3,
+                    'Live',
+                    Icons.sensors_rounded,
+                    'Real-time',
+                  ),
+                ),
+                Expanded(
+                  child: _buildEnhancedTab(
+                    4,
+                    'Fairness',
+                    Icons.balance_rounded,
+                    'AI equity',
+                  ),
+                ),
+                Expanded(
+                  child: _buildEnhancedTab(
+                    5,
+                    'Quality',
+                    Icons.verified_user_rounded,
+                    'Data health',
+                  ),
+                ),
+              ],
+            ),
     );
   }
 
-  Widget _buildEnhancedTab(int index, String label, IconData icon) {
+  Widget _buildEnhancedTab(
+    int index,
+    String label,
+    IconData icon,
+    String subtitle,
+  ) {
     final isSelected = _selectedTab == index;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Material(
       color: Colors.transparent,
@@ -1010,6 +1478,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         onTap: () {
           final previousTab = _selectedTab;
           setState(() => _selectedTab = index);
+          HapticFeedback.selectionClick();
 
           // Start/stop streaming based on tab selection
           if (index == 3 && previousTab != 3) {
@@ -1022,14 +1491,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         },
         borderRadius: UIConstants.borderRadiusMd,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
+          duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOutCubic,
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          padding: EdgeInsets.symmetric(
+            vertical: isSmallScreen ? 10 : 12,
+            horizontal: isSmallScreen ? 10 : 8,
+          ),
           decoration: BoxDecoration(
             gradient: isSelected
                 ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                     colors: [
-                      AppColors.primary.withValues(alpha: 0.2),
+                      AppColors.primary.withValues(alpha: 0.25),
                       AppColors.primary.withValues(alpha: 0.15),
                     ],
                   )
@@ -1038,54 +1512,144 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             borderRadius: UIConstants.borderRadiusMd,
             border: isSelected
                 ? Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.3),
-                    width: 1.5,
+                    color: AppColors.primary.withValues(alpha: 0.4),
+                    width: 2,
                   )
-                : null,
+                : Border.all(color: Colors.transparent, width: 2),
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.25),
-                      blurRadius: 12,
-                      spreadRadius: 0,
-                      offset: const Offset(0, 2),
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                      blurRadius: 15,
+                      spreadRadius: 2,
+                      offset: const Offset(0, 3),
                     ),
                   ]
                 : null,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.primary.withValues(alpha: 0.15)
-                      : Colors.transparent,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  icon,
-                  size: 20,
-                  color: isSelected
-                      ? AppColors.primary
-                      : AppColorsExtension.getGrey700(context),
-                ),
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  // Glow effect
+                  if (isSelected)
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withOpacity(0.4),
+                              blurRadius: 12,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  // Icon container
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      gradient: isSelected ? AppColors.primaryGradient : null,
+                      color: isSelected
+                          ? null
+                          : (isDark
+                                ? Colors.white.withOpacity(0.05)
+                                : AppColors.grey100),
+                      shape: BoxShape.circle,
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: AppColors.primary.withOpacity(0.4),
+                                blurRadius: 10,
+                                spreadRadius: 1,
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Icon(
+                      icon,
+                      size: isSmallScreen ? 18 : 20,
+                      color: isSelected
+                          ? Colors.white
+                          : AppColorsExtension.getGrey600(context),
+                    ),
+                  ),
+                  // Pulse indicator for Live tab
+                  if (isSelected && index == 3)
+                    Positioned(
+                      right: -2,
+                      top: -2,
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: AppColors.success,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isDark
+                                ? const Color(0xFF0F0F0F)
+                                : Colors.white,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
-              const SizedBox(height: 6),
-              AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 250),
-                style: TextStyle(
-                  fontSize: UIConstants.fontSizeXs,
-                  color: isSelected
-                      ? AppColors.primary
-                      : AppColorsExtension.getGrey700(context),
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                  letterSpacing: 0.2,
+              if (!isSmallScreen) ...[
+                const SizedBox(height: 6),
+                Flexible(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AnimatedDefaultTextStyle(
+                        duration: const Duration(milliseconds: 250),
+                        style: TextStyle(
+                          fontSize: UIConstants.fontSizeXs,
+                          color: isSelected
+                              ? AppColors.primary
+                              : AppColorsExtension.getGrey700(context),
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.w600,
+                          letterSpacing: 0.3,
+                        ),
+                        child: Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      AnimatedDefaultTextStyle(
+                        duration: const Duration(milliseconds: 250),
+                        style: TextStyle(
+                          fontSize: 9,
+                          color: isSelected
+                              ? AppColors.primary.withOpacity(0.7)
+                              : AppColorsExtension.getGrey600(
+                                  context,
+                                ).withOpacity(0.7),
+                          fontWeight: FontWeight.w500,
+                        ),
+                        child: Text(
+                          subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Text(label),
-              ),
+              ],
             ],
           ),
         ),
@@ -1279,9 +1843,31 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         return _buildActivityTab(loadedState);
       case 3:
         return _buildRealtimeTab(loadedState);
+      case 4:
+        return _buildFairnessTab(loadedState);
+      case 5:
+        return _buildDataQualityTab(loadedState);
       default:
         return const SizedBox();
     }
+  }
+
+  Widget _buildDataQualityTab(AdminLoaded? loadedState) {
+    // Load data quality metrics if not already loaded
+    if (loadedState?.dataQualityMetrics == null) {
+      context.read<AdminBloc>().add(const LoadDataQualityMetrics());
+    }
+
+    return const DataQualityDashboardWidget();
+  }
+
+  Widget _buildFairnessTab(AdminLoaded? loadedState) {
+    // Load fairness metrics if not already loaded
+    if (loadedState?.fairnessMetrics == null) {
+      context.read<AdminBloc>().add(const LoadFairnessMetrics());
+    }
+
+    return const FairnessDashboardWidget();
   }
 
   Widget _buildRealtimeTab(AdminLoaded? loadedState) {
@@ -1400,6 +1986,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         ),
         const SizedBox(height: UIConstants.spacingXl),
 
+        // Quick Actions Section
+        _buildQuickActionsSection(context, metrics),
+        const SizedBox(height: UIConstants.spacingXl),
+
         // User metrics section with better spacing
         _buildEnhancedSectionTitle('User Analytics', Icons.people_rounded),
         const SizedBox(height: UIConstants.spacingLg),
@@ -1470,6 +2060,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 icon: Icons.people,
                 color: AppColors.info,
                 gradient: AppColors.infoGradient,
+                trailing: const MetricTrendIndicator(
+                  percentage: 15.2,
+                  isPositive: true,
+                  label: 'vs last month',
+                ),
               ),
             ),
             const SizedBox(width: UIConstants.spacingMd),
@@ -1586,6 +2181,75 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               ),
             ),
           ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickActionsSection(BuildContext context, metrics) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildEnhancedSectionTitle('Quick Actions', Icons.flash_on_rounded),
+        const SizedBox(height: UIConstants.spacingMd),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final crossAxisCount = constraints.maxWidth > 600 ? 4 : 2;
+            final childAspectRatio = constraints.maxWidth > 600 ? 1.3 : 1.1;
+
+            return GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: crossAxisCount,
+              crossAxisSpacing: UIConstants.spacingMd,
+              mainAxisSpacing: UIConstants.spacingMd,
+              childAspectRatio: childAspectRatio,
+              children: [
+                Card3D(
+                  onTap: () => Navigator.of(context).pushNamed('/admin'),
+                  child: QuickActionCard(
+                    title: 'Vendor Applications',
+                    subtitle: 'Review pending applications',
+                    icon: Icons.store_rounded,
+                    color: AppColors.warning,
+                    badgeCount: metrics.pendingApplications,
+                    onTap: () => Navigator.of(context).pushNamed('/admin'),
+                  ),
+                ),
+                Card3D(
+                  onTap: () => Navigator.of(context).pushNamed('/admin'),
+                  child: QuickActionCard(
+                    title: 'Review Moderation',
+                    subtitle: 'Moderate flagged reviews',
+                    icon: Icons.flag_rounded,
+                    color: AppColors.error,
+                    badgeCount: metrics.flaggedReviews,
+                    onTap: () => Navigator.of(context).pushNamed('/admin'),
+                  ),
+                ),
+                Card3D(
+                  onTap: () => Navigator.of(context).pushNamed('/admin'),
+                  child: QuickActionCard(
+                    title: 'Audit Logs',
+                    subtitle: 'View admin action history',
+                    icon: Icons.history_rounded,
+                    color: AppColors.info,
+                    onTap: () => Navigator.of(context).pushNamed('/admin'),
+                  ),
+                ),
+                Card3D(
+                  onTap: () => Navigator.of(context).pushNamed('/admin'),
+                  child: QuickActionCard(
+                    title: 'System Config',
+                    subtitle: 'Manage settings & flags',
+                    icon: Icons.settings_rounded,
+                    color: AppColors.primary,
+                    onTap: () => Navigator.of(context).pushNamed('/admin'),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ],
     );

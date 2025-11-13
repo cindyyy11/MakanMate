@@ -4,6 +4,9 @@ import 'package:makan_mate/features/admin/domain/entities/admin_notification_ent
 import 'package:makan_mate/features/admin/domain/entities/metric_trend_entity.dart';
 import 'package:makan_mate/features/admin/domain/entities/platform_metrics_entity.dart';
 import 'package:makan_mate/features/admin/domain/entities/system_metrics_entity.dart';
+import 'package:makan_mate/features/admin/domain/entities/fairness_metrics_entity.dart';
+import 'package:makan_mate/features/admin/domain/entities/seasonal_trend_entity.dart';
+import 'package:makan_mate/features/admin/domain/entities/data_quality_metrics_entity.dart';
 
 /// States for admin BLoC
 abstract class AdminState extends Equatable {
@@ -41,6 +44,9 @@ class AdminLoaded extends AdminState {
   final List<ActivityLog>? activityLogs;
   final List<AdminNotification>? notifications;
   final SystemMetrics? systemMetrics;
+  final FairnessMetrics? fairnessMetrics;
+  final SeasonalTrendAnalysis? seasonalTrends;
+  final DataQualityMetrics? dataQualityMetrics;
 
   const AdminLoaded(
     this.metrics, {
@@ -49,6 +55,9 @@ class AdminLoaded extends AdminState {
     this.activityLogs,
     this.notifications,
     this.systemMetrics,
+    this.fairnessMetrics,
+    this.seasonalTrends,
+    this.dataQualityMetrics,
   });
 
   @override
@@ -59,6 +68,9 @@ class AdminLoaded extends AdminState {
     activityLogs,
     notifications,
     systemMetrics,
+    fairnessMetrics,
+    seasonalTrends,
+    dataQualityMetrics,
   ];
 }
 

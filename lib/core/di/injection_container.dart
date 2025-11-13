@@ -7,7 +7,6 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:makan_mate/core/network/network_info.dart';
 import 'package:makan_mate/features/auth/data/datasources/auth_local_datasource.dart';
 import 'package:makan_mate/features/auth/data/datasources/auth_local_secure_datasource.dart';
@@ -39,6 +38,7 @@ import 'package:makan_mate/features/recommendations/domain/usecases/track_intera
 import 'package:makan_mate/features/recommendations/presentation/bloc/recommendation_bloc.dart';
 import 'package:makan_mate/features/admin/data/datasources/admin_remote_datasource.dart';
 import 'package:makan_mate/features/admin/data/repositories/admin_repository_impl.dart';
+import 'package:makan_mate/features/admin/data/services/audit_log_service.dart';
 import 'package:makan_mate/features/admin/domain/repositories/admin_repository.dart';
 import 'package:makan_mate/features/admin/domain/usecases/export_metrics_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_activity_logs_usecase.dart';
@@ -46,6 +46,9 @@ import 'package:makan_mate/features/admin/domain/usecases/get_metric_trend_useca
 import 'package:makan_mate/features/admin/domain/usecases/get_notifications_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_platform_metrics_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/stream_system_metrics_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/get_fairness_metrics_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/get_seasonal_trends_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/get_data_quality_metrics_usecase.dart';
 import 'package:makan_mate/features/admin/presentation/bloc/admin_bloc.dart';
 import 'package:makan_mate/features/reviews/data/datasources/review_remote_datasource.dart';
 import 'package:makan_mate/features/reviews/data/repositories/review_repository_impl.dart';
@@ -299,6 +302,9 @@ void _initAdmin() {
       getNotifications: sl(),
       exportMetrics: sl(),
       streamSystemMetrics: sl(),
+      getFairnessMetrics: sl(),
+      getSeasonalTrends: sl(),
+      getDataQualityMetrics: sl(),
       adminRepository: sl(),
       logger: logger,
     ),
@@ -311,6 +317,9 @@ void _initAdmin() {
   sl.registerLazySingleton(() => GetNotificationsUseCase(sl()));
   sl.registerLazySingleton(() => ExportMetricsUseCase(sl()));
   sl.registerLazySingleton(() => StreamSystemMetricsUseCase(sl()));
+  sl.registerLazySingleton(() => GetFairnessMetricsUseCase(sl()));
+  sl.registerLazySingleton(() => GetSeasonalTrendsUseCase(sl()));
+  sl.registerLazySingleton(() => GetDataQualityMetricsUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<AdminRepository>(
@@ -320,6 +329,11 @@ void _initAdmin() {
   // Data sources
   sl.registerLazySingleton<AdminRemoteDataSource>(
     () => AdminRemoteDataSourceImpl(firestore: sl(), logger: logger),
+  );
+
+  // Services
+  sl.registerLazySingleton<AuditLogService>(
+    () => AuditLogService(firestore: sl(), auth: sl(), logger: logger),
   );
 }
 

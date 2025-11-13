@@ -14,12 +14,12 @@ class DateRangeFilter extends StatelessWidget {
   final VoidCallback onClear;
 
   const DateRangeFilter({
-    Key? key,
+    super.key,
     this.startDate,
     this.endDate,
     required this.onDateRangeChanged,
     required this.onClear,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

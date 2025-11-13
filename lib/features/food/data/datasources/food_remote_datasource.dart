@@ -216,7 +216,7 @@ class FoodRemoteDataSourceImpl implements FoodRemoteDataSource {
       final nameQuery = await firestore
           .collection(FOOD_COLLECTION)
           .where('name', isGreaterThanOrEqualTo: searchQuery)
-          .where('name', isLessThan: searchQuery + 'z')
+          .where('name', isLessThan: '${searchQuery}z')
           .limit(50)
           .get();
 

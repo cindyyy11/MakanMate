@@ -8,7 +8,6 @@ import 'package:makan_mate/features/recommendations/presentation/pages/recommend
 import 'package:makan_mate/features/recommendations/presentation/widgets/recommendation_card.dart';
 import 'package:makan_mate/core/di/injection_container.dart' as di;
 import 'package:makan_mate/features/food/domain/usecases/get_food_item_usecase.dart';
-import 'package:makan_mate/features/food/data/models/food_models.dart';
 
 /// Reusable widget for displaying AI recommendations
 /// 

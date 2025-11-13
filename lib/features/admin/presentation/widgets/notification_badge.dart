@@ -12,11 +12,11 @@ class NotificationBadge extends StatelessWidget {
   final VoidCallback? onDismiss;
 
   const NotificationBadge({
-    Key? key,
+    super.key,
     required this.notification,
     this.onTap,
     this.onDismiss,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

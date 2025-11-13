@@ -7,7 +7,6 @@ import 'package:makan_mate/features/recommendations/presentation/bloc/recommenda
 import 'package:makan_mate/features/recommendations/presentation/widgets/recommendation_card.dart';
 import 'package:makan_mate/core/di/injection_container.dart' as di;
 import 'package:makan_mate/features/food/domain/usecases/get_food_item_usecase.dart';
-import 'package:makan_mate/features/food/data/models/food_models.dart';
 
 /// Page displaying personalized AI recommendations
 class RecommendationsPage extends StatefulWidget {

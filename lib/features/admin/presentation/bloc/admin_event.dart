@@ -101,3 +101,67 @@ class StartStreamingSystemMetrics extends AdminEvent {
 class StopStreamingSystemMetrics extends AdminEvent {
   const StopStreamingSystemMetrics();
 }
+
+/// Event to load fairness metrics
+class LoadFairnessMetrics extends AdminEvent {
+  final int recommendationLimit;
+  final DateTime? startDate;
+  final DateTime? endDate;
+
+  const LoadFairnessMetrics({
+    this.recommendationLimit = 1000,
+    this.startDate,
+    this.endDate,
+  });
+
+  @override
+  List<Object?> get props => [recommendationLimit, startDate, endDate];
+}
+
+/// Event to refresh fairness metrics
+class RefreshFairnessMetrics extends AdminEvent {
+  final int recommendationLimit;
+  final DateTime? startDate;
+  final DateTime? endDate;
+
+  const RefreshFairnessMetrics({
+    this.recommendationLimit = 1000,
+    this.startDate,
+    this.endDate,
+  });
+
+  @override
+  List<Object?> get props => [recommendationLimit, startDate, endDate];
+}
+
+/// Event to load seasonal trend analysis
+class LoadSeasonalTrends extends AdminEvent {
+  final DateTime? startDate;
+  final DateTime? endDate;
+
+  const LoadSeasonalTrends({this.startDate, this.endDate});
+
+  @override
+  List<Object?> get props => [startDate, endDate];
+}
+
+/// Event to refresh seasonal trend analysis
+class RefreshSeasonalTrends extends AdminEvent {
+  final DateTime? startDate;
+  final DateTime? endDate;
+
+  const RefreshSeasonalTrends({this.startDate, this.endDate});
+
+  @override
+  List<Object?> get props => [startDate, endDate];
+}
+
+/// Event to load data quality metrics
+class LoadDataQualityMetrics extends AdminEvent {
+  const LoadDataQualityMetrics();
+}
+
+/// Event to refresh data quality metrics
+class RefreshDataQualityMetrics extends AdminEvent {
+  const RefreshDataQualityMetrics();
+}

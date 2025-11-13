@@ -32,6 +32,7 @@ class RecommendationEngine extends AIEngineBase {
   factory RecommendationEngine() => _instance;
   RecommendationEngine._internal();
 
+  @override
   final logger = Logger(
     printer: PrettyPrinter(
       methodCount: 0,
@@ -91,7 +92,7 @@ class RecommendationEngine extends AIEngineBase {
           final options = InterpreterOptions()
             ..threads = 4
             ..useNnApiForAndroid = true;
-          final loadedInterpreter = await Interpreter.fromFile(
+          final loadedInterpreter = Interpreter.fromFile(
             File(downloadedModelPath),
             options: options,
           );

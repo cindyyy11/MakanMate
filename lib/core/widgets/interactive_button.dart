@@ -12,7 +12,7 @@ class InteractiveButton extends StatefulWidget {
   final String? tooltip;
 
   const InteractiveButton({
-    Key? key,
+    super.key,
     required this.child,
     this.onTap,
     this.backgroundColor,
@@ -20,7 +20,7 @@ class InteractiveButton extends StatefulWidget {
     this.padding,
     this.borderRadius,
     this.tooltip,
-  }) : super(key: key);
+  });
 
   @override
   State<InteractiveButton> createState() => _InteractiveButtonState();

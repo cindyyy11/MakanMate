@@ -7,11 +7,11 @@ class StaggeredAnimation extends StatefulWidget {
   final Duration delay;
 
   const StaggeredAnimation({
-    Key? key,
+    super.key,
     required this.child,
     required this.index,
     this.delay = const Duration(milliseconds: 100),
-  }) : super(key: key);
+  });
 
   @override
   State<StaggeredAnimation> createState() => _StaggeredAnimationState();

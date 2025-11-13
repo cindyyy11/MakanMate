@@ -24,26 +24,26 @@ class _SignUpPageState extends State<SignUpPage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    
+
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-    
+
     _slideController = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
-    
+
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
     );
-    
+
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOut));
-    
+
     _fadeController.forward();
     _slideController.forward();
   }
@@ -61,14 +61,12 @@ class _SignUpPageState extends State<SignUpPage> with TickerProviderStateMixin {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: BoxDecoration(
-          gradient: AppColors.primaryGradient,
-        ),
+        decoration: BoxDecoration(gradient: AppColors.primaryGradient),
         child: Stack(
           children: [
             // Animated background circles
             _buildAnimatedBackground(),
-            
+
             // Back button
             SafeArea(
               child: Padding(
@@ -83,13 +81,16 @@ class _SignUpPageState extends State<SignUpPage> with TickerProviderStateMixin {
                     ),
                   ),
                   child: IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.textPrimary),
+                    icon: const Icon(
+                      Icons.arrow_back_ios_new,
+                      color: AppColors.textPrimary,
+                    ),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ),
               ),
             ),
-            
+
             // Main content
             SafeArea(
               child: FadeTransition(
@@ -103,12 +104,12 @@ class _SignUpPageState extends State<SignUpPage> with TickerProviderStateMixin {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const SizedBox(height: 40),
-                          
+
                           // Logo with glassmorphism
                           _buildLogoSection(),
-                          
+
                           const SizedBox(height: 32),
-                          
+
                           // Welcome text
                           Text(
                             'Sign Up',
@@ -118,16 +119,19 @@ class _SignUpPageState extends State<SignUpPage> with TickerProviderStateMixin {
                               color: AppColors.textPrimary,
                               shadows: [
                                 Shadow(
-                                  color: AppColors.withOpacity(AppColors.surface, 0.5),
+                                  color: AppColors.withOpacity(
+                                    AppColors.surface,
+                                    0.5,
+                                  ),
                                   offset: const Offset(0, 1),
                                   blurRadius: 2,
                                 ),
                               ],
                             ),
                           ),
-                          
+
                           const SizedBox(height: 8),
-                          
+
                           Text(
                             'Create your MakanMate account',
                             style: TextStyle(
@@ -136,17 +140,17 @@ class _SignUpPageState extends State<SignUpPage> with TickerProviderStateMixin {
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          
+
                           const SizedBox(height: 32),
-                          
+
                           // SignUp Form Card
                           _buildSignUpCard(),
-                          
+
                           const SizedBox(height: 24),
-                          
+
                           // Login prompt
                           _buildLoginPrompt(),
-                          
+
                           const SizedBox(height: 40),
                         ],
                       ),
@@ -167,17 +171,26 @@ class _SignUpPageState extends State<SignUpPage> with TickerProviderStateMixin {
         Positioned(
           top: -150,
           left: -100,
-          child: _buildFloatingCircle(350, AppColors.withOpacity(AppColors.surface, 0.12)),
+          child: _buildFloatingCircle(
+            350,
+            AppColors.withOpacity(AppColors.surface, 0.12),
+          ),
         ),
         Positioned(
           bottom: -100,
           right: -100,
-          child: _buildFloatingCircle(300, AppColors.withOpacity(AppColors.surface, 0.15)),
+          child: _buildFloatingCircle(
+            300,
+            AppColors.withOpacity(AppColors.surface, 0.15),
+          ),
         ),
         Positioned(
           top: 300,
           right: -50,
-          child: _buildFloatingCircle(200, AppColors.withOpacity(AppColors.surface, 0.1)),
+          child: _buildFloatingCircle(
+            200,
+            AppColors.withOpacity(AppColors.surface, 0.1),
+          ),
         ),
       ],
     );
@@ -187,10 +200,7 @@ class _SignUpPageState extends State<SignUpPage> with TickerProviderStateMixin {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color,
-      ),
+      decoration: BoxDecoration(shape: BoxShape.circle, color: color),
     );
   }
 
@@ -272,17 +282,14 @@ class _SignUpPageState extends State<SignUpPage> with TickerProviderStateMixin {
             children: [
               // SignUp Form
               const SignUpForm(),
-              
+
               const SizedBox(height: 24),
-              
+
               // Divider
               Row(
                 children: [
                   Expanded(
-                    child: Divider(
-                      color: AppColors.grey600,
-                      thickness: 1,
-                    ),
+                    child: Divider(color: AppColors.grey600, thickness: 1),
                   ),
                   Padding(
                     padding: UIConstants.paddingHorizontalMd,
@@ -296,16 +303,13 @@ class _SignUpPageState extends State<SignUpPage> with TickerProviderStateMixin {
                     ),
                   ),
                   Expanded(
-                    child: Divider(
-                      color: AppColors.grey600,
-                      thickness: 1,
-                    ),
+                    child: Divider(color: AppColors.grey600, thickness: 1),
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Social Auth Buttons
               SocialAuthButton(
                 icon: 'assets/images/google_logo.png',

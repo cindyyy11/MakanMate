@@ -14,9 +14,9 @@ class RealtimeMonitoringWidget extends StatelessWidget {
   final SystemMetrics? systemMetrics;
 
   const RealtimeMonitoringWidget({
-    Key? key,
+    super.key,
     this.systemMetrics,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -11,14 +11,14 @@ class RatingWidget extends StatelessWidget {
   final bool showRatingText;
 
   const RatingWidget({
-    Key? key,
+    super.key,
     required this.rating,
     this.maxRating = 5,
     this.size = 20,
     this.activeColor,
     this.inactiveColor,
     this.showRatingText = true,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
