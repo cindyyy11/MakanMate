@@ -4,7 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:makan_mate/features/auth/presentation/pages/auth_wrapper.dart';
 import 'package:makan_mate/features/auth/presentation/pages/login_page.dart';
 import 'package:makan_mate/features/auth/presentation/pages/signup_page.dart';
+import 'package:makan_mate/features/home/domain/entities/restaurant_entity.dart';
 import 'package:makan_mate/features/home/presentation/pages/home_page.dart';
+import 'package:makan_mate/features/home/presentation/pages/restaurant_detail_screen.dart';
 import 'package:makan_mate/features/recommendations/presentation/pages/recommendations_page.dart';
 import 'package:makan_mate/features/recommendations/presentation/bloc/recommendation_bloc.dart';
 import 'package:makan_mate/features/admin/presentation/pages/admin_dashboard_page.dart';
@@ -27,7 +29,7 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const SignUpPage());
 
       case '/home':
-        return MaterialPageRoute(builder: (_) => const HomePage());
+        return MaterialPageRoute(builder: (_) => const HomeScreen());
 
       case '/recommendations':
         final user = FirebaseAuth.instance.currentUser;
@@ -55,6 +57,13 @@ class AppRouter {
 
       case '/model-testing':
         return MaterialPageRoute(builder: (_) => const ModelTestingScreen());
+
+      case '/restaurantDetail':
+        final restaurant = settings.arguments as RestaurantEntity;
+        return MaterialPageRoute(
+          builder: (_) => RestaurantDetailScreen(),
+          settings: settings,
+        );
 
       default:
         return MaterialPageRoute(

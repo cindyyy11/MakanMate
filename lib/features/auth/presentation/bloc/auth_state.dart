@@ -45,3 +45,11 @@ class AuthError extends AuthState {
   @override
   List<Object> get props => [message];
 }
+
+class AuthBlocked extends AuthState {
+  final String message;
+  AuthBlocked(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}

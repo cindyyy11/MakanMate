@@ -79,7 +79,7 @@ dependencies:
   # Location & Maps
   geolocator: ^14.0.2
   geocoding: ^4.0.0
-  google_maps_flutter: ^2.12.3
+  google_maps_flutter: ^2.13.1
 
   # Camera & AR
   camera: ^0.11.2

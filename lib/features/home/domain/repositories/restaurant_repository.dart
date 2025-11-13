@@ -8,6 +8,9 @@ abstract class RestaurantRepository {
     String? cuisineType,
     bool? isHalal,
   });
-  
+
+  Future<List<RestaurantEntity>> getCategories();
+  Future<List<RestaurantEntity>> getRecommendations();
+
   Future<Either<Failure, RestaurantEntity>> getRestaurantById(String id);
 }

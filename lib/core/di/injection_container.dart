@@ -19,6 +19,14 @@ import 'package:makan_mate/features/auth/domain/usecases/sign_in_usecase.dart';
 import 'package:makan_mate/features/auth/domain/usecases/sign_out_usecase.dart';
 import 'package:makan_mate/features/auth/domain/usecases/sign_up_usecase.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:makan_mate/features/home/domain/usecases/get_categories_usecase.dart';
+import 'package:makan_mate/features/home/domain/usecases/get_recommendations_usecase.dart'
+    as HomeGetRecommendationsUseCase;
+import 'package:makan_mate/features/map/data/datasources/map_remote_datasource.dart';
+import 'package:makan_mate/features/map/domain/repositories/map_repository.dart';
+import 'package:makan_mate/features/map/domain/repositories/map_repository_impl.dart';
+import 'package:makan_mate/features/map/domain/usecases/get_nearby_restaurants_usecase.dart';
+import 'package:makan_mate/features/map/presentation/bloc/map_bloc.dart';
 import 'package:makan_mate/features/restaurant/data/datasources/restaurant_remote_datasource.dart';
 import 'package:makan_mate/features/restaurant/data/repositories/restaurant_repository_impl.dart';
 import 'package:makan_mate/features/home/domain/repositories/restaurant_repository.dart';
@@ -51,8 +59,6 @@ import 'package:makan_mate/features/admin/domain/usecases/get_seasonal_trends_us
 import 'package:makan_mate/features/admin/domain/usecases/get_data_quality_metrics_usecase.dart';
 import 'package:makan_mate/features/admin/presentation/bloc/admin_bloc.dart';
 import 'package:makan_mate/features/reviews/data/datasources/review_remote_datasource.dart';
-import 'package:makan_mate/features/reviews/data/repositories/review_repository_impl.dart';
-import 'package:makan_mate/features/reviews/domain/repositories/review_repository.dart';
 import 'package:makan_mate/features/reviews/domain/usecases/flag_review_usecase.dart';
 import 'package:makan_mate/features/reviews/domain/usecases/get_item_reviews_usecase.dart';
 import 'package:makan_mate/features/reviews/domain/usecases/get_restaurant_reviews_usecase.dart';
@@ -80,6 +86,41 @@ import 'package:makan_mate/features/vendor/domain/usecases/get_vendor_applicatio
 import 'package:makan_mate/features/vendor/domain/usecases/approve_vendor_application_usecase.dart';
 import 'package:makan_mate/features/vendor/domain/usecases/reject_vendor_application_usecase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+// Vendor Feature imports
+import '../../features/vendor/data/datasources/vendor_remote_datasource.dart';
+import '../../features/vendor/data/datasources/promotion_remote_datasource.dart';
+import '../../features/vendor/data/repositories/vendor_repository_impl.dart';
+import '../../features/vendor/data/repositories/promotion_repository_impl.dart';
+import '../../features/vendor/data/services/storage_service.dart';
+import '../../features/vendor/domain/repositories/vendor_repository.dart';
+import '../../features/vendor/domain/repositories/promotion_repository.dart';
+import '../../features/vendor/domain/usecases/add_menu_item_usecase.dart';
+import '../../features/vendor/domain/usecases/delete_menu_item_usecase.dart';
+import '../../features/vendor/domain/usecases/get_menu_items_usecase.dart';
+import '../../features/vendor/domain/usecases/update_menu_item_usecase.dart';
+import '../../features/vendor/domain/usecases/get_promotions_usecase.dart';
+import '../../features/vendor/domain/usecases/get_promotions_by_status_usecase.dart';
+import '../../features/vendor/domain/usecases/add_promotion_usecase.dart';
+import '../../features/vendor/domain/usecases/update_promotion_usecase.dart';
+import '../../features/vendor/domain/usecases/delete_promotion_usecase.dart';
+import '../../features/vendor/domain/usecases/deactivate_promotion_usecase.dart';
+import '../../features/vendor/presentation/bloc/vendor_bloc.dart';
+import '../../features/vendor/presentation/bloc/promotion_bloc.dart';
+import '../../features/vendor/presentation/bloc/vendor_review_bloc.dart';
+import '../../features/vendor/data/repositories/review_repository_impl.dart';
+import '../../features/vendor/domain/repositories/review_repository.dart';
+import '../../features/vendor/domain/usecases/watch_vendor_reviews_usecase.dart';
+import '../../features/vendor/domain/usecases/reply_to_review_usecase.dart';
+import '../../features/vendor/domain/usecases/report_review_usecase.dart';
+import '../../features/vendor/data/datasources/vendor_profile_remote_datasource.dart';
+import '../../features/vendor/data/repositories/vendor_profile_repository_impl.dart';
+import '../../features/vendor/domain/repositories/vendor_profile_repository.dart';
+import '../../features/vendor/domain/usecases/get_vendor_profile_usecase.dart';
+import '../../features/vendor/domain/usecases/update_vendor_profile_usecase.dart';
+import '../../features/vendor/domain/usecases/create_vendor_profile_usecase.dart';
+import '../../features/vendor/presentation/bloc/vendor_profile_bloc.dart';
+import '../../features/auth/presentation/bloc/auth_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -155,10 +196,21 @@ void _initAuth() {
 // ---------------------------
 void _initHome() {
   // Bloc
-  sl.registerFactory(() => HomeBloc(getRestaurants: sl()));
+  sl.registerFactory(
+    () => HomeBloc(
+      getCategoriesUseCase: sl(),
+      getRecommendationsUseCase: sl(),
+      getRestaurants: sl(),
+    ),
+  );
 
   // Use cases
   sl.registerLazySingleton(() => GetRestaurantsUseCase(sl()));
+  sl.registerLazySingleton(
+    () => HomeGetRecommendationsUseCase.GetRecommendationsUseCase(sl()),
+  );
+
+  sl.registerLazySingleton(() => GetCategoriesUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<RestaurantRepository>(
@@ -302,9 +354,6 @@ void _initAdmin() {
       getNotifications: sl(),
       exportMetrics: sl(),
       streamSystemMetrics: sl(),
-      getFairnessMetrics: sl(),
-      getSeasonalTrends: sl(),
-      getDataQualityMetrics: sl(),
       adminRepository: sl(),
       logger: logger,
     ),
@@ -317,9 +366,6 @@ void _initAdmin() {
   sl.registerLazySingleton(() => GetNotificationsUseCase(sl()));
   sl.registerLazySingleton(() => ExportMetricsUseCase(sl()));
   sl.registerLazySingleton(() => StreamSystemMetricsUseCase(sl()));
-  sl.registerLazySingleton(() => GetFairnessMetricsUseCase(sl()));
-  sl.registerLazySingleton(() => GetSeasonalTrendsUseCase(sl()));
-  sl.registerLazySingleton(() => GetDataQualityMetricsUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<AdminRepository>(
@@ -370,13 +416,7 @@ void _initReviews() {
   sl.registerLazySingleton(() => FlagReviewUseCase(sl()));
 
   // Repository
-  sl.registerLazySingleton<ReviewRepository>(
-    () => ReviewRepositoryImpl(
-      remoteDataSource: sl(),
-      networkInfo: sl(),
-      logger: logger,
-    ),
-  );
+  sl.registerLazySingleton<ReviewRepository>(() => ReviewRepositoryImpl());
 
   // Data sources
   sl.registerLazySingleton<ReviewRemoteDataSource>(
@@ -430,19 +470,99 @@ void _initUser() {
 // Vendor
 // ---------------------------
 void _initVendor() {
-  // Use cases
-  sl.registerLazySingleton(() => CreateVendorApplicationUseCase(sl()));
-  sl.registerLazySingleton(() => GetVendorApplicationUseCase(sl()));
-  sl.registerLazySingleton(() => ApproveVendorApplicationUseCase(sl()));
-  sl.registerLazySingleton(() => RejectVendorApplicationUseCase(sl()));
-
   // Repository
   sl.registerLazySingleton<VendorRepository>(
-    () => VendorRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
+    () => VendorRepositoryImpl(remoteDataSource: sl()),
   );
 
   // Data sources
   sl.registerLazySingleton<VendorRemoteDataSource>(
-    () => VendorRemoteDataSourceImpl(firestore: sl()),
+    () => VendorRemoteDataSourceImpl(),
+  );
+  // Map Feature
+  sl.registerLazySingleton<MapRemoteDataSource>(
+    () => MapRemoteDataSourceImpl(),
+  );
+  sl.registerLazySingleton<MapRepository>(() => MapRepositoryImpl(sl()));
+  sl.registerLazySingleton(() => GetNearbyRestaurantsUseCase(sl()));
+  sl.registerFactory(() => MapBloc(sl()));
+
+  sl.registerLazySingleton<StorageService>(() => StorageService());
+
+  sl.registerLazySingleton(() => GetMenuItemsUseCase(sl()));
+  sl.registerLazySingleton(() => AddMenuItemUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateMenuItemUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteMenuItemUseCase(sl()));
+
+  sl.registerFactory(
+    () => VendorBloc(
+      getMenuItems: sl(),
+      addMenuItem: sl(),
+      updateMenuItem: sl(),
+      deleteMenuItem: sl(),
+      storageService: sl(),
+    ),
+  );
+
+  // Promotion Feature
+  sl.registerLazySingleton<PromotionRemoteDataSource>(
+    () => PromotionRemoteDataSourceImpl(),
+  );
+
+  sl.registerLazySingleton<PromotionRepository>(
+    () => PromotionRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerLazySingleton(() => GetPromotionsUseCase(sl()));
+  sl.registerLazySingleton(() => GetPromotionsByStatusUseCase(sl()));
+  sl.registerLazySingleton(() => AddPromotionUseCase(sl()));
+  sl.registerLazySingleton(() => UpdatePromotionUseCase(sl()));
+  sl.registerLazySingleton(() => DeletePromotionUseCase(sl()));
+  sl.registerLazySingleton(() => DeactivatePromotionUseCase(sl()));
+
+  sl.registerFactory(
+    () => PromotionBloc(
+      getPromotions: sl(),
+      getPromotionsByStatus: sl(),
+      addPromotion: sl(),
+      updatePromotion: sl(),
+      deletePromotion: sl(),
+      deactivatePromotion: sl(),
+      storageService: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton(() => WatchVendorReviewsUseCase(sl()));
+  sl.registerLazySingleton(() => ReplyToReviewUseCase(sl()));
+  sl.registerLazySingleton(() => ReportReviewUseCase(sl()));
+
+  sl.registerFactory(
+    () => VendorReviewBloc(
+      watchReviews: sl(),
+      replyToReview: sl(),
+      reportReview: sl(),
+    ),
+  );
+
+  // Vendor Profile Feature
+  sl.registerLazySingleton<VendorProfileRemoteDataSource>(
+    () => VendorProfileRemoteDataSourceImpl(),
+  );
+
+  sl.registerLazySingleton<VendorProfileRepository>(
+    () => VendorProfileRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerLazySingleton(() => GetVendorProfileUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateVendorProfileUseCase(sl()));
+  sl.registerLazySingleton(() => CreateVendorProfileUseCase(sl()));
+
+  sl.registerFactory(
+    () => VendorProfileBloc(
+      getVendorProfile: sl(),
+      updateVendorProfile: sl(),
+      createVendorProfile: sl(),
+      storageService: sl(),
+    ),
   );
 }

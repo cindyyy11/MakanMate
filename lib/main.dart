@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +13,18 @@ import 'package:makan_mate/core/utils/logger.dart';
 import 'package:makan_mate/firebase_options.dart';
 import 'package:makan_mate/services/metrics_service.dart';
 
-void main() async {
+// Local imports
+import 'firebase_options.dart';
+import 'core/di/injection_container.dart' as di;
+import 'features/home/presentation/bloc/home_bloc.dart';
+
+// Vendor Feature imports
+import 'features/vendor/presentation/bloc/vendor_bloc.dart';
+import 'features/vendor/presentation/bloc/vendor_event.dart';
+import 'features/vendor/presentation/pages/pending_approval_page.dart';
+import 'features/vendor/presentation/pages/vendor_onboarding_page.dart';
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -75,3 +87,34 @@ void main() async {
     FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
   });
 }
+
+/* 
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => di.sl<HomeBloc>()),
+        BlocProvider(create: (_) => di.sl<AuthBloc>()..add(AppStarted())),
+        BlocProvider(create: (_) => di.sl<VendorBloc>()..add(LoadMenuEvent())),
+      ],
+      child: MaterialApp(
+        title: 'MakanMate',
+        debugShowCheckedModeBanner: false,
+        routes: {
+          '/vendorOnboarding': (_) => const VendorOnboardingPage(),
+          '/pendingApproval': (_) => PendingApprovalPage(
+            onBackToLogin: () {
+              // This route is used only for navigation overview; the actual
+              // AuthBloc listener will handle resetting state.
+            },
+          ),
+        },
+        home: const AuthPage(), // Use AuthPage for proper authentication flow
+      ),
+    );
+  }
+} */
+
