@@ -53,11 +53,11 @@ class PromotionEntity {
   String getDisplayText() {
     switch (type) {
       case PromotionType.buyXGetY:
-        return 'BOGO FREE'; // Buy One Get One
+        return 'Buy $buyQuantity Get $getQuantity';
       case PromotionType.discount:
         return '${discountPercentage?.toStringAsFixed(0)}% OFF';
       case PromotionType.birthday:
-        return 'BIRTHDAY SPECIAL';
+        return 'Birthday Special';
       case PromotionType.flatDiscount:
         return 'RM ${flatDiscountAmount?.toStringAsFixed(2)} OFF';
     }
