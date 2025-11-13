@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:makan_mate/features/home/presentation/pages/home_page.dart';
 import '../../features/vendor/presentation/pages/menu_management_page.dart';
-import '../../screens/home_screen.dart';
 
 /// Utility class to handle role-based routing
 class RoleRouter {
@@ -13,7 +13,7 @@ class RoleRouter {
           .collection('users')
           .doc(userId)
           .get();
-      
+
       if (doc.exists) {
         final data = doc.data();
         return data?['role'] as String? ?? 'customer'; // Default to customer
@@ -30,15 +30,15 @@ class RoleRouter {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       // Should not happen if called after authentication check
-      return const HomeScreen();
+      return const HomePage();
     }
 
     final role = await getUserRole(user.uid);
-    
+
     if (role == 'vendor') {
       return const MenuManagementPage();
     } else {
-      return const HomeScreen();
+      return const HomePage();
     }
   }
 
@@ -46,9 +46,8 @@ class RoleRouter {
   static Future<bool> isVendor() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return false;
-    
+
     final role = await getUserRole(user.uid);
     return role == 'vendor';
   }
 }
-

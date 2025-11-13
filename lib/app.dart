@@ -5,7 +5,13 @@ import 'package:makan_mate/core/theme/app_theme.dart';
 import 'package:makan_mate/core/theme/theme_bloc.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_event.dart';
+import 'package:makan_mate/features/vendor/presentation/bloc/promotion_bloc.dart';
+import 'package:makan_mate/features/vendor/presentation/bloc/promotion_event.dart';
+import 'package:makan_mate/features/vendor/presentation/bloc/vendor_bloc.dart';
+import 'package:makan_mate/features/vendor/presentation/bloc/vendor_review_bloc.dart';
 import 'package:makan_mate/routes/app_router.dart';
+
+import 'features/vendor/presentation/bloc/vendor_event.dart';
 
 class MakanMateApp extends StatelessWidget {
   const MakanMateApp({super.key});
@@ -17,9 +23,13 @@ class MakanMateApp extends StatelessWidget {
         BlocProvider(
           create: (_) => di.sl<AuthBloc>()..add(AuthCheckRequested()),
         ),
+        BlocProvider(create: (_) => ThemeBloc()),
+
+        BlocProvider(create: (_) => di.sl<VendorBloc>()..add(LoadMenuEvent())),
         BlocProvider(
-          create: (_) => ThemeBloc(),
+          create: (_) => di.sl<PromotionBloc>()..add(LoadPromotionsEvent()),
         ),
+        BlocProvider(create: (_) => di.sl<VendorReviewBloc>()),
       ],
       child: BlocBuilder<ThemeBloc, ThemeState>(
         builder: (context, themeState) {

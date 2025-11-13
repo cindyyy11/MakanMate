@@ -23,6 +23,11 @@ import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:makan_mate/features/home/domain/usecases/get_categories_usecase.dart';
 import 'package:makan_mate/features/home/domain/usecases/get_recommendations_usecase.dart'
     as HomeGetRecommendationsUseCase;
+import 'package:makan_mate/features/map/data/datasources/map_remote_datasource.dart';
+import 'package:makan_mate/features/map/domain/repositories/map_repository.dart';
+import 'package:makan_mate/features/map/domain/repositories/map_repository_impl.dart';
+import 'package:makan_mate/features/map/domain/usecases/get_nearby_restaurants_usecase.dart';
+import 'package:makan_mate/features/map/presentation/bloc/map_bloc.dart';
 import 'package:makan_mate/features/restaurant/data/datasources/restaurant_remote_datasource.dart';
 import 'package:makan_mate/features/restaurant/data/repositories/restaurant_repository_impl.dart';
 import 'package:makan_mate/features/home/domain/repositories/restaurant_repository.dart';
@@ -51,8 +56,6 @@ import 'package:makan_mate/features/admin/domain/usecases/get_platform_metrics_u
 import 'package:makan_mate/features/admin/domain/usecases/stream_system_metrics_usecase.dart';
 import 'package:makan_mate/features/admin/presentation/bloc/admin_bloc.dart';
 import 'package:makan_mate/features/reviews/data/datasources/review_remote_datasource.dart';
-import 'package:makan_mate/features/reviews/data/repositories/review_repository_impl.dart';
-import 'package:makan_mate/features/reviews/domain/repositories/review_repository.dart';
 import 'package:makan_mate/features/reviews/domain/usecases/flag_review_usecase.dart';
 import 'package:makan_mate/features/reviews/domain/usecases/get_item_reviews_usecase.dart';
 import 'package:makan_mate/features/reviews/domain/usecases/get_restaurant_reviews_usecase.dart';
@@ -404,13 +407,7 @@ void _initReviews() {
   sl.registerLazySingleton(() => FlagReviewUseCase(sl()));
 
   // Repository
-  sl.registerLazySingleton<ReviewRepository>(
-    () => ReviewRepositoryImpl(
-      remoteDataSource: sl(),
-      networkInfo: sl(),
-      logger: logger,
-    ),
-  );
+  sl.registerLazySingleton<ReviewRepository>(() => ReviewRepositoryImpl());
 
   // Data sources
   sl.registerLazySingleton<ReviewRemoteDataSource>(
@@ -464,70 +461,58 @@ void _initUser() {
 // Vendor
 // ---------------------------
 void _initVendor() {
-  // Use cases
-  sl.registerLazySingleton(() => CreateVendorApplicationUseCase(sl()));
-  sl.registerLazySingleton(() => GetVendorApplicationUseCase(sl()));
-  sl.registerLazySingleton(() => ApproveVendorApplicationUseCase(sl()));
-  sl.registerLazySingleton(() => RejectVendorApplicationUseCase(sl()));
-
   // Repository
   sl.registerLazySingleton<VendorRepository>(
-    () => VendorRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
+    () => VendorRepositoryImpl(remoteDataSource: sl()),
   );
 
   // Data sources
   sl.registerLazySingleton<VendorRemoteDataSource>(
-    () => VendorRemoteDataSourceImpl(firestore: sl()),
+    () => VendorRemoteDataSourceImpl(),
   );
   // Map Feature
-    sl.registerLazySingleton<MapRemoteDataSource>(() => MapRemoteDataSourceImpl());
-    sl.registerLazySingleton<MapRepository>(() => MapRepositoryImpl(sl()));
-    sl.registerLazySingleton(() => GetNearbyRestaurantsUseCase(sl()));
-    sl.registerFactory(() => MapBloc(sl()));
+  sl.registerLazySingleton<MapRemoteDataSource>(
+    () => MapRemoteDataSourceImpl(),
+  );
+  sl.registerLazySingleton<MapRepository>(() => MapRepositoryImpl(sl()));
+  sl.registerLazySingleton(() => GetNearbyRestaurantsUseCase(sl()));
+  sl.registerFactory(() => MapBloc(sl()));
 
-    // Vendor Feature
-    sl.registerLazySingleton<VendorRemoteDataSource>(
-      () => VendorRemoteDataSourceImpl(),
-    );
+  sl.registerLazySingleton<StorageService>(() => StorageService());
 
-    sl.registerLazySingleton<StorageService>(
-      () => StorageService(),
-    );
+  sl.registerLazySingleton(() => GetMenuItemsUseCase(sl()));
+  sl.registerLazySingleton(() => AddMenuItemUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateMenuItemUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteMenuItemUseCase(sl()));
 
-    sl.registerLazySingleton<VendorRepository>(
-      () => VendorRepositoryImpl(remoteDataSource: sl()),
-    );
-
-    sl.registerLazySingleton(() => GetMenuItemsUseCase(sl()));
-    sl.registerLazySingleton(() => AddMenuItemUseCase(sl()));
-    sl.registerLazySingleton(() => UpdateMenuItemUseCase(sl()));
-    sl.registerLazySingleton(() => DeleteMenuItemUseCase(sl()));
-
-    sl.registerFactory(() => VendorBloc(
+  sl.registerFactory(
+    () => VendorBloc(
       getMenuItems: sl(),
       addMenuItem: sl(),
       updateMenuItem: sl(),
       deleteMenuItem: sl(),
       storageService: sl(),
-    ));
+    ),
+  );
 
-    // Promotion Feature
-    sl.registerLazySingleton<PromotionRemoteDataSource>(
-      () => PromotionRemoteDataSourceImpl(),
-    );
+  // Promotion Feature
+  sl.registerLazySingleton<PromotionRemoteDataSource>(
+    () => PromotionRemoteDataSourceImpl(),
+  );
 
-    sl.registerLazySingleton<PromotionRepository>(
-      () => PromotionRepositoryImpl(remoteDataSource: sl()),
-    );
+  sl.registerLazySingleton<PromotionRepository>(
+    () => PromotionRepositoryImpl(remoteDataSource: sl()),
+  );
 
-    sl.registerLazySingleton(() => GetPromotionsUseCase(sl()));
-    sl.registerLazySingleton(() => GetPromotionsByStatusUseCase(sl()));
-    sl.registerLazySingleton(() => AddPromotionUseCase(sl()));
-    sl.registerLazySingleton(() => UpdatePromotionUseCase(sl()));
-    sl.registerLazySingleton(() => DeletePromotionUseCase(sl()));
-    sl.registerLazySingleton(() => DeactivatePromotionUseCase(sl()));
+  sl.registerLazySingleton(() => GetPromotionsUseCase(sl()));
+  sl.registerLazySingleton(() => GetPromotionsByStatusUseCase(sl()));
+  sl.registerLazySingleton(() => AddPromotionUseCase(sl()));
+  sl.registerLazySingleton(() => UpdatePromotionUseCase(sl()));
+  sl.registerLazySingleton(() => DeletePromotionUseCase(sl()));
+  sl.registerLazySingleton(() => DeactivatePromotionUseCase(sl()));
 
-    sl.registerFactory(() => PromotionBloc(
+  sl.registerFactory(
+    () => PromotionBloc(
       getPromotions: sl(),
       getPromotionsByStatus: sl(),
       addPromotion: sl(),
@@ -535,40 +520,40 @@ void _initVendor() {
       deletePromotion: sl(),
       deactivatePromotion: sl(),
       storageService: sl(),
-    ));
+    ),
+  );
 
-    // Review Feature
-    sl.registerLazySingleton<ReviewRepository>(
-      () => ReviewRepositoryImpl(),
-    );
+  sl.registerLazySingleton(() => WatchVendorReviewsUseCase(sl()));
+  sl.registerLazySingleton(() => ReplyToReviewUseCase(sl()));
+  sl.registerLazySingleton(() => ReportReviewUseCase(sl()));
 
-    sl.registerLazySingleton(() => WatchVendorReviewsUseCase(sl()));
-    sl.registerLazySingleton(() => ReplyToReviewUseCase(sl()));
-    sl.registerLazySingleton(() => ReportReviewUseCase(sl()));
-
-    sl.registerFactory(() => VendorReviewBloc(
+  sl.registerFactory(
+    () => VendorReviewBloc(
       watchReviews: sl(),
       replyToReview: sl(),
       reportReview: sl(),
-    ));
+    ),
+  );
 
-    // Vendor Profile Feature
-    sl.registerLazySingleton<VendorProfileRemoteDataSource>(
-      () => VendorProfileRemoteDataSourceImpl(),
-    );
+  // Vendor Profile Feature
+  sl.registerLazySingleton<VendorProfileRemoteDataSource>(
+    () => VendorProfileRemoteDataSourceImpl(),
+  );
 
-    sl.registerLazySingleton<VendorProfileRepository>(
-      () => VendorProfileRepositoryImpl(remoteDataSource: sl()),
-    );
+  sl.registerLazySingleton<VendorProfileRepository>(
+    () => VendorProfileRepositoryImpl(remoteDataSource: sl()),
+  );
 
-    sl.registerLazySingleton(() => GetVendorProfileUseCase(sl()));
-    sl.registerLazySingleton(() => UpdateVendorProfileUseCase(sl()));
-    sl.registerLazySingleton(() => CreateVendorProfileUseCase(sl()));
+  sl.registerLazySingleton(() => GetVendorProfileUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateVendorProfileUseCase(sl()));
+  sl.registerLazySingleton(() => CreateVendorProfileUseCase(sl()));
 
-    sl.registerFactory(() => VendorProfileBloc(
+  sl.registerFactory(
+    () => VendorProfileBloc(
       getVendorProfile: sl(),
       updateVendorProfile: sl(),
       createVendorProfile: sl(),
       storageService: sl(),
-    ));
+    ),
+  );
 }
