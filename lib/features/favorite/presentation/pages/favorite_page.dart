@@ -1,6 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:makan_mate/core/widgets/bottom_nav_widget.dart';
+import 'package:makan_mate/features/map/presentation/bloc/map_bloc.dart';
+import 'package:makan_mate/features/home/presentation/pages/spin_wheel_page.dart';
+import 'package:makan_mate/screens/home_screen.dart';
 
 class FavoritePage extends StatelessWidget {
   const FavoritePage({Key? key}) : super(key: key);
@@ -163,6 +168,42 @@ class FavoritePage extends StatelessWidget {
               );
             },
           );
+        },
+      ),
+      bottomNavigationBar: BottomNavWidget(
+        currentIndex: 1,
+        onTap: (index) {
+          switch (index) {
+            case 0:
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => BlocProvider.value(
+                    value: context.read<MapBloc>(),
+                    child: const HomeScreen(),
+                  ),
+                ),
+              );
+              break;
+            case 1:
+              break;
+            case 2:
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => BlocProvider.value(
+                    value: context.read<MapBloc>(), 
+                    child: const SpinWheelPage(),
+                  ),
+                ),
+              );
+              break;
+            case 3:
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Profile feature coming soon!')),
+              );
+              break;
+          }
         },
       ),
     );

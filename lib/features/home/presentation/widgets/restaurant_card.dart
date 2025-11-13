@@ -10,6 +10,16 @@ class RestaurantCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final vendor = restaurant.vendor;
+
+    final imageUrl = vendor.businessLogoUrl ??
+        'assets/images/logos/image-not-found.jpg';
+
+    final rating = vendor.ratingAverage?.toStringAsFixed(1) ?? '-';
+
+    final hasHalal = vendor.certifications
+        .any((c) => c.type.toLowerCase() == "halal");
+
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: InkWell(
@@ -26,44 +36,36 @@ class RestaurantCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image
-            ClipRRect(
-              borderRadius: BorderRadius.vertical(
-                top: Radius.circular(UIConstants.radiusMd),
-              ),
-              child: Image.network(
-                restaurant.imageUrl,
-                height: 180,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  height: 180,
-                  color: AppColors.grey300,
-                  child: const Icon(
-                    Icons.restaurant,
-                    size: UIConstants.iconSize2Xl,
-                    color: AppColors.grey500,
-                  ),
-                ),
-              ),
+            Image.network(
+              imageUrl,
+              width: 100,
+              height: 100,
+              fit: BoxFit.cover,
             ),
-            Padding(
-              padding: UIConstants.paddingMd,
+
+            const SizedBox(width: 10),
+
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Name and rating
+                  Text(vendor.businessName,
+                      style:
+                          const TextStyle(fontWeight: FontWeight.bold)),
+
+                  Text(vendor.cuisine ?? '-'),
+                  Text(vendor.priceRange ?? '-'),
+
                   Row(
                     children: [
-                      Expanded(
-                        child: Text(
-                          restaurant.name,
-                          style: const TextStyle(
-                            fontSize: UIConstants.fontSizeXl,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                      const Icon(Icons.star, color: Colors.amber, size: 16),
+                      Text(rating),
+
+                      if (hasHalal)
+                        const Padding(
+                          padding: EdgeInsets.only(left: 6),
+                          child: Icon(Icons.mosque,
+                              size: 16, color: Colors.green),
                         ),
                       ),
                       const Icon(

@@ -194,5 +194,10 @@ class VendorBloc extends Bloc<VendorEvent, VendorState> {
     } catch (e) {
       emit(VendorError('Failed to delete menu item.'));
     }
+  Future<void> _onLoadVendorMenu(
+    LoadVendorMenuEvent event,
+    Emitter<VendorState> emit,
+  ) async {
+    //
   }
 }

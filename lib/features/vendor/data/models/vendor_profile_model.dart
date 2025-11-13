@@ -5,31 +5,39 @@ class VendorProfileModel {
   final String id;
   final String? profilePhotoUrl;
   final String? businessLogoUrl;
+  final String? bannerImageUrl;
   final String businessName;
   final String contactNumber;
   final String emailAddress;
   final String businessAddress;
-  final Map<String, Map<String, dynamic>> operatingHours;
   final String shortDescription;
-  final List<Map<String, dynamic>> outlets;
-  final List<Map<String, dynamic>> certifications;
+  final String? cuisine;
+  final String? priceRange;
+  final double? ratingAverage;
   final String approvalStatus;
+  final Map<String, OperatingHours> operatingHours;
+  final List<OutletEntity> outlets;
+  final List<CertificationEntity> certifications;
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  VendorProfileModel({
+  const VendorProfileModel({
     required this.id,
     this.profilePhotoUrl,
     this.businessLogoUrl,
+    this.bannerImageUrl,
     required this.businessName,
     required this.contactNumber,
     required this.emailAddress,
     required this.businessAddress,
-    required this.operatingHours,
     required this.shortDescription,
-    this.outlets = const [],
-    this.certifications = const [],
+    this.cuisine,
+    this.priceRange,
+    this.ratingAverage,
     this.approvalStatus = 'pending',
+    required this.operatingHours,
+    required this.outlets,
+    required this.certifications,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -40,6 +48,7 @@ class VendorProfileModel {
       profilePhotoUrl: data['profilePhotoUrl'] as String?,
       businessLogoUrl: data['businessLogoUrl'] as String?,
       businessName: data['businessName'] as String? ?? '',
+      bannerImageUrl: data['bannerImageUrl'] as String ?? '',
       contactNumber: data['contactNumber'] as String? ?? '',
       emailAddress: data['emailAddress'] as String? ?? '',
       businessAddress: data['businessAddress'] as String? ?? '',
@@ -68,6 +77,7 @@ class VendorProfileModel {
       'profilePhotoUrl': profilePhotoUrl,
       'businessLogoUrl': businessLogoUrl,
       'businessName': businessName,
+      'bannerImageUrl': bannerImageUrl,
       'contactNumber': contactNumber,
       'emailAddress': emailAddress,
       'businessAddress': businessAddress,
@@ -93,6 +103,7 @@ class VendorProfileModel {
       id: id,
       profilePhotoUrl: profilePhotoUrl,
       businessLogoUrl: businessLogoUrl,
+      bannerImageUrl: bannerImageUrl,
       businessName: businessName,
       contactNumber: contactNumber,
       emailAddress: emailAddress,
@@ -155,6 +166,7 @@ class VendorProfileModel {
       id: entity.id,
       profilePhotoUrl: entity.profilePhotoUrl,
       businessLogoUrl: entity.businessLogoUrl,
+      bannerImageUrl: entity.bannerImageUrl,
       businessName: entity.businessName,
       contactNumber: entity.contactNumber,
       emailAddress: entity.emailAddress,

@@ -51,7 +51,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
         position.longitude,
       );
 
-      emit(MapLoaded(locations));
+      emit(MapLoaded(position, locations));
     } catch (e) {
       emit(MapError('Failed to load map data: $e'));
     }

@@ -2,8 +2,13 @@ import 'package:equatable/equatable.dart';
 
 class VendorProfileEntity extends Equatable {
   final String id;
+
+  // Images
   final String? profilePhotoUrl;
   final String? businessLogoUrl;
+  final String? bannerImageUrl;
+
+  // Business info
   final String businessName;
   final String contactNumber;
   final String emailAddress;
@@ -20,6 +25,7 @@ class VendorProfileEntity extends Equatable {
     required this.id,
     this.profilePhotoUrl,
     this.businessLogoUrl,
+    this.bannerImageUrl,
     required this.businessName,
     required this.contactNumber,
     required this.emailAddress,
@@ -37,6 +43,7 @@ class VendorProfileEntity extends Equatable {
     String? id,
     String? profilePhotoUrl,
     String? businessLogoUrl,
+    String? bannerImageUrl,
     String? businessName,
     String? contactNumber,
     String? emailAddress,
@@ -53,6 +60,7 @@ class VendorProfileEntity extends Equatable {
       id: id ?? this.id,
       profilePhotoUrl: profilePhotoUrl ?? this.profilePhotoUrl,
       businessLogoUrl: businessLogoUrl ?? this.businessLogoUrl,
+      bannerImageUrl: bannerImageUrl ?? this.bannerImageUrl,
       businessName: businessName ?? this.businessName,
       contactNumber: contactNumber ?? this.contactNumber,
       emailAddress: emailAddress ?? this.emailAddress,
@@ -72,6 +80,7 @@ class VendorProfileEntity extends Equatable {
     id,
     profilePhotoUrl,
     businessLogoUrl,
+    bannerImageUrl,
     businessName,
     contactNumber,
     emailAddress,
