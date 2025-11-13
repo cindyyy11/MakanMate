@@ -30,7 +30,7 @@ class RoleRouter {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       // Should not happen if called after authentication check
-      return const HomePage();
+      return const HomeScreen();
     }
 
     final role = await getUserRole(user.uid);
@@ -38,7 +38,7 @@ class RoleRouter {
     if (role == 'vendor') {
       return const MenuManagementPage();
     } else {
-      return const HomePage();
+      return const HomeScreen();
     }
   }
 

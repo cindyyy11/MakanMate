@@ -7,7 +7,6 @@ import 'package:makan_mate/features/admin/presentation/pages/admin_dashboard_pag
 import 'package:makan_mate/features/auth/domain/entities/user_entity.dart';
 import 'package:makan_mate/features/favorite/presentation/pages/favorite_page.dart';
 import 'package:makan_mate/features/home/presentation/pages/home_page.dart';
-import 'package:makan_mate/features/home/presentation/widgets/home_screen.dart';
 import 'package:makan_mate/features/vendor/presentation/pages/menu_management_page.dart';
 import 'package:makan_mate/features/vendor/presentation/pages/promotion_management_page.dart';
 import 'package:makan_mate/features/vendor/presentation/pages/vendor_home_page.dart';
@@ -33,6 +32,7 @@ class _MainScaffoldState extends State<MainScaffold> {
     _items = _buildNavBarItemsForRole(widget.user.role);
   }
 
+  // Here is where you set the pages that the user can navigate through
   List<Widget> _buildPagesForRole(String role) {
     switch (role) {
       case 'admin':
@@ -55,6 +55,7 @@ class _MainScaffoldState extends State<MainScaffold> {
     }
   }
 
+  //Here is where you add Navigation Bar Icons (MUST BE IN ORDER WITH THE Widget list above)
   List<BottomNavigationBarItem> _buildNavBarItemsForRole(String role) {
     switch (role) {
       case 'vendor':
