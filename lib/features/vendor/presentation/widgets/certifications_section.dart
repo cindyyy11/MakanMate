@@ -71,8 +71,11 @@ class CertificationsSection extends StatelessWidget {
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
-                      Icon(Icons.verified_user_outlined,
-                          size: 48, color: Colors.grey[400]),
+                      Icon(
+                        Icons.verified_user_outlined,
+                        size: 48,
+                        color: Colors.grey[400],
+                      ),
                       const SizedBox(height: 8),
                       Text(
                         'No certifications added yet',
@@ -83,10 +86,9 @@ class CertificationsSection extends StatelessWidget {
                 ),
               )
             else
-              ...certifications.map((cert) => _buildCertificationCard(
-                    context,
-                    cert,
-                  )),
+              ...certifications.map(
+                (cert) => _buildCertificationCard(context, cert),
+              ),
           ],
         ),
       ),
@@ -94,7 +96,9 @@ class CertificationsSection extends StatelessWidget {
   }
 
   Widget _buildCertificationCard(
-      BuildContext context, CertificationEntity certification) {
+    BuildContext context,
+    CertificationEntity certification,
+  ) {
     final statusColor = _getStatusColor(certification.status);
     final statusIcon = _getStatusIcon(certification.status);
     final statusText = _getStatusText(certification.status);
@@ -104,10 +108,7 @@ class CertificationsSection extends StatelessWidget {
       color: Colors.grey[50],
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: statusColor.withOpacity(0.3),
-          width: 2,
-        ),
+        side: BorderSide(color: statusColor.withOpacity(0.3), width: 2),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -141,7 +142,9 @@ class CertificationsSection extends StatelessWidget {
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: statusColor,
                               borderRadius: BorderRadius.circular(12),
@@ -192,18 +195,21 @@ class CertificationsSection extends StatelessWidget {
                       }
                     },
                   ),
-                if (isAdmin && certification.status == CertificationStatus.pending)
+                if (isAdmin &&
+                    certification.status == CertificationStatus.pending)
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
                         icon: const Icon(Icons.check, color: Colors.green),
-                        onPressed: () => _verifyCertification(context, certification),
+                        onPressed: () =>
+                            _verifyCertification(context, certification),
                         tooltip: 'Verify',
                       ),
                       IconButton(
                         icon: const Icon(Icons.close, color: Colors.red),
-                        onPressed: () => _rejectCertification(context, certification),
+                        onPressed: () =>
+                            _rejectCertification(context, certification),
                         tooltip: 'Reject',
                       ),
                     ],
@@ -237,7 +243,8 @@ class CertificationsSection extends StatelessWidget {
                           ? Colors.red
                           : Colors.grey[700],
                       fontSize: 14,
-                      fontWeight: certification.expiryDate!.isBefore(DateTime.now())
+                      fontWeight:
+                          certification.expiryDate!.isBefore(DateTime.now())
                           ? FontWeight.bold
                           : FontWeight.normal,
                     ),
@@ -261,9 +268,8 @@ class CertificationsSection extends StatelessWidget {
                     child: Image.network(
                       certification.certificateImageUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => const Center(
-                        child: Icon(Icons.image_not_supported),
-                      ),
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Center(child: Icon(Icons.image_not_supported)),
                     ),
                   ),
                 ),
@@ -355,7 +361,7 @@ class CertificationsSection extends StatelessWidget {
       'Gluten-Free',
       'Organic',
       'Kosher',
-      'Other'
+      'Other',
     ];
     String? selectedType;
     final certificateNumberController = TextEditingController();
@@ -367,7 +373,9 @@ class CertificationsSection extends StatelessWidget {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Container(
             constraints: const BoxConstraints(maxWidth: 500, maxHeight: 700),
             child: Column(
@@ -441,7 +449,9 @@ class CertificationsSection extends StatelessWidget {
                               context: context,
                               initialDate: DateTime.now(),
                               firstDate: DateTime.now(),
-                              lastDate: DateTime.now().add(const Duration(days: 3650)),
+                              lastDate: DateTime.now().add(
+                                const Duration(days: 3650),
+                              ),
                             );
                             if (date != null) {
                               setDialogState(() {
@@ -456,7 +466,9 @@ class CertificationsSection extends StatelessWidget {
                             ),
                             child: Text(
                               expiryDate != null
-                                  ? DateFormat('MMM dd, yyyy').format(expiryDate!)
+                                  ? DateFormat(
+                                      'MMM dd, yyyy',
+                                    ).format(expiryDate!)
                                   : 'Select date',
                             ),
                           ),
@@ -536,9 +548,11 @@ class CertificationsSection extends StatelessWidget {
                                   id: const Uuid().v4(),
                                   type: selectedType!,
                                   certificateNumber:
-                                      certificateNumberController.text.trim().isEmpty
-                                          ? null
-                                          : certificateNumberController.text.trim(),
+                                      certificateNumberController.text
+                                          .trim()
+                                          .isEmpty
+                                      ? null
+                                      : certificateNumberController.text.trim(),
                                   expiryDate: expiryDate,
                                   status: CertificationStatus.pending,
                                   createdAt: DateTime.now(),
@@ -546,11 +560,11 @@ class CertificationsSection extends StatelessWidget {
                                 );
 
                                 context.read<VendorProfileBloc>().add(
-                                      AddCertificationEvent(
-                                        certification,
-                                        certificateImageFile: certificateImage,
-                                      ),
-                                    );
+                                  AddCertificationEvent(
+                                    certification,
+                                    certificateImageFile: certificateImage,
+                                  ),
+                                );
                                 Navigator.pop(context);
                               },
                         style: ElevatedButton.styleFrom(
@@ -571,7 +585,9 @@ class CertificationsSection extends StatelessWidget {
   }
 
   void _showEditCertificationDialog(
-      BuildContext context, CertificationEntity certification) {
+    BuildContext context,
+    CertificationEntity certification,
+  ) {
     final availableTypes = [
       'Halal',
       'Vegetarian',
@@ -580,11 +596,12 @@ class CertificationsSection extends StatelessWidget {
       'Gluten-Free',
       'Organic',
       'Kosher',
-      'Other'
+      'Other',
     ];
     String selectedType = certification.type;
-    final certificateNumberController =
-        TextEditingController(text: certification.certificateNumber ?? '');
+    final certificateNumberController = TextEditingController(
+      text: certification.certificateNumber ?? '',
+    );
     DateTime? expiryDate = certification.expiryDate;
     File? certificateImage;
     final imagePicker = ImagePicker();
@@ -593,7 +610,9 @@ class CertificationsSection extends StatelessWidget {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Container(
             constraints: const BoxConstraints(maxWidth: 500, maxHeight: 700),
             child: Column(
@@ -668,7 +687,9 @@ class CertificationsSection extends StatelessWidget {
                               context: context,
                               initialDate: expiryDate ?? DateTime.now(),
                               firstDate: DateTime.now(),
-                              lastDate: DateTime.now().add(const Duration(days: 3650)),
+                              lastDate: DateTime.now().add(
+                                const Duration(days: 3650),
+                              ),
                             );
                             if (date != null) {
                               setDialogState(() {
@@ -683,7 +704,9 @@ class CertificationsSection extends StatelessWidget {
                             ),
                             child: Text(
                               expiryDate != null
-                                  ? DateFormat('MMM dd, yyyy').format(expiryDate!)
+                                  ? DateFormat(
+                                      'MMM dd, yyyy',
+                                    ).format(expiryDate!)
                                   : 'Select date',
                             ),
                           ),
@@ -717,7 +740,9 @@ class CertificationsSection extends StatelessWidget {
                                 certification.certificateImageUrl!,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) =>
-                                    const Center(child: Icon(Icons.image_not_supported)),
+                                    const Center(
+                                      child: Icon(Icons.image_not_supported),
+                                    ),
                               ),
                             ),
                           )
@@ -778,18 +803,18 @@ class CertificationsSection extends StatelessWidget {
                             type: selectedType,
                             certificateNumber:
                                 certificateNumberController.text.trim().isEmpty
-                                    ? null
-                                    : certificateNumberController.text.trim(),
+                                ? null
+                                : certificateNumberController.text.trim(),
                             expiryDate: expiryDate,
                             updatedAt: DateTime.now(),
                           );
 
                           context.read<VendorProfileBloc>().add(
-                                UpdateCertificationEvent(
-                                  updatedCertification,
-                                  certificateImageFile: certificateImage,
-                                ),
-                              );
+                            UpdateCertificationEvent(
+                              updatedCertification,
+                              certificateImageFile: certificateImage,
+                            ),
+                          );
                           Navigator.pop(context);
                         },
                         style: ElevatedButton.styleFrom(
@@ -810,12 +835,16 @@ class CertificationsSection extends StatelessWidget {
   }
 
   void _showDeleteConfirmation(
-      BuildContext context, CertificationEntity certification) {
+    BuildContext context,
+    CertificationEntity certification,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Certification'),
-        content: Text('Are you sure you want to delete ${certification.type} certification?'),
+        content: Text(
+          'Are you sure you want to delete ${certification.type} certification?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -824,8 +853,8 @@ class CertificationsSection extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               context.read<VendorProfileBloc>().add(
-                    DeleteCertificationEvent(certification.id),
-                  );
+                DeleteCertificationEvent(certification.id),
+              );
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -837,7 +866,9 @@ class CertificationsSection extends StatelessWidget {
   }
 
   void _showCertificateImage(
-      BuildContext context, CertificationEntity certification) {
+    BuildContext context,
+    CertificationEntity certification,
+  ) {
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -859,17 +890,21 @@ class CertificationsSection extends StatelessWidget {
   }
 
   void _verifyCertification(
-      BuildContext context, CertificationEntity certification) {
+    BuildContext context,
+    CertificationEntity certification,
+  ) {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       context.read<VendorProfileBloc>().add(
-            VerifyCertificationEvent(certification.id, user.uid),
-          );
+        VerifyCertificationEvent(certification.id, user.uid),
+      );
     }
   }
 
   void _rejectCertification(
-      BuildContext context, CertificationEntity certification) {
+    BuildContext context,
+    CertificationEntity certification,
+  ) {
     final reasonController = TextEditingController();
     showDialog(
       context: context,
@@ -893,12 +928,12 @@ class CertificationsSection extends StatelessWidget {
               final user = FirebaseAuth.instance.currentUser;
               if (user != null) {
                 context.read<VendorProfileBloc>().add(
-                      RejectCertificationEvent(
-                        certification.id,
-                        user.uid,
-                        reasonController.text.trim(),
-                      ),
-                    );
+                  RejectCertificationEvent(
+                    certification.id,
+                    user.uid,
+                    reasonController.text.trim(),
+                  ),
+                );
               }
               Navigator.pop(context);
             },
@@ -910,4 +945,3 @@ class CertificationsSection extends StatelessWidget {
     );
   }
 }
-

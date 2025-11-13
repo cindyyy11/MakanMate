@@ -3,14 +3,6 @@ import 'package:makan_mate/core/errors/failures.dart';
 import 'package:makan_mate/features/home/domain/entities/restaurant_entity.dart';
 
 abstract class RestaurantRepository {
-  Future<Either<Failure, List<RestaurantEntity>>> getRestaurants({
-    int? limit,
-    String? cuisineType,
-    bool? isHalal,
-  });
-
-  Future<List<RestaurantEntity>> getCategories();
-  Future<List<RestaurantEntity>> getRecommendations();
-
-  Future<Either<Failure, RestaurantEntity>> getRestaurantById(String id);
+  Future<List<RestaurantEntity>> getRestaurants();
+  Future<RestaurantEntity> getRestaurantById(String id);
 }

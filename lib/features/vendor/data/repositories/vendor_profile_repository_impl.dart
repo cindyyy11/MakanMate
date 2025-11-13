@@ -56,5 +56,15 @@ class VendorProfileRepositoryImpl implements VendorProfileRepository {
       throw Exception('Failed to update approval status: $e');
     }
   }
+  
+  @override
+  Future<List<VendorProfileEntity>> getAllApprovedVendors() {
+    try {
+      return remoteDataSource.getAllApprovedVendors()
+        .then((models) => models.map((model) => model.toEntity()).toList());
+    } catch (e) {
+      throw Exception('Failed to get all approved vendors: $e');
+    }
+  }
 }
 

@@ -5,5 +5,6 @@ abstract class VendorProfileRepository {
   Future<void> createVendorProfile(VendorProfileEntity profile);
   Future<void> updateVendorProfile(VendorProfileEntity profile);
   Future<void> updateApprovalStatus(String vendorId, String status);
+  Future<List<VendorProfileEntity>> getAllApprovedVendors();
 }
 

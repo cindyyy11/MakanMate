@@ -99,6 +99,8 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => di.sl<HomeBloc>()),
         BlocProvider(create: (_) => di.sl<AuthBloc>()..add(AppStarted())),
         BlocProvider(create: (_) => di.sl<VendorBloc>()..add(LoadMenuEvent())),
+        BlocProvider(create: (_) => AuthBloc()),
+        BlocProvider(create: (_) => di.sl<MapBloc>()),
       ],
       child: MaterialApp(
         title: 'MakanMate',

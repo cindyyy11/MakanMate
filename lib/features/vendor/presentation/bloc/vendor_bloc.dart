@@ -127,7 +127,9 @@ class VendorBloc extends Bloc<VendorEvent, VendorState> {
   Future<void> _onUploadImage(UploadImageEvent event, Emitter emit) async {
     try {
       emit(ImageUploading());
-      final imageUrl = await storageService.uploadMenuItemImage(event.imageFile);
+      final imageUrl = await storageService.uploadMenuItemImage(
+        event.imageFile,
+      );
       emit(ImageUploaded(imageUrl));
     } catch (e) {
       emit(ImageUploadError('Failed to upload image: ${e.toString()}'));
@@ -137,7 +139,7 @@ class VendorBloc extends Bloc<VendorEvent, VendorState> {
   Future<void> _onAddMenu(AddMenuEvent event, Emitter emit) async {
     try {
       String imageUrl = event.item.imageUrl;
-      
+
       // Upload image if provided
       if (event.imageFile != null) {
         emit(ImageUploading());
@@ -171,7 +173,7 @@ class VendorBloc extends Bloc<VendorEvent, VendorState> {
   Future<void> _onUpdateMenu(UpdateMenuEvent event, Emitter emit) async {
     try {
       String imageUrl = event.item.imageUrl;
-      
+
       // Upload new image if provided
       if (event.imageFile != null) {
         emit(ImageUploading());
