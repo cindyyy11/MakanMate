@@ -11,6 +11,7 @@ import 'package:makan_mate/features/vendor/presentation/pages/menu_management_pa
 import 'package:makan_mate/features/vendor/presentation/pages/promotion_management_page.dart';
 import 'package:makan_mate/features/vendor/presentation/pages/vendor_home_page.dart';
 import 'package:makan_mate/features/vendor/presentation/pages/vendor_reviews_page.dart';
+import 'package:makan_mate/features/vendor/presentation/pages/vendor_settings_page.dart';
 
 class MainScaffold extends StatefulWidget {
   final UserEntity user;
@@ -48,6 +49,7 @@ class _MainScaffoldState extends State<MainScaffold> {
           const MenuManagementPage(),
           const PromotionManagementPage(),
           const VendorReviewsPage(),
+          const VendorSettingsPage(),
         ];
       case 'user':
       default:
@@ -70,6 +72,10 @@ class _MainScaffoldState extends State<MainScaffold> {
             label: 'Promotions',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.star), label: 'Reviews'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'App Settings',
+          ),
         ];
       case 'user':
       default:
