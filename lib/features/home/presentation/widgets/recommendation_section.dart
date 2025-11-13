@@ -14,7 +14,7 @@ class RecommendationSection extends StatelessWidget {
         const Text('Recommended for You',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         const SizedBox(height: 12),
-        ...recommendations.map((r) => RestaurantCard(restaurant: r)).toList(),
+        ...recommendations.map((r) => RestaurantCard(restaurant: r)),
       ],
     );
   }
