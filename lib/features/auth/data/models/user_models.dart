@@ -65,8 +65,81 @@ class UserModel extends BaseModel {
   }
 
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
-    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-    return UserModel.fromJson({'id': doc.id, ...data});
+    final rawData = doc.data();
+    if (rawData == null) {
+      throw Exception('Document data is null');
+    }
+
+    // Safely convert Firestore data to Map<String, dynamic>
+    final Map<String, dynamic> data = Map<String, dynamic>.from(rawData as Map);
+
+    // Convert Firestore Timestamps to ISO8601 strings for fromJson
+    final jsonData = <String, dynamic>{'id': doc.id};
+
+    for (var entry in data.entries) {
+      if (entry.value is Timestamp) {
+        // Convert Timestamp to ISO8601 string
+        jsonData[entry.key] = (entry.value as Timestamp)
+            .toDate()
+            .toIso8601String();
+      } else if (entry.value is DateTime) {
+        // Convert DateTime to ISO8601 string
+        jsonData[entry.key] = (entry.value as DateTime).toIso8601String();
+      } else if (entry.key == 'currentLocation' && entry.value != null) {
+        // Handle nested Location object - safely convert to Map<String, dynamic>
+        if (entry.value is Map) {
+          jsonData[entry.key] = Map<String, dynamic>.from(entry.value as Map);
+        } else {
+          // If it's not a Map, provide default
+          jsonData[entry.key] = {
+            'latitude': 3.1390,
+            'longitude': 101.6869,
+            'city': 'Kuala Lumpur',
+            'state': 'Kuala Lumpur',
+            'country': 'Malaysia',
+          };
+        }
+      } else if (entry.value is List) {
+        // Handle lists - ensure they're properly typed
+        jsonData[entry.key] = List.from(entry.value as List);
+      } else if (entry.value is Map) {
+        // Handle nested maps - convert to Map<String, dynamic>
+        jsonData[entry.key] = Map<String, dynamic>.from(entry.value as Map);
+      } else {
+        jsonData[entry.key] = entry.value;
+      }
+    }
+
+    // Handle missing required fields with defaults
+    final now = DateTime.now().toIso8601String();
+    jsonData['createdAt'] ??= now;
+    jsonData['updatedAt'] ??= now;
+
+    // Handle other required fields with defaults
+    jsonData['name'] ??=
+        jsonData['email']?.toString().split('@').first ?? 'User';
+    jsonData['email'] ??= '';
+    jsonData['role'] ??= 'user';
+    jsonData['isVerified'] ??= false;
+    jsonData['dietaryRestrictions'] ??= [];
+    jsonData['cuisinePreferences'] ??= {};
+    jsonData['spiceTolerance'] ??= 0.5;
+    jsonData['culturalBackground'] ??= 'mixed';
+    jsonData['behaviorPatterns'] ??= {};
+
+    // Handle currentLocation - provide default if missing or invalid
+    if (jsonData['currentLocation'] == null ||
+        jsonData['currentLocation'] is! Map) {
+      jsonData['currentLocation'] = {
+        'latitude': 3.1390,
+        'longitude': 101.6869,
+        'city': 'Kuala Lumpur',
+        'state': 'Kuala Lumpur',
+        'country': 'Malaysia',
+      };
+    }
+
+    return UserModel.fromJson(jsonData);
   }
 
   /// Create UserModel from Firebase Auth User
@@ -191,6 +264,7 @@ class UserModel extends BaseModel {
     behaviorPatterns,
     createdAt,
     updatedAt,
+    isVerified,
   ];
 }
 

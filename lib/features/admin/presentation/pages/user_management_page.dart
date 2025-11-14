@@ -3,6 +3,9 @@ import 'package:makan_mate/core/constants/ui_constants.dart';
 import 'package:makan_mate/core/theme/app_colors.dart';
 import 'package:makan_mate/core/theme/app_theme.dart';
 import 'package:makan_mate/features/admin/presentation/widgets/3d_card.dart';
+import 'package:makan_mate/features/admin/presentation/bloc/admin_user_management_bloc.dart';
+import 'package:makan_mate/features/admin/presentation/bloc/admin_user_management_event.dart';
+import 'package:makan_mate/features/admin/presentation/bloc/admin_user_management_state.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_event.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -194,16 +197,149 @@ class _AllUsersTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: UIConstants.paddingLg,
-      children: const [
-        ListTile(
-          leading: CircleAvatar(child: Icon(Icons.person)),
-          title: Text('John Doe'),
-          subtitle: Text('john@example.com'),
-          trailing: Icon(Icons.chevron_right),
-        ),
-      ],
+    return BlocConsumer<AdminUserManagementBloc, AdminUserManagementState>(
+      listener: (context, state) {
+        // Handle any side effects if needed
+      },
+      builder: (context, state) {
+        if (state is AdminUserManagementLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (state is AdminUserManagementError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 64, color: AppColors.error),
+                const SizedBox(height: UIConstants.spacingMd),
+                Text(
+                  state.message,
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                const SizedBox(height: UIConstants.spacingMd),
+                ElevatedButton(
+                  onPressed: () {
+                    context.read<AdminUserManagementBloc>().add(
+                      const LoadUsers(),
+                    );
+                  },
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          );
+        }
+
+        if (state is UsersLoaded) {
+          if (state.users.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.people_outline_rounded,
+                    size: 64,
+                    color: AppColorsExtension.getTextSecondary(context),
+                  ),
+                  const SizedBox(height: UIConstants.spacingMd),
+                  Text(
+                    'No users found',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: AppColorsExtension.getTextSecondary(context),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return RefreshIndicator(
+            onRefresh: () async {
+              context.read<AdminUserManagementBloc>().add(const LoadUsers());
+            },
+            child: ListView.builder(
+              padding: UIConstants.paddingLg,
+              itemCount: state.users.length,
+              itemBuilder: (context, index) {
+                final user = state.users[index];
+                return Card(
+                  margin: const EdgeInsets.only(bottom: UIConstants.spacingMd),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundImage: user.profileImageUrl != null
+                          ? NetworkImage(user.profileImageUrl!)
+                          : null,
+                      child: user.profileImageUrl == null
+                          ? const Icon(Icons.person)
+                          : null,
+                    ),
+                    title: Text(user.name),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(user.email),
+                        if (user.isVerified)
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.verified,
+                                size: 14,
+                                color: AppColors.success,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Verified',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(color: AppColors.success),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () async {
+                      // Navigate to user details page
+                      await Navigator.of(context).pushNamed(
+                        '/userDetails',
+                        arguments: user,
+                      );
+                      // Refresh users list when returning from details page
+                      // Use a small delay to ensure the page is fully back and context is ready
+                      await Future.delayed(const Duration(milliseconds: 100));
+                      if (context.mounted) {
+                        context.read<AdminUserManagementBloc>().add(
+                              const LoadUsers(),
+                            );
+                      }
+                    },
+                  ),
+                );
+              },
+            ),
+          );
+        }
+
+        // Initial state - load users
+        if (state is AdminUserManagementInitial) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            context.read<AdminUserManagementBloc>().add(const LoadUsers());
+          });
+        }
+
+        // If state is UserOperationSuccess, still show the last loaded users
+        // or trigger a reload
+        if (state is UserOperationSuccess) {
+          // Trigger reload to get fresh data
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            context.read<AdminUserManagementBloc>().add(const LoadUsers());
+          });
+          // Show loading while reloading
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        return const SizedBox.shrink();
+      },
     );
   }
 }

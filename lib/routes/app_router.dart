@@ -10,9 +10,11 @@ import 'package:makan_mate/features/home/presentation/pages/restaurant_detail_sc
 import 'package:makan_mate/features/recommendations/presentation/pages/recommendations_page.dart';
 import 'package:makan_mate/features/recommendations/presentation/bloc/recommendation_bloc.dart';
 import 'package:makan_mate/features/admin/presentation/pages/admin_dashboard_page.dart';
-import 'package:makan_mate/features/admin/presentation/pages/admin_main_page.dart';
 import 'package:makan_mate/features/admin/presentation/bloc/admin_bloc.dart';
 import 'package:makan_mate/features/admin/presentation/bloc/admin_event.dart';
+import 'package:makan_mate/features/admin/presentation/bloc/admin_user_management_bloc.dart';
+import 'package:makan_mate/features/admin/presentation/pages/user_details_page.dart';
+import 'package:makan_mate/features/user/domain/entities/user_entity.dart';
 import 'package:makan_mate/core/ml/model_testing_screen.dart';
 import 'package:makan_mate/core/di/injection_container.dart' as di;
 
@@ -51,7 +53,7 @@ class AppRouter {
         return MaterialPageRoute(
           builder: (_) => BlocProvider(
             create: (_) => di.sl<AdminBloc>()..add(const LoadPlatformMetrics()),
-            child: const AdminMainPage(),
+            child: const AdminDashboardPage(),
           ),
         );
 
@@ -61,7 +63,20 @@ class AppRouter {
       case '/restaurantDetail':
         final restaurant = settings.arguments as RestaurantEntity;
         return MaterialPageRoute(
-          builder: (_) => RestaurantDetailScreen(restaurant: restaurant,),
+          builder: (_) => RestaurantDetailScreen(restaurant: restaurant),
+          settings: settings,
+        );
+
+      case '/userDetails':
+        final user = settings.arguments as UserEntity;
+        return MaterialPageRoute(
+          builder: (context) {
+            final bloc = context.read<AdminUserManagementBloc>();
+            return BlocProvider.value(
+              value: bloc,
+              child: UserDetailsPage(user: user),
+            );
+          },
           settings: settings,
         );
 

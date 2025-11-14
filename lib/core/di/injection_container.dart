@@ -45,6 +45,16 @@ import 'package:makan_mate/features/recommendations/data/repositories/recommenda
 import 'package:makan_mate/features/recommendations/domain/repositories/recommendation_repository.dart';
 import 'package:makan_mate/features/recommendations/domain/usecases/get_recommendations_usecase.dart';
 import 'package:makan_mate/features/admin/data/datasources/admin_remote_datasource.dart';
+import 'package:makan_mate/features/admin/data/datasources/admin_vendor_management_datasource.dart';
+import 'package:makan_mate/features/admin/data/datasources/admin_promotion_management_datasource.dart';
+import 'package:makan_mate/features/admin/data/datasources/admin_review_management_datasource.dart';
+import 'package:makan_mate/features/admin/data/repositories/admin_vendor_repository_impl.dart';
+import 'package:makan_mate/features/admin/domain/repositories/admin_vendor_repository.dart';
+import 'package:makan_mate/features/admin/data/datasources/admin_menu_management_datasource.dart';
+import 'package:makan_mate/features/admin/data/datasources/admin_user_management_datasource.dart';
+import 'package:makan_mate/features/admin/data/repositories/admin_user_repository_impl.dart';
+import 'package:makan_mate/features/admin/domain/repositories/admin_user_repository.dart';
+import 'package:makan_mate/features/admin/presentation/bloc/admin_user_management_bloc.dart';
 import 'package:makan_mate/features/admin/data/repositories/admin_repository_impl.dart';
 import 'package:makan_mate/features/admin/data/services/audit_log_service.dart';
 import 'package:makan_mate/features/admin/domain/repositories/admin_repository.dart';
@@ -57,6 +67,24 @@ import 'package:makan_mate/features/admin/domain/usecases/stream_system_metrics_
 import 'package:makan_mate/features/admin/domain/usecases/get_fairness_metrics_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_seasonal_trends_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_data_quality_metrics_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/get_vendors_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/approve_vendor_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/reject_vendor_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/get_pending_promotions_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/approve_promotion_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/get_flagged_reviews_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/approve_review_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/remove_review_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/get_pending_menu_items_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/approve_menu_item_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/get_users_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/get_user_by_id_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/verify_user_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/ban_user_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/unban_user_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/warn_user_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/get_user_violation_history_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/delete_user_data_usecase.dart';
 import 'package:makan_mate/features/admin/presentation/bloc/admin_bloc.dart';
 import 'package:makan_mate/features/reviews/data/datasources/review_remote_datasource.dart';
 import 'package:makan_mate/features/reviews/domain/usecases/flag_review_usecase.dart';
@@ -395,6 +423,8 @@ void _initAdmin() {
     ),
   );
 
+  sl.registerFactory(() => AdminUserManagementBloc(repository: sl()));
+
   // Use cases
   sl.registerLazySingleton(() => GetPlatformMetricsUseCase(sl()));
   sl.registerLazySingleton(() => GetMetricTrendUseCase(sl()));
@@ -402,6 +432,9 @@ void _initAdmin() {
   sl.registerLazySingleton(() => GetNotificationsUseCase(sl()));
   sl.registerLazySingleton(() => ExportMetricsUseCase(sl()));
   sl.registerLazySingleton(() => StreamSystemMetricsUseCase(sl()));
+  sl.registerLazySingleton(() => GetFairnessMetricsUseCase(sl()));
+  sl.registerLazySingleton(() => GetSeasonalTrendsUseCase(sl()));
+  sl.registerLazySingleton(() => GetDataQualityMetricsUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<AdminRepository>(
@@ -413,10 +446,87 @@ void _initAdmin() {
     () => AdminRemoteDataSourceImpl(firestore: sl(), logger: logger),
   );
 
+  // Management datasources
+  sl.registerLazySingleton<AdminVendorManagementDataSource>(
+    () => AdminVendorManagementDataSource(
+      firestore: sl(),
+      auth: sl(),
+      logger: logger,
+      auditLogService: sl(),
+    ),
+  );
+
+  // Management repositories
+  sl.registerLazySingleton<AdminVendorRepository>(
+    () => AdminVendorRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
+  );
+
+  sl.registerLazySingleton<AdminUserManagementDataSource>(
+    () => AdminUserManagementDataSource(
+      firestore: sl(),
+      auth: sl(),
+      logger: logger,
+      auditLogService: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton<AdminUserRepository>(
+    () => AdminUserRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
+  );
+
+  sl.registerLazySingleton<AdminPromotionManagementDataSource>(
+    () => AdminPromotionManagementDataSource(
+      firestore: sl(),
+      auth: sl(),
+      logger: logger,
+      auditLogService: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton<AdminReviewManagementDataSource>(
+    () => AdminReviewManagementDataSource(
+      firestore: sl(),
+      auth: sl(),
+      logger: logger,
+      auditLogService: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton<AdminMenuManagementDataSource>(
+    () => AdminMenuManagementDataSource(
+      firestore: sl(),
+      auth: sl(),
+      logger: logger,
+      auditLogService: sl(),
+    ),
+  );
+
   // Services
   sl.registerLazySingleton<AuditLogService>(
     () => AuditLogService(firestore: sl(), auth: sl(), logger: logger),
   );
+
+  // Management use cases
+  sl.registerLazySingleton(() => GetVendorsUseCase(sl()));
+  sl.registerLazySingleton(() => ApproveVendorUseCase(sl()));
+  sl.registerLazySingleton(() => RejectVendorUseCase(sl()));
+  sl.registerLazySingleton(() => GetPendingPromotionsUseCase(sl()));
+  sl.registerLazySingleton(() => ApprovePromotionUseCase(sl()));
+  sl.registerLazySingleton(() => GetFlaggedReviewsUseCase(sl()));
+  sl.registerLazySingleton(() => ApproveReviewUseCase(sl()));
+  sl.registerLazySingleton(() => RemoveReviewUseCase(sl()));
+  sl.registerLazySingleton(() => GetPendingMenuItemsUseCase(sl()));
+  sl.registerLazySingleton(() => ApproveMenuItemUseCase(sl()));
+
+  // User management use cases
+  sl.registerLazySingleton(() => GetUsersUseCase(sl()));
+  sl.registerLazySingleton(() => GetUserByIdUseCase(sl()));
+  sl.registerLazySingleton(() => VerifyUserUseCase(sl()));
+  sl.registerLazySingleton(() => BanUserUseCase(sl()));
+  sl.registerLazySingleton(() => UnbanUserUseCase(sl()));
+  sl.registerLazySingleton(() => WarnUserUseCase(sl()));
+  sl.registerLazySingleton(() => GetUserViolationHistoryUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteUserDataUseCase(sl()));
 }
 
 // ---------------------------

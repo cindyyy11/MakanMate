@@ -47,12 +47,12 @@ class _AddEditPromotionPageState extends State<AddEditPromotionPage> {
       _currentImageUrl = promo.imageUrl;
 
       if (promo.discountPercentage != null) {
-        _discountPercentageController.text =
-            promo.discountPercentage!.toStringAsFixed(0);
+        _discountPercentageController.text = promo.discountPercentage!
+            .toStringAsFixed(0);
       }
       if (promo.flatDiscountAmount != null) {
-        _flatDiscountController.text =
-            promo.flatDiscountAmount!.toStringAsFixed(2);
+        _flatDiscountController.text = promo.flatDiscountAmount!
+            .toStringAsFixed(2);
       }
       if (promo.buyQuantity != null) {
         _buyQuantityController.text = promo.buyQuantity.toString();
@@ -136,7 +136,9 @@ class _AddEditPromotionPageState extends State<AddEditPromotionPage> {
       final percentage = double.tryParse(_discountPercentageController.text);
       if (percentage == null || percentage <= 0 || percentage > 100) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please enter a valid discount percentage (1-100)')),
+          const SnackBar(
+            content: Text('Please enter a valid discount percentage (1-100)'),
+          ),
         );
         return;
       }
@@ -187,12 +189,12 @@ class _AddEditPromotionPageState extends State<AddEditPromotionPage> {
 
     if (widget.promotion == null) {
       context.read<PromotionBloc>().add(
-            AddPromotionEvent(promotion, imageFile: _selectedImage),
-          );
+        AddPromotionEvent(promotion, imageFile: _selectedImage),
+      );
     } else {
       context.read<PromotionBloc>().add(
-            UpdatePromotionEvent(promotion, imageFile: _selectedImage),
-          );
+        UpdatePromotionEvent(promotion, imageFile: _selectedImage),
+      );
     }
   }
 
@@ -263,28 +265,29 @@ class _AddEditPromotionPageState extends State<AddEditPromotionPage> {
                                 ),
                               )
                             : _currentImageUrl != null &&
-                                    _currentImageUrl!.isNotEmpty
-                                ? ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Image.network(
-                                      _currentImageUrl!,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) =>
-                                          const Icon(Icons.image_not_supported,
-                                              size: 48),
-                                    ),
-                                  )
-                                : const Center(
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(Icons.add_photo_alternate, size: 48),
-                                        SizedBox(height: 8),
-                                        Text('Tap to add image'),
-                                      ],
-                                    ),
-                                  ),
+                                  _currentImageUrl!.isNotEmpty
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.network(
+                                  _currentImageUrl!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const Icon(
+                                        Icons.image_not_supported,
+                                        size: 48,
+                                      ),
+                                ),
+                              )
+                            : const Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.add_photo_alternate, size: 48),
+                                    SizedBox(height: 8),
+                                    Text('Tap to add image'),
+                                  ],
+                                ),
+                              ),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -292,7 +295,10 @@ class _AddEditPromotionPageState extends State<AddEditPromotionPage> {
                     // Title
                     const Text(
                       'Title',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
@@ -316,48 +322,51 @@ class _AddEditPromotionPageState extends State<AddEditPromotionPage> {
                     // Promotion Type
                     const Text(
                       'Promotion Type',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     IgnorePointer(
                       ignoring: isLoading,
                       child: DropdownButtonFormField<PromotionType>(
-                        initialValue: _selectedType,
+                        value: _selectedType,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
                         items: PromotionType.values.map((type) {
-                        String label;
-                        switch (type) {
-                          case PromotionType.discount:
-                            label = 'Discount (%)';
-                            break;
-                          case PromotionType.flatDiscount:
-                            label = 'Flat Discount (RM)';
-                            break;
-                          case PromotionType.buyXGetY:
-                            label = 'Buy X Get Y';
-                            break;
-                          case PromotionType.birthday:
-                            label = 'Birthday Voucher';
-                            break;
-                        }
-                        return DropdownMenuItem(
-                          value: type,
-                          child: Text(label),
-                        );
-                      }).toList(),
-                      onChanged: isLoading
-                          ? null
-                          : (value) {
-                              if (value != null) {
-                                setState(() {
-                                  _selectedType = value;
-                                });
-                              }
-                            },
+                          String label;
+                          switch (type) {
+                            case PromotionType.discount:
+                              label = 'Discount (%)';
+                              break;
+                            case PromotionType.flatDiscount:
+                              label = 'Flat Discount (RM)';
+                              break;
+                            case PromotionType.buyXGetY:
+                              label = 'Buy X Get Y';
+                              break;
+                            case PromotionType.birthday:
+                              label = 'Birthday Voucher';
+                              break;
+                          }
+                          return DropdownMenuItem(
+                            value: type,
+                            child: Text(label),
+                          );
+                        }).toList(),
+                        onChanged: isLoading
+                            ? null
+                            : (value) {
+                                if (value != null) {
+                                  setState(() {
+                                    _selectedType = value;
+                                  });
+                                }
+                              },
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -366,7 +375,10 @@ class _AddEditPromotionPageState extends State<AddEditPromotionPage> {
                     if (_selectedType == PromotionType.discount) ...[
                       const Text(
                         'Discount Percentage',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       TextFormField(
@@ -397,13 +409,18 @@ class _AddEditPromotionPageState extends State<AddEditPromotionPage> {
                     ] else if (_selectedType == PromotionType.flatDiscount) ...[
                       const Text(
                         'Discount Amount',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: _flatDiscountController,
                         enabled: !isLoading,
-                        keyboardType: TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         decoration: InputDecoration(
                           hintText: '0.00',
                           prefixText: 'RM ',
@@ -433,7 +450,9 @@ class _AddEditPromotionPageState extends State<AddEditPromotionPage> {
                                 const Text(
                                   'Buy Quantity',
                                   style: TextStyle(
-                                      fontSize: 16, fontWeight: FontWeight.w500),
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                                 const SizedBox(height: 8),
                                 TextFormField(
@@ -468,7 +487,9 @@ class _AddEditPromotionPageState extends State<AddEditPromotionPage> {
                                 const Text(
                                   'Get Quantity',
                                   style: TextStyle(
-                                      fontSize: 16, fontWeight: FontWeight.w500),
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                                 const SizedBox(height: 8),
                                 TextFormField(
@@ -503,7 +524,10 @@ class _AddEditPromotionPageState extends State<AddEditPromotionPage> {
                     // Description
                     const Text(
                       'Description',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
@@ -528,7 +552,10 @@ class _AddEditPromotionPageState extends State<AddEditPromotionPage> {
                     // Start Date
                     const Text(
                       'Start Date',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     InkWell(
@@ -562,7 +589,10 @@ class _AddEditPromotionPageState extends State<AddEditPromotionPage> {
                     // Expiry Date
                     const Text(
                       'Expiry Date',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     InkWell(
@@ -612,12 +642,15 @@ class _AddEditPromotionPageState extends State<AddEditPromotionPage> {
                                 width: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor:
-                                      AlwaysStoppedAnimation<Color>(Colors.white),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
                                 ),
                               )
                             : Text(
-                                isEditMode ? 'Update Promotion' : 'Create Promotion',
+                                isEditMode
+                                    ? 'Update Promotion'
+                                    : 'Create Promotion',
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -636,4 +669,3 @@ class _AddEditPromotionPageState extends State<AddEditPromotionPage> {
     );
   }
 }
-

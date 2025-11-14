@@ -21,6 +21,9 @@ class VendorProfileModel {
   final List<CertificationEntity> certifications;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final DateTime? rejectedAt;
+  final String? rejectedBy; // Admin user ID
+  final String? rejectionReason;
 
   const VendorProfileModel({
     required this.id,
@@ -42,8 +45,11 @@ class VendorProfileModel {
     required this.certifications,
     required this.createdAt,
     required this.updatedAt,
+    this.rejectedAt,
+    this.rejectedBy,
+    this.rejectionReason,
   });
-  
+
   Map<String, dynamic> toMap() {
     return {
       'profilePhotoUrl': profilePhotoUrl,
@@ -59,11 +65,18 @@ class VendorProfileModel {
       'priceRange': priceRange,
       'ratingAverage': ratingAverage,
       'approvalStatus': approvalStatus,
-      'operatingHours': operatingHours.map((key, value) => MapEntry(key, {
-            'openTime': value.openTime,
-            'closeTime': value.closeTime,
-            'isClosed': value.isClosed,
-          })),
+      'operatingHours': operatingHours.map(
+        (key, value) => MapEntry(key, {
+          'openTime': value.openTime,
+          'closeTime': value.closeTime,
+          'isClosed': value.isClosed,
+        }),
+      ),
+      'createdAt': createdAt,
+      'updatedAt': updatedAt,
+      if (rejectedAt != null) 'rejectedAt': rejectedAt,
+      if (rejectedBy != null) 'rejectedBy': rejectedBy,
+      if (rejectionReason != null) 'rejectionReason': rejectionReason,
     };
   }
 
@@ -71,6 +84,12 @@ class VendorProfileModel {
     final data = toMap();
     data['createdAt'] = Timestamp.fromDate(createdAt);
     data['updatedAt'] = Timestamp.fromDate(updatedAt);
+    if (rejectedAt != null) {
+      data['rejectedAt'] = Timestamp.fromDate(rejectedAt!);
+    }
+    if (rejectedBy != null) {
+      data['rejectedBy'] = rejectedBy;
+    }
     return data;
   }
 
@@ -95,6 +114,9 @@ class VendorProfileModel {
       certifications: entity.certifications,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
+      rejectedAt: entity.rejectedAt,
+      rejectedBy: entity.rejectedBy,
+      rejectionReason: entity.rejectionReason,
     );
   }
 
@@ -136,6 +158,9 @@ class VendorProfileModel {
       certifications: const [],
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      rejectedAt: _parseTimestampNullable(data['rejectedAt']),
+      rejectedBy: data['rejectedBy'] as String?,
+      rejectionReason: data['rejectionReason'] as String?,
     );
   }
 
@@ -160,6 +185,20 @@ class VendorProfileModel {
       certifications: certifications,
       createdAt: createdAt,
       updatedAt: updatedAt,
+      rejectedAt: rejectedAt,
+      rejectedBy: rejectedBy,
+      rejectionReason: rejectionReason,
     );
+  }
+
+  static DateTime? _parseTimestampNullable(dynamic value) {
+    if (value == null) return null;
+    if (value is Timestamp) {
+      return value.toDate();
+    }
+    if (value is DateTime) {
+      return value;
+    }
+    return null;
   }
 }

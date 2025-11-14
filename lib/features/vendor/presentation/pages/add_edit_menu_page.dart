@@ -442,7 +442,7 @@ class _AddEditMenuPageState extends State<AddEditMenuPage> {
                                         _isAvailable = value;
                                       });
                                     },
-                              activeThumbColor: Colors.orange[700],
+                              activeColor: Colors.orange[700],
                             ),
                           ],
                         ),

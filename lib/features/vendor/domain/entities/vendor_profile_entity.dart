@@ -36,6 +36,9 @@ class VendorProfileEntity extends Equatable {
   // Timestamps
   final DateTime createdAt;
   final DateTime updatedAt;
+  final DateTime? rejectedAt;
+  final String? rejectedBy; // Admin user ID
+  final String? rejectionReason;
 
   const VendorProfileEntity({
     required this.id,
@@ -58,6 +61,9 @@ class VendorProfileEntity extends Equatable {
     this.menuItems = const [],
     required this.createdAt,
     required this.updatedAt,
+    this.rejectedAt,
+    this.rejectedBy,
+    this.rejectionReason,
   });
 
   VendorProfileEntity copyWith({
@@ -81,6 +87,9 @@ class VendorProfileEntity extends Equatable {
     List<MenuItemEntity>? menuItems,
     DateTime? createdAt,
     DateTime? updatedAt,
+    DateTime? rejectedAt,
+    String? rejectedBy,
+    String? rejectionReason,
   }) {
     return VendorProfileEntity(
       id: id ?? this.id,
@@ -103,6 +112,9 @@ class VendorProfileEntity extends Equatable {
       menuItems: menuItems ?? this.menuItems,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      rejectedAt: rejectedAt ?? this.rejectedAt,
+      rejectedBy: rejectedBy ?? this.rejectedBy,
+      rejectionReason: rejectionReason ?? this.rejectionReason,
     );
   }
 
@@ -128,6 +140,9 @@ class VendorProfileEntity extends Equatable {
     menuItems,
     createdAt,
     updatedAt,
+    rejectedAt,
+    rejectedBy,
+    rejectionReason,
   ];
 }
 

@@ -11,6 +11,7 @@ import 'package:makan_mate/features/vendor/presentation/bloc/promotion_bloc.dart
 import 'package:makan_mate/features/vendor/presentation/bloc/promotion_event.dart';
 import 'package:makan_mate/features/vendor/presentation/bloc/vendor_bloc.dart';
 import 'package:makan_mate/features/vendor/presentation/bloc/vendor_review_bloc.dart';
+import 'package:makan_mate/features/admin/presentation/bloc/admin_user_management_bloc.dart';
 import 'package:makan_mate/routes/app_router.dart';
 
 import 'features/vendor/presentation/bloc/vendor_event.dart';
@@ -34,6 +35,7 @@ class MakanMateApp extends StatelessWidget {
         ),
         BlocProvider(create: (_) => di.sl<VendorReviewBloc>()),
         BlocProvider(create: (_) => di.sl<MapBloc>()),
+        BlocProvider(create: (_) => di.sl<AdminUserManagementBloc>()),
       ],
       child: BlocBuilder<ThemeBloc, ThemeState>(
         builder: (context, themeState) {

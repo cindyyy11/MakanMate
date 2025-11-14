@@ -14,6 +14,7 @@ import 'package:makan_mate/features/admin/data/models/seasonal_trend_model.dart'
 import 'package:makan_mate/features/admin/data/models/data_quality_metrics_model.dart';
 import 'package:makan_mate/features/admin/data/models/ab_test_model.dart';
 import 'package:makan_mate/features/admin/domain/entities/ab_test_entity.dart';
+import 'package:makan_mate/features/admin/domain/entities/seasonal_trend_entity.dart';
 import 'package:makan_mate/features/admin/domain/services/fairness_metrics_calculator_interface.dart';
 import 'package:makan_mate/features/admin/domain/services/seasonal_trend_calculator_interface.dart';
 import 'package:makan_mate/features/admin/data/datasources/fairness_metrics_calculator_impl.dart';
@@ -204,12 +205,32 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
   /// Count active vendors
   Future<int> _getActiveVendors() async {
     try {
-      final snapshot = await firestore
-          .collection('vendors')
-          .where('status', isEqualTo: 'active')
-          .count()
-          .get();
-      return snapshot.count ?? 0;
+      // Try approvalStatus field first (your structure), then status field
+      try {
+        final snapshot = await firestore
+            .collection('vendors')
+            .where('approvalStatus', isEqualTo: 'approved')
+            .count()
+            .get();
+        return snapshot.count ?? 0;
+      } catch (e) {
+        // Fallback to status field
+        try {
+          final snapshot = await firestore
+              .collection('vendors')
+              .where('status', isEqualTo: 'active')
+              .count()
+              .get();
+          return snapshot.count ?? 0;
+        } catch (e2) {
+          // If neither exists, count all vendors as active
+          logger.w(
+            'approvalStatus/status field not found, counting all vendors: $e2',
+          );
+          final snapshot = await firestore.collection('vendors').count().get();
+          return snapshot.count ?? 0;
+        }
+      }
     } catch (e) {
       logger.w('Error counting active vendors: $e');
       return 0;
@@ -219,12 +240,31 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
   /// Count pending vendor applications
   Future<int> _getPendingApplications() async {
     try {
-      final snapshot = await firestore
-          .collection('vendor_applications')
-          .where('status', isEqualTo: 'pending')
-          .count()
-          .get();
-      return snapshot.count ?? 0;
+      // Try vendor_applications collection first
+      try {
+        final snapshot = await firestore
+            .collection('vendor_applications')
+            .where('status', isEqualTo: 'pending')
+            .count()
+            .get();
+        return snapshot.count ?? 0;
+      } catch (e) {
+        // Fallback: Check admin/approvals/promotions for pending promotions
+        logger.w('vendor_applications not found, checking admin approvals: $e');
+        try {
+          final snapshot = await firestore
+              .collection('admin')
+              .doc('approvals')
+              .collection('promotions')
+              .where('status', isEqualTo: 'pending')
+              .count()
+              .get();
+          return snapshot.count ?? 0;
+        } catch (e2) {
+          logger.w('No vendor applications found: $e2');
+          return 0;
+        }
+      }
     } catch (e) {
       logger.w('Error counting pending applications: $e');
       return 0;
@@ -241,7 +281,8 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
           .get();
       return snapshot.count ?? 0;
     } catch (e) {
-      logger.w('Error counting flagged reviews: $e');
+      // Collection doesn't exist yet - return 0
+      logger.w('flagged_content collection not found: $e');
       return 0;
     }
   }
@@ -253,7 +294,35 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
       final reviewsSnapshot = await firestore.collection('reviews').get();
 
       if (reviewsSnapshot.docs.isEmpty) {
-        return 0.0;
+        // Try to get ratings from favorites/item if reviews don't exist
+        logger.w('reviews collection not found, checking favorites');
+        try {
+          final favoritesSnapshot = await firestore
+              .collection('favorites')
+              .doc('item')
+              .collection('item')
+              .get();
+
+          if (favoritesSnapshot.docs.isEmpty) {
+            return 0.0;
+          }
+
+          double totalRating = 0.0;
+          int count = 0;
+
+          for (var doc in favoritesSnapshot.docs) {
+            final rating = doc.data()['rating'];
+            if (rating != null) {
+              totalRating += (rating as num).toDouble();
+              count++;
+            }
+          }
+
+          return count > 0 ? totalRating / count : 0.0;
+        } catch (e2) {
+          logger.w('No reviews or ratings found: $e2');
+          return 0.0;
+        }
       }
 
       double totalRating = 0.0;
@@ -299,8 +368,18 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
   /// Count total restaurants
   Future<int> _getTotalRestaurants() async {
     try {
-      final snapshot = await firestore.collection('restaurants').count().get();
-      return snapshot.count ?? 0;
+      // Try restaurants collection first
+      try {
+        final snapshot = await firestore
+            .collection('restaurants')
+            .count()
+            .get();
+        return snapshot.count ?? 0;
+      } catch (e) {
+        // Fallback: Use vendors count (vendors = restaurants in your structure)
+        logger.w('restaurants collection not found, using vendors count: $e');
+        return await _getTotalVendors();
+      }
     } catch (e) {
       logger.w('Error counting restaurants: $e');
       return 0;
@@ -310,8 +389,31 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
   /// Count total food items
   Future<int> _getTotalFoodItems() async {
     try {
-      final snapshot = await firestore.collection('food_items').count().get();
-      return snapshot.count ?? 0;
+      // Try food_items collection first
+      try {
+        final snapshot = await firestore.collection('food_items').count().get();
+        return snapshot.count ?? 0;
+      } catch (e) {
+        // Fallback: Count menu items from vendors/{vendorId}/menu subcollections
+        logger.w('food_items collection not found, counting menu items: $e');
+        try {
+          int totalMenuItems = 0;
+          final vendorsSnapshot = await firestore.collection('vendors').get();
+
+          for (var vendorDoc in vendorsSnapshot.docs) {
+            final menuSnapshot = await vendorDoc.reference
+                .collection('menu')
+                .count()
+                .get();
+            totalMenuItems += menuSnapshot.count ?? 0;
+          }
+
+          return totalMenuItems;
+        } catch (e2) {
+          logger.w('Error counting menu items: $e2');
+          return 0;
+        }
+      }
     } catch (e) {
       logger.w('Error counting food items: $e');
       return 0;
@@ -420,9 +522,25 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
     try {
       logger.i('Fetching activity logs');
 
-      Query query = firestore
-          .collection('audit_logs')
-          .orderBy('timestamp', descending: true);
+      // Try audit_logs first, fallback to activity_logs
+      Query query;
+      bool useAuditLogs = true;
+
+      try {
+        // Try to query audit_logs to see if it exists
+        final testQuery = firestore.collection('audit_logs').limit(1);
+        await testQuery.get();
+        query = firestore
+            .collection('audit_logs')
+            .orderBy('timestamp', descending: true);
+      } catch (e) {
+        // Fallback to activity_logs if audit_logs doesn't exist
+        logger.w('audit_logs not found, using activity_logs: $e');
+        useAuditLogs = false;
+        query = firestore
+            .collection('activity_logs')
+            .orderBy('timestamp', descending: true);
+      }
 
       if (startDate != null) {
         query = query.where(
@@ -440,7 +558,12 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
 
       if (userId != null) {
         // Support both adminId (audit_logs) and userId (activity_logs) fields
-        query = query.where('adminId', isEqualTo: userId);
+        if (useAuditLogs) {
+          query = query.where('adminId', isEqualTo: userId);
+        } else {
+          // Using activity_logs
+          query = query.where('userId', isEqualTo: userId);
+        }
       }
 
       if (limit != null) {
@@ -483,8 +606,9 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
       return snapshot.docs
           .map((doc) => AdminNotificationModel.fromFirestore(doc))
           .toList();
-    } catch (e, stackTrace) {
-      logger.e('Error fetching notifications: $e', stackTrace: stackTrace);
+    } catch (e) {
+      // Collection doesn't exist yet - return empty list
+      logger.w('admin_notifications collection not found: $e');
       return [];
     }
   }
@@ -680,8 +804,26 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
       return model;
     } catch (e, stackTrace) {
       logger.e('Error fetching fairness metrics: $e', stackTrace: stackTrace);
-      rethrow;
+      // Return default metrics instead of throwing
+      return _getDefaultFairnessMetrics();
     }
+  }
+
+  /// Get default fairness metrics when data is not available
+  FairnessMetricsModel _getDefaultFairnessMetrics() {
+    return FairnessMetricsModel(
+      cuisineDistribution: {},
+      regionDistribution: {},
+      smallVendorVisibility: 0.0,
+      largeVendorVisibility: 0.0,
+      diversityScore: 0.0,
+      ndcgScore: 0.0,
+      biasAlerts: const [],
+      totalRecommendations: 0,
+      analysisStartDate: DateTime.now().subtract(const Duration(days: 30)),
+      analysisEndDate: DateTime.now(),
+      calculatedAt: DateTime.now(),
+    );
   }
 
   @override
@@ -758,6 +900,22 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
 
       // Calculate fresh trends
       logger.i('Calculating fresh seasonal trends');
+
+      // Check if searches collection exists
+      try {
+        final searchCheck = await firestore
+            .collection('searches')
+            .limit(1)
+            .get();
+        if (searchCheck.docs.isEmpty) {
+          logger.w('No searches data available, returning default trends');
+          return _getDefaultSeasonalTrends();
+        }
+      } catch (e) {
+        logger.w('searches collection not found: $e');
+        return _getDefaultSeasonalTrends();
+      }
+
       final analysis = await _seasonalTrendCalculator.calculateSeasonalTrends(
         startDate: startDate,
         endDate: endDate,
@@ -776,8 +934,36 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
       return model;
     } catch (e, stackTrace) {
       logger.e('Error fetching seasonal trends: $e', stackTrace: stackTrace);
-      rethrow;
+      // Return default trends instead of throwing
+      return _getDefaultSeasonalTrends();
     }
+  }
+
+  /// Get default seasonal trends when data is not available
+  SeasonalTrendAnalysisModel _getDefaultSeasonalTrends() {
+    final now = DateTime.now();
+    final month = now.month;
+    Season currentSeason = Season.regular;
+
+    if (month == 3 || month == 4) {
+      currentSeason = Season.ramadan;
+    } else if (month == 1 || month == 2) {
+      currentSeason = Season.cny;
+    } else if (month == 6 || month == 7) {
+      currentSeason = Season.durian;
+    }
+
+    return SeasonalTrendAnalysisModel(
+      currentSeason: currentSeason,
+      trendingDishes: const [],
+      trendingCuisines: const [],
+      upcomingEvents: const [],
+      recommendations: const [],
+      analysisStartDate: now.subtract(const Duration(days: 30)),
+      analysisEndDate: now,
+      calculatedAt: now,
+      totalSearches: 0,
+    );
   }
 
   @override
@@ -912,9 +1098,7 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
     try {
       logger.i('Updating A/B test: ${test.id}');
 
-      final updatedTest = (test).copyWith(
-        updatedAt: DateTime.now(),
-      );
+      final updatedTest = (test).copyWith(updatedAt: DateTime.now());
       await firestore
           .collection('ab_tests')
           .doc(test.id)

@@ -11,6 +11,7 @@ UserModel _$UserModelFromJson(Map<String, dynamic> json) => UserModel(
   name: json['name'] as String,
   email: json['email'] as String,
   role: json['role'] as String? ?? 'user',
+  isVerified: json['isVerified'] as bool? ?? false,
   profileImageUrl: json['profileImageUrl'] as String?,
   dietaryRestrictions:
       (json['dietaryRestrictions'] as List<dynamic>?)
@@ -41,12 +42,13 @@ Map<String, dynamic> _$UserModelToJson(UserModel instance) => <String, dynamic>{
   'name': instance.name,
   'email': instance.email,
   'role': instance.role,
+  'isVerified': instance.isVerified,
   'profileImageUrl': instance.profileImageUrl,
   'dietaryRestrictions': instance.dietaryRestrictions,
   'cuisinePreferences': instance.cuisinePreferences,
   'spiceTolerance': instance.spiceTolerance,
   'culturalBackground': instance.culturalBackground,
-  'currentLocation': instance.currentLocation.toJson(),
+  'currentLocation': instance.currentLocation,
   'behaviorPatterns': instance.behaviorPatterns,
   'createdAt': instance.createdAt.toIso8601String(),
   'updatedAt': instance.updatedAt.toIso8601String(),

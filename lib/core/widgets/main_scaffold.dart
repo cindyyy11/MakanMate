@@ -74,7 +74,7 @@ class _MainScaffoldState extends State<MainScaffold> {
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
             icon: Icon(Icons.restaurant_menu),
-            label: 'Menu',
+            label: 'Menu',  
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.local_offer),

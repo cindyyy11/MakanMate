@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:makan_mate/core/constants/ui_constants.dart';
 import 'package:makan_mate/core/theme/app_colors.dart';
 import 'package:makan_mate/core/theme/app_theme.dart';
+import 'package:makan_mate/core/di/injection_container.dart';
 import 'package:makan_mate/features/admin/presentation/widgets/3d_card.dart';
+import 'package:makan_mate/features/admin/domain/usecases/get_vendors_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/approve_vendor_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/reject_vendor_usecase.dart';
+import 'package:makan_mate/features/vendor/domain/entities/vendor_profile_entity.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_event.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -191,9 +196,251 @@ class _VendorApplicationsTab extends StatefulWidget {
 }
 
 class _VendorApplicationsTabState extends State<_VendorApplicationsTab> {
-  // Search and filter functionality can be implemented here
-  // String _searchQuery = '';
-  // String? _filterRisk;
+  final GetVendorsUseCase _getVendorsUseCase = sl<GetVendorsUseCase>();
+  final ApproveVendorUseCase _approveVendorUseCase = sl<ApproveVendorUseCase>();
+  final RejectVendorUseCase _rejectVendorUseCase = sl<RejectVendorUseCase>();
+  
+  List<VendorProfileEntity> _vendors = [];
+  bool _isLoading = true;
+  String _searchQuery = '';
+  String? _filterRisk;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVendors();
+  }
+
+  Future<void> _loadVendors() async {
+    setState(() => _isLoading = true);
+    try {
+      final result = await _getVendorsUseCase.call(
+        GetVendorsParams(approvalStatus: 'pending'),
+      );
+      result.fold(
+        (failure) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error loading vendors: ${failure.message}'),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          }
+        },
+        (vendors) {
+          if (mounted) {
+            setState(() {
+              _vendors = vendors;
+              _isLoading = false;
+            });
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _approveVendor(String vendorId) async {
+    try {
+      final result = await _approveVendorUseCase.call(
+        ApproveVendorParams(vendorId: vendorId),
+      );
+      result.fold(
+        (failure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error approving vendor: ${failure.message}'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        },
+        (_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Vendor approved successfully'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+          _loadVendors(); // Reload list
+        },
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
+  Future<void> _rejectVendor(String vendorId, String reason) async {
+    final reasonController = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reject Vendor'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Please provide a reason for rejection:'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(
+                hintText: 'Rejection reason...',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            child: const Text('Reject'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && reasonController.text.isNotEmpty) {
+      try {
+        final result = await _rejectVendorUseCase.call(
+          RejectVendorParams(
+            vendorId: vendorId,
+            reason: reasonController.text,
+          ),
+        );
+        result.fold(
+          (failure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error rejecting vendor: ${failure.message}'),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          },
+          (_) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Vendor rejected'),
+                backgroundColor: AppColors.warning,
+              ),
+            );
+            _loadVendors(); // Reload list
+          },
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  List<VendorProfileEntity> get _filteredVendors {
+    var filtered = _vendors;
+    
+    // Apply search filter
+    if (_searchQuery.isNotEmpty) {
+      filtered = filtered.where((vendor) {
+        final name = vendor.businessName.toLowerCase();
+        final email = vendor.emailAddress.toLowerCase();
+        final query = _searchQuery.toLowerCase();
+        return name.contains(query) || email.contains(query);
+      }).toList();
+    }
+    
+    // Apply risk filter
+    if (_filterRisk != null) {
+      filtered = filtered.where((vendor) {
+        final riskScore = _calculateRiskScore(vendor);
+        switch (_filterRisk) {
+          case 'low':
+            return riskScore < 30;
+          case 'medium':
+            return riskScore >= 30 && riskScore < 70;
+          case 'high':
+            return riskScore >= 70;
+          default:
+            return true;
+        }
+      }).toList();
+    }
+    
+    return filtered;
+  }
+
+  int get _pendingCount => _vendors.length;
+  int get _lowRiskCount => _vendors.where((v) => _calculateRiskScore(v) < 30).length;
+  int get _highRiskCount => _vendors.where((v) => _calculateRiskScore(v) >= 70).length;
+
+  int _calculateRiskScore(VendorProfileEntity vendor) {
+    // Simple risk calculation based on available fields
+    int score = 0;
+    
+    // Check for missing critical fields
+    if (vendor.businessAddress.isEmpty) score += 20;
+    if (vendor.contactNumber.isEmpty) score += 15;
+    if (vendor.emailAddress.isEmpty) score += 10;
+    
+    // Check certifications (Halal cert is important)
+    final hasHalalCert = vendor.certifications.any((cert) => 
+      cert.type.toLowerCase().contains('halal') && 
+      cert.status == CertificationStatus.verified
+    );
+    if (!hasHalalCert) score += 25;
+    
+    // Check if business name is missing
+    if (vendor.businessName.isEmpty) score += 30;
+    
+    return score;
+  }
+
+  List<String> _getRedFlags(VendorProfileEntity vendor) {
+    List<String> flags = [];
+    
+    if (vendor.businessName.isEmpty) {
+      flags.add('Missing business name');
+    }
+    
+    final hasHalalCert = vendor.certifications.any((cert) => 
+      cert.type.toLowerCase().contains('halal') && 
+      cert.status == CertificationStatus.verified
+    );
+    if (!hasHalalCert) {
+      flags.add('No verified Halal certificate');
+    }
+    
+    if (vendor.businessAddress.isEmpty) {
+      flags.add('Missing business address');
+    }
+    
+    if (vendor.contactNumber.isEmpty) {
+      flags.add('Missing contact number');
+    }
+    
+    return flags;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -231,8 +478,7 @@ class _VendorApplicationsTabState extends State<_VendorApplicationsTab> {
                     ),
                   ),
                   onChanged: (value) {
-                    // Implement search functionality
-                    // setState(() => _searchQuery = value);
+                    setState(() => _searchQuery = value);
                   },
                 ),
               ),
@@ -247,8 +493,7 @@ class _VendorApplicationsTabState extends State<_VendorApplicationsTab> {
                   child: const Icon(Icons.tune_rounded),
                 ),
                 onSelected: (value) {
-                  // Implement filter functionality
-                  // setState(() => _filterRisk = value == 'all' ? null : value);
+                  setState(() => _filterRisk = value == 'all' ? null : value);
                 },
                 itemBuilder: (context) => [
                   const PopupMenuItem(
@@ -274,46 +519,42 @@ class _VendorApplicationsTabState extends State<_VendorApplicationsTab> {
         ),
         // Applications List
         Expanded(
-          child: ListView(
-            padding: UIConstants.paddingLg,
-            children: [
-              _buildStatsCards(context),
-              const SizedBox(height: UIConstants.spacingLg),
-              _buildApplicationCard(
-                context,
-                'Nasi Lemak Corner',
-                ownerName: 'Ahmad bin Hassan',
-                email: 'ahmad@example.com',
-                submittedDate: DateTime.now().subtract(const Duration(days: 2)),
-                riskScore: 45,
-                redFlags: ['No business reg', 'Halal cert expiring'],
-              ),
-              _buildApplicationCard(
-                context,
-                'Mamak Stall KL',
-                ownerName: 'Raj Kumar',
-                email: 'raj@example.com',
-                submittedDate: DateTime.now().subtract(const Duration(days: 1)),
-                riskScore: 25,
-                redFlags: [],
-              ),
-              _buildApplicationCard(
-                context,
-                'Chinese Restaurant',
-                ownerName: 'Lee Wei Ming',
-                email: 'lee@example.com',
-                submittedDate: DateTime.now().subtract(
-                  const Duration(hours: 5),
-                ),
-                riskScore: 75,
-                redFlags: [
-                  'Invalid license',
-                  'Suspicious activity',
-                  'Duplicate listing',
-                ],
-              ),
-            ],
-          ),
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _filteredVendors.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.inbox_rounded,
+                            size: 64,
+                            color: AppColorsExtension.getTextSecondary(context),
+                          ),
+                          const SizedBox(height: UIConstants.spacingMd),
+                          Text(
+                            'No pending applications',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: AppColorsExtension.getTextSecondary(context),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _loadVendors,
+                      child: ListView(
+                        padding: UIConstants.paddingLg,
+                        children: [
+                          _buildStatsCards(context),
+                          const SizedBox(height: UIConstants.spacingLg),
+                          ..._filteredVendors.map((vendor) => _buildApplicationCard(
+                                context,
+                                vendor,
+                              )),
+                        ],
+                      ),
+                    ),
         ),
       ],
     );
@@ -326,7 +567,7 @@ class _VendorApplicationsTabState extends State<_VendorApplicationsTab> {
           child: _buildStatCard(
             context,
             'Pending',
-            '12',
+            '$_pendingCount',
             Icons.pending_rounded,
             AppColors.warning,
           ),
@@ -336,7 +577,7 @@ class _VendorApplicationsTabState extends State<_VendorApplicationsTab> {
           child: _buildStatCard(
             context,
             'Low Risk',
-            '8',
+            '$_lowRiskCount',
             Icons.check_circle_rounded,
             AppColors.success,
           ),
@@ -346,7 +587,7 @@ class _VendorApplicationsTabState extends State<_VendorApplicationsTab> {
           child: _buildStatCard(
             context,
             'High Risk',
-            '4',
+            '$_highRiskCount',
             Icons.warning_rounded,
             AppColors.error,
           ),
@@ -410,25 +651,25 @@ class _VendorApplicationsTabState extends State<_VendorApplicationsTab> {
 
   Widget _buildApplicationCard(
     BuildContext context,
-    String name, {
-    String? ownerName,
-    String? email,
-    DateTime? submittedDate,
-    int? riskScore,
-    List<String>? redFlags,
-  }) {
+    VendorProfileEntity vendor,
+  ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final riskColor = riskScore != null
-        ? (riskScore < 30
-              ? AppColors.success
-              : riskScore < 70
-              ? AppColors.warning
-              : AppColors.error)
-        : AppColors.grey500;
+    final vendorId = vendor.id;
+    final name = vendor.businessName;
+    final email = vendor.emailAddress;
+    final submittedDate = vendor.createdAt;
+    final riskScore = _calculateRiskScore(vendor);
+    final redFlags = _getRedFlags(vendor);
+    final riskColor = riskScore < 30
+        ? AppColors.success
+        : riskScore < 70
+            ? AppColors.warning
+            : AppColors.error;
 
     return Card3D(
       onTap: () {
-        // Show detailed view
+        // Show detailed vendor view
+        _showVendorDetails(context, vendor);
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: UIConstants.spacingMd),
@@ -484,37 +725,12 @@ class _VendorApplicationsTabState extends State<_VendorApplicationsTab> {
                             ),
                           ],
                         ),
-                        if (ownerName != null) ...[
+                        if (vendor.contactNumber.isNotEmpty) ...[
                           const SizedBox(height: UIConstants.spacingXs),
                           Row(
                             children: [
                               Icon(
-                                Icons.person_rounded,
-                                size: 14,
-                                color: AppColorsExtension.getTextSecondary(
-                                  context,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                ownerName,
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(
-                                      color:
-                                          AppColorsExtension.getTextSecondary(
-                                            context,
-                                          ),
-                                    ),
-                              ),
-                            ],
-                          ),
-                        ],
-                        if (email != null) ...[
-                          const SizedBox(height: 2),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.email_rounded,
+                                Icons.phone_rounded,
                                 size: 14,
                                 color: AppColorsExtension.getTextSecondary(
                                   context,
@@ -523,7 +739,7 @@ class _VendorApplicationsTabState extends State<_VendorApplicationsTab> {
                               const SizedBox(width: 4),
                               Expanded(
                                 child: Text(
-                                  email,
+                                  vendor.contactNumber,
                                   style: Theme.of(context).textTheme.bodySmall
                                       ?.copyWith(
                                         color:
@@ -538,31 +754,58 @@ class _VendorApplicationsTabState extends State<_VendorApplicationsTab> {
                             ],
                           ),
                         ],
-                        if (submittedDate != null) ...[
-                          const SizedBox(height: 4),
+                        if (email.isNotEmpty) ...[
+                          const SizedBox(height: 2),
                           Row(
                             children: [
                               Icon(
-                                Icons.access_time_rounded,
+                                Icons.email_rounded,
                                 size: 14,
                                 color: AppColorsExtension.getTextSecondary(
                                   context,
                                 ),
                               ),
                               const SizedBox(width: 4),
-                              Text(
-                                'Submitted ${_formatDate(submittedDate)}',
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(
-                                      color:
-                                          AppColorsExtension.getTextSecondary(
-                                            context,
-                                          ),
-                                    ),
+                              Expanded(
+                                child: Text(
+                                  vendor.emailAddress,
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color:
+                                            AppColorsExtension.getTextSecondary(
+                                              context,
+                                            ),
+                                      ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                             ],
                           ),
                         ],
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.access_time_rounded,
+                              size: 14,
+                              color: AppColorsExtension.getTextSecondary(
+                                context,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Submitted ${_formatDate(submittedDate)}',
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color:
+                                        AppColorsExtension.getTextSecondary(
+                                          context,
+                                        ),
+                                  ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),
@@ -617,7 +860,7 @@ class _VendorApplicationsTabState extends State<_VendorApplicationsTab> {
                   ),
                 ],
               ),
-              if (redFlags != null && redFlags.isNotEmpty) ...[
+              if (redFlags.isNotEmpty) ...[
                 const SizedBox(height: UIConstants.spacingMd),
                 Container(
                   padding: UIConstants.paddingSm,
@@ -692,7 +935,7 @@ class _VendorApplicationsTabState extends State<_VendorApplicationsTab> {
                 children: [
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () {},
+                      onPressed: () => _approveVendor(vendorId),
                       icon: const Icon(Icons.check_rounded, size: 18),
                       label: const Text('Approve'),
                       style: ElevatedButton.styleFrom(
@@ -708,7 +951,7 @@ class _VendorApplicationsTabState extends State<_VendorApplicationsTab> {
                   const SizedBox(width: UIConstants.spacingMd),
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () {},
+                      onPressed: () => _rejectVendor(vendorId, ''),
                       icon: const Icon(Icons.close_rounded, size: 18),
                       label: const Text('Reject'),
                       style: OutlinedButton.styleFrom(
@@ -723,7 +966,7 @@ class _VendorApplicationsTabState extends State<_VendorApplicationsTab> {
                   ),
                   const SizedBox(width: UIConstants.spacingSm),
                   IconButton(
-                    onPressed: () {},
+                    onPressed: () => _showVendorDetails(context, vendor),
                     icon: const Icon(Icons.more_vert_rounded),
                     tooltip: 'More options',
                   ),
@@ -749,6 +992,77 @@ class _VendorApplicationsTabState extends State<_VendorApplicationsTab> {
     } else {
       return 'Just now';
     }
+  }
+
+  void _showVendorDetails(BuildContext context, VendorProfileEntity vendor) {
+    CertificationEntity? halalCert;
+    try {
+      halalCert = vendor.certifications.firstWhere(
+        (cert) => cert.type.toLowerCase().contains('halal'),
+      );
+    } catch (e) {
+      // No halal cert found
+      halalCert = null;
+    }
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(vendor.businessName),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildDetailRow('Business Name', vendor.businessName),
+              _buildDetailRow('Email', vendor.emailAddress),
+              _buildDetailRow('Phone', vendor.contactNumber),
+              _buildDetailRow('Address', vendor.businessAddress),
+              _buildDetailRow('Description', vendor.shortDescription),
+              if (halalCert != null) ...[
+                _buildDetailRow('Halal Cert', halalCert.certificateNumber ?? 'Pending'),
+                _buildDetailRow('Cert Status', halalCert.status.name),
+              ] else
+                _buildDetailRow('Halal Cert', 'Not provided'),
+              _buildDetailRow('Approval Status', vendor.approvalStatus),
+              _buildDetailRow('Outlets', '${vendor.outlets.length}'),
+              _buildDetailRow('Certifications', '${vendor.certifications.length}'),
+              _buildDetailRow(
+                'Submitted',
+                _formatDate(vendor.createdAt),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              '$label:',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          Expanded(
+            child: Text(value),
+          ),
+        ],
+      ),
+    );
   }
 }
 

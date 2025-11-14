@@ -51,5 +51,6 @@ class UserEntity extends Equatable {
     behaviorPatterns,
     createdAt,
     updatedAt,
+    isVerified,
   ];
 }
