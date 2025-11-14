@@ -2,8 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:makan_mate/core/widgets/bottom_nav_widget.dart';
-import 'package:makan_mate/features/favorite/presentation/pages/favorite_page.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_bloc.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_event.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_state.dart';
@@ -13,7 +11,6 @@ import 'package:makan_mate/features/home/presentation/pages/restaurant_detail_pa
 import 'package:makan_mate/features/map/presentation/bloc/map_bloc.dart';
 import 'package:makan_mate/features/map/presentation/pages/map_page.dart';
 import 'package:makan_mate/features/map/presentation/bloc/map_event.dart' as map;
-import 'package:makan_mate/features/home/presentation/pages/spin_wheel_page.dart';
 
 
 class HomeScreen extends StatefulWidget {
@@ -105,24 +102,24 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined, color: Colors.black54),
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Notifications feature coming soon!')),
-            );
-          },
-        ),
-        IconButton(
-          icon: const Icon(Icons.person_outline, color: Colors.black54),
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Profile feature coming soon!')),
-            );
-          },
-        ),
-      ],
+      // actions: [
+      //   IconButton(
+      //     icon: const Icon(Icons.notifications_outlined, color: Colors.black54),
+      //     onPressed: () {
+      //       ScaffoldMessenger.of(context).showSnackBar(
+      //         const SnackBar(content: Text('Notifications feature coming soon!')),
+      //       );
+      //     },
+      //   ),
+      //   IconButton(
+      //     icon: const Icon(Icons.person_outline, color: Colors.black54),
+      //     onPressed: () {
+      //       ScaffoldMessenger.of(context).showSnackBar(
+      //         const SnackBar(content: Text('Profile feature coming soon!')),
+      //       );
+      //     },
+      //   ),
+      // ],
     );
   }
 

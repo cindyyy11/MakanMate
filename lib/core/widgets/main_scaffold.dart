@@ -10,6 +10,7 @@ import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_event.dart';
 import 'package:makan_mate/features/favorite/presentation/pages/favorite_page.dart';
 import 'package:makan_mate/features/home/presentation/pages/home_page.dart';
+import 'package:makan_mate/features/home/presentation/pages/profile_page.dart';
 import 'package:makan_mate/features/home/presentation/pages/spin_wheel_page.dart';
 import 'package:makan_mate/features/vendor/presentation/pages/menu_management_page.dart';
 import 'package:makan_mate/features/vendor/presentation/pages/promotion_management_page.dart';
@@ -62,7 +63,7 @@ class _MainScaffoldState extends State<MainScaffold> {
         ];
       case 'user':
       default:
-        return [const HomeScreen(), const FavoritePage(), const SpinWheelPage()];
+        return [const HomeScreen(), const FavoritePage(), const SpinWheelPage(), const ProfilePage()];
     }
   }
 
