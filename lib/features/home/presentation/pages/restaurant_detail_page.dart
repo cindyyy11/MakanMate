@@ -1,5 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:makan_mate/features/ratings/data/datasources/ratings_remote_datasource.dart';
+import 'package:makan_mate/features/ratings/data/repositories/ratings_repository_impl.dart';
+import 'package:makan_mate/features/ratings/domain/usecases/submit_rating_usecase.dart';
+import 'package:makan_mate/features/ratings/presentation/bloc/ratings_bloc.dart';
+import 'package:makan_mate/features/ratings/presentation/pages/submit_rating_page.dart';
 import 'package:url_launcher/url_launcher.dart';   // <-- ADDED
 import 'package:makan_mate/features/home/domain/entities/restaurant_entity.dart';
 import 'package:makan_mate/features/vendor/domain/entities/vendor_profile_entity.dart';
@@ -49,7 +55,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
 
     final data = doc.data() ?? {};
 
-    VendorProfileEntity vendor = _mapVendor(data);
+    VendorProfileEntity vendor = _mapVendor(doc.id, data);
 
     final outletSnap = await FirebaseFirestore.instance
         .collection('vendors')
@@ -115,7 +121,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
   }
 
   // Map Vendor Profile
-  VendorProfileEntity _mapVendor(Map<String, dynamic> d) {
+  VendorProfileEntity _mapVendor(String vendorId, Map<String, dynamic> d){
     final hours = <String, OperatingHours>{};
 
     if (d['operatingHours'] != null) {
@@ -130,7 +136,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
     }
 
     return VendorProfileEntity(
-      id: d['id'] ?? "",
+      id: vendorId,
       businessName: d['businessName'] ?? "",
       businessAddress: d['businessAddress'] ?? "",
       businessLogoUrl: d['businessLogoUrl'],
@@ -191,12 +197,14 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
           _header(),
           const SizedBox(height: 16),
           _tags(),
+          const SizedBox(height: 16),
+          _rateButton(),
           const SizedBox(height: 24),
           _menuSection(),
           const SizedBox(height: 24),
           _operatingHoursSection(),
           const SizedBox(height: 24),
-          _directionsSection(),   // <-- UPDATED
+          _directionsSection(), 
         ],
       ),
     );
@@ -258,6 +266,47 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
       ],
     );
   }
+
+  Widget _rateButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => BlocProvider(
+                create: (_) => RatingsBloc(
+                  SubmitRatingUsecase(
+                    RatingsRepositoryImpl(
+                      RatingsRemoteDatasourceImpl(FirebaseFirestore.instance),
+                    ),
+                  ),
+                ),
+                child: SubmitRatingPage(vendorId: vendor!.id),
+              ),
+            ),
+          );
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        child: const Text(
+          "Rate This Restaurant",
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+
 
   Widget _tag(String text) {
     return Container(
