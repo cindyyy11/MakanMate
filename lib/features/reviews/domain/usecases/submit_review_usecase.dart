@@ -12,8 +12,9 @@ class SubmitReviewUseCase {
   Future<Either<Failure, ReviewEntity>> call({
     required String userId,
     required String userName,
-    required String restaurantId,
+    required String vendorId,
     required String itemId,
+    String? outletId,
     required double rating,
     String? comment,
     List<String>? imageUrls,
@@ -23,8 +24,9 @@ class SubmitReviewUseCase {
     return await repository.submitReview(
       userId: userId,
       userName: userName,
-      restaurantId: restaurantId,
+      vendorId: vendorId,
       itemId: itemId,
+      outletId: outletId,
       rating: rating,
       comment: comment,
       imageUrls: imageUrls,

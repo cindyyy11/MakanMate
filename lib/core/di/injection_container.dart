@@ -8,6 +8,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:makan_mate/core/network/network_info.dart';
+import 'package:makan_mate/features/admin/domain/usecases/approve_menu_item_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/get_pending_menu_items_usecase.dart';
+import 'package:makan_mate/features/admin/presentation/bloc/admin_review_management_bloc.dart';
 import 'package:makan_mate/features/auth/data/datasources/auth_local_datasource.dart';
 import 'package:makan_mate/features/auth/data/datasources/auth_local_secure_datasource.dart';
 import 'package:makan_mate/features/auth/data/datasources/auth_remote_datasource.dart';
@@ -47,7 +50,20 @@ import 'package:makan_mate/features/recommendations/domain/usecases/get_recommen
 import 'package:makan_mate/features/admin/data/datasources/admin_remote_datasource.dart';
 import 'package:makan_mate/features/admin/data/datasources/admin_vendor_management_datasource.dart';
 import 'package:makan_mate/features/admin/data/datasources/admin_promotion_management_datasource.dart';
-import 'package:makan_mate/features/admin/data/datasources/admin_review_management_datasource.dart';
+import 'package:makan_mate/features/admin/data/datasources/admin_voucher_management_datasource.dart';
+import 'package:makan_mate/features/admin/domain/usecases/get_pending_vouchers_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/approve_voucher_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/reject_voucher_usecase.dart';
+import 'package:makan_mate/features/admin/presentation/bloc/admin_voucher_management_bloc.dart';
+import 'package:makan_mate/features/reviews/data/datasources/admin_review_management_datasource.dart';
+import 'package:makan_mate/features/reviews/data/repositories/admin_review_repository_impl.dart';
+import 'package:makan_mate/features/reviews/domain/repositories/admin_review_repository.dart';
+import 'package:makan_mate/features/reviews/domain/usecases/get_flagged_reviews_usecase.dart';
+import 'package:makan_mate/features/reviews/domain/usecases/get_all_reviews_usecase.dart';
+import 'package:makan_mate/features/reviews/domain/usecases/approve_review_usecase.dart';
+import 'package:makan_mate/features/reviews/domain/usecases/flag_review_usecase.dart';
+import 'package:makan_mate/features/reviews/domain/usecases/remove_review_usecase.dart';
+import 'package:makan_mate/features/reviews/domain/usecases/dismiss_flagged_review_usecase.dart';
 import 'package:makan_mate/features/admin/data/repositories/admin_vendor_repository_impl.dart';
 import 'package:makan_mate/features/admin/domain/repositories/admin_vendor_repository.dart';
 import 'package:makan_mate/features/admin/data/datasources/admin_menu_management_datasource.dart';
@@ -72,11 +88,6 @@ import 'package:makan_mate/features/admin/domain/usecases/approve_vendor_usecase
 import 'package:makan_mate/features/admin/domain/usecases/reject_vendor_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_pending_promotions_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/approve_promotion_usecase.dart';
-import 'package:makan_mate/features/admin/domain/usecases/get_flagged_reviews_usecase.dart';
-import 'package:makan_mate/features/admin/domain/usecases/approve_review_usecase.dart';
-import 'package:makan_mate/features/admin/domain/usecases/remove_review_usecase.dart';
-import 'package:makan_mate/features/admin/domain/usecases/get_pending_menu_items_usecase.dart';
-import 'package:makan_mate/features/admin/domain/usecases/approve_menu_item_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_users_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_user_by_id_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/verify_user_usecase.dart';
@@ -424,6 +435,21 @@ void _initAdmin() {
   );
 
   sl.registerFactory(() => AdminUserManagementBloc(repository: sl()));
+  
+  sl.registerFactory(() => AdminReviewManagementBloc(
+    getFlaggedReviewsUseCase: sl(),
+    getAllReviewsUseCase: sl(),
+    approveReviewUseCase: sl(),
+    flagReviewUseCase: sl(),
+    removeReviewUseCase: sl(),
+    dismissFlaggedReviewUseCase: sl(),
+  ));
+
+  sl.registerFactory(() => AdminVoucherManagementBloc(
+    getPendingVouchersUseCase: sl(),
+    approveVoucherUseCase: sl(),
+    rejectVoucherUseCase: sl(),
+  ));
 
   // Use cases
   sl.registerLazySingleton(() => GetPlatformMetricsUseCase(sl()));
@@ -483,6 +509,15 @@ void _initAdmin() {
     ),
   );
 
+  sl.registerLazySingleton<AdminVoucherManagementDataSource>(
+    () => AdminVoucherManagementDataSource(
+      firestore: sl(),
+      auth: sl(),
+      logger: logger,
+      auditLogService: sl(),
+    ),
+  );
+
   sl.registerLazySingleton<AdminReviewManagementDataSource>(
     () => AdminReviewManagementDataSource(
       firestore: sl(),
@@ -501,6 +536,14 @@ void _initAdmin() {
     ),
   );
 
+  // Review management repository
+  sl.registerLazySingleton<AdminReviewRepository>(
+    () => AdminReviewRepositoryImpl(
+      remoteDataSource: sl(),
+      networkInfo: sl(),
+    ),
+  );
+
   // Services
   sl.registerLazySingleton<AuditLogService>(
     () => AuditLogService(firestore: sl(), auth: sl(), logger: logger),
@@ -512,9 +555,19 @@ void _initAdmin() {
   sl.registerLazySingleton(() => RejectVendorUseCase(sl()));
   sl.registerLazySingleton(() => GetPendingPromotionsUseCase(sl()));
   sl.registerLazySingleton(() => ApprovePromotionUseCase(sl()));
+  
+  // Voucher management use cases
+  sl.registerLazySingleton(() => GetPendingVouchersUseCase(sl(), sl()));
+  sl.registerLazySingleton(() => ApproveVoucherUseCase(sl(), sl()));
+  sl.registerLazySingleton(() => RejectVoucherUseCase(sl(), sl()));
+  
+  // Review management use cases
   sl.registerLazySingleton(() => GetFlaggedReviewsUseCase(sl()));
+  sl.registerLazySingleton(() => GetAllReviewsUseCase(sl()));
   sl.registerLazySingleton(() => ApproveReviewUseCase(sl()));
   sl.registerLazySingleton(() => RemoveReviewUseCase(sl()));
+  sl.registerLazySingleton(() => DismissFlaggedReviewUseCase(sl()));
+  
   sl.registerLazySingleton(() => GetPendingMenuItemsUseCase(sl()));
   sl.registerLazySingleton(() => ApproveMenuItemUseCase(sl()));
 
@@ -545,15 +598,15 @@ void _initReviews() {
   );
 
   // BLoC
-  sl.registerFactory(
-    () => ReviewBloc(
-      submitReview: sl(),
-      getRestaurantReviews: sl(),
-      getItemReviews: sl(),
-      flagReview: sl(),
-      logger: logger,
-    ),
-  );
+  // sl.registerFactory(
+  //   () => ReviewBloc(
+  //     submitReview: sl(),
+  //     getRestaurantReviews: sl(),
+  //     getItemReviews: sl(),
+  //     flagReview: sl(),
+  //     logger: logger,
+  //   ),
+  // );
 
   // Use cases
   sl.registerLazySingleton(() => SubmitReviewUseCase(sl()));

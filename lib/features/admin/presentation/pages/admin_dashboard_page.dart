@@ -2228,6 +2228,16 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ),
                 ),
                 Card3D(
+                  onTap: () => Navigator.of(context).pushNamed('/voucherApproval'),
+                  child: QuickActionCard(
+                    title: 'Voucher Approvals',
+                    subtitle: 'Approve pending vouchers',
+                    icon: Icons.card_giftcard_rounded,
+                    color: AppColors.secondary,
+                    onTap: () => Navigator.of(context).pushNamed('/voucherApproval'),
+                  ),
+                ),
+                Card3D(
                   onTap: () => Navigator.of(context).pushNamed('/admin'),
                   child: QuickActionCard(
                     title: 'Audit Logs',
