@@ -8,8 +8,9 @@ abstract class ReviewRepository {
   Future<Either<Failure, ReviewEntity>> submitReview({
     required String userId,
     required String userName,
-    required String restaurantId,
+    required String vendorId,
     required String itemId,
+    String? outletId,
     required double rating,
     String? comment,
     List<String>? imageUrls,
@@ -17,9 +18,9 @@ abstract class ReviewRepository {
     List<String>? tags,
   });
 
-  /// Get reviews for a restaurant
+  /// Get reviews for a vendor (restaurant)
   Future<Either<Failure, List<ReviewEntity>>> getRestaurantReviews(
-    String restaurantId, {
+    String vendorId, {
     int limit = 50,
   });
 

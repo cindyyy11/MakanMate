@@ -7,8 +7,9 @@ abstract class ReviewRemoteDataSource {
   Future<ReviewModel> submitReview({
     required String userId,
     required String userName,
-    required String restaurantId,
+    required String vendorId,
     required String itemId,
+    String? outletId,
     required double rating,
     String? comment,
     List<String>? imageUrls,
@@ -17,7 +18,7 @@ abstract class ReviewRemoteDataSource {
   });
 
   Future<List<ReviewModel>> getRestaurantReviews(
-    String restaurantId, {
+    String vendorId, {
     int limit = 50,
   });
 
@@ -46,8 +47,9 @@ class ReviewRemoteDataSourceImpl implements ReviewRemoteDataSource {
   Future<ReviewModel> submitReview({
     required String userId,
     required String userName,
-    required String restaurantId,
+    required String vendorId,
     required String itemId,
+    String? outletId,
     required double rating,
     String? comment,
     List<String>? imageUrls,
@@ -58,8 +60,9 @@ class ReviewRemoteDataSourceImpl implements ReviewRemoteDataSource {
       final reviewData = {
         'userId': userId,
         'userName': userName,
-        'restaurantId': restaurantId,
+        'vendorId': vendorId,
         'itemId': itemId,
+        if (outletId != null) 'outletId': outletId,
         'rating': rating,
         'comment': comment ?? '',
         'imageUrls': imageUrls ?? [],
@@ -84,13 +87,13 @@ class ReviewRemoteDataSourceImpl implements ReviewRemoteDataSource {
 
   @override
   Future<List<ReviewModel>> getRestaurantReviews(
-    String restaurantId, {
+    String vendorId, {
     int limit = 50,
   }) async {
     try {
       final query = await firestore
           .collection('reviews')
-          .where('restaurantId', isEqualTo: restaurantId)
+          .where('vendorId', isEqualTo: vendorId)
           .orderBy('createdAt', descending: true)
           .limit(limit)
           .get();

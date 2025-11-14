@@ -2,22 +2,23 @@ import 'package:dartz/dartz.dart';
 import 'package:makan_mate/core/errors/failures.dart';
 import 'package:makan_mate/features/reviews/domain/repositories/admin_review_repository.dart';
 
-class FlagReviewUseCase {
+class ApproveReviewUseCase {
   final AdminReviewRepository repository;
 
-  FlagReviewUseCase(this.repository);
+  ApproveReviewUseCase(this.repository);
 
-  Future<Either<Failure, void>> call(FlagReviewParams params) async {
-    return await repository.flagReview(
+  Future<Either<Failure, void>> call(ApproveReviewParams params) async {
+    return await repository.approveReview(
       reviewId: params.reviewId,
       reason: params.reason,
     );
   }
 }
 
-class FlagReviewParams {
+class ApproveReviewParams {
   final String reviewId;
-  final String reason;
+  final String? reason;
 
-  FlagReviewParams({required this.reviewId, required this.reason});
+  ApproveReviewParams({required this.reviewId, this.reason});
 }
+

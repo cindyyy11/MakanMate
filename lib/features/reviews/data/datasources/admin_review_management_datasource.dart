@@ -24,44 +24,58 @@ class AdminReviewManagementDataSource {
     int? limit,
   }) async {
     try {
+      // Query flagged reviews - filter by removed in memory to avoid index requirements
       Query query = firestore
-          .collection('flagged_content')
-          .where('contentType', isEqualTo: 'review')
-          .orderBy('flaggedAt', descending: true);
+          .collection('reviews')
+          .where('flagged', isEqualTo: true);
 
-      if (status != null) {
-        query = query.where('status', isEqualTo: status);
-      } else {
-        query = query.where('status', isEqualTo: 'pending');
-      }
-
-      if (limit != null) {
-        query = query.limit(limit);
+      // Fetch more than limit if filtering in memory
+      final fetchLimit = limit != null ? (limit * 2) : null;
+      if (fetchLimit != null) {
+        query = query.limit(fetchLimit);
       }
 
       final snapshot = await query.get();
       final List<AdminReviewModel> reviews = [];
-      
+
       for (var doc in snapshot.docs) {
         try {
-          final flagData = doc.data() as Map<String, dynamic>;
-          final reviewId = flagData['contentId'] as String?;
-          
-          if (reviewId != null) {
-            // Fetch the actual review document
-            final reviewDoc = await firestore.collection('reviews').doc(reviewId).get();
-            if (reviewDoc.exists) {
-              final review = await AdminReviewModel.fromFirestore(reviewDoc, firestore);
+          final review = await AdminReviewModel.fromFirestore(doc, firestore);
+
+          // Filter by removed status if status is provided
+          // Note: status parameter is kept for backward compatibility but now maps to removed field
+          if (status == 'resolved' || status == 'removed') {
+            if (review.removed == true) {
               reviews.add(review);
             }
+          } else if (status == 'pending') {
+            if (review.removed != true) {
+              reviews.add(review);
+            }
+          } else {
+            // No status filter, add all flagged reviews
+            reviews.add(review);
           }
         } catch (e) {
           logger.w('Error parsing flagged review ${doc.id}: $e');
         }
       }
+
+      // Sort by flaggedAt descending (most recent first), fallback to createdAt
+      reviews.sort((a, b) {
+        final aDate = a.flaggedAt ?? a.createdAt;
+        final bDate = b.flaggedAt ?? b.createdAt;
+        return bDate.compareTo(aDate);
+      });
+
+      // Apply limit after filtering and sorting
+      if (limit != null && reviews.length > limit) {
+        return reviews.take(limit).toList();
+      }
+
       return reviews;
-    } catch (e, stackTrace) {
-      logger.e('Error fetching flagged reviews: $e', stackTrace: stackTrace);
+    } catch (e) {
+      logger.e('Error fetching flagged reviews: $e');
       return [];
     }
   }
@@ -91,7 +105,7 @@ class AdminReviewManagementDataSource {
 
       final snapshot = await query.get();
       final List<AdminReviewModel> reviews = [];
-      
+
       for (var doc in snapshot.docs) {
         try {
           final review = await AdminReviewModel.fromFirestore(doc, firestore);
@@ -115,32 +129,13 @@ class AdminReviewManagementDataSource {
         throw Exception('Admin not authenticated');
       }
 
-      // Update review
+      // Update review - unflag it
       await firestore.collection('reviews').doc(reviewId).update({
         'flagged': false,
         'moderatedAt': FieldValue.serverTimestamp(),
         'moderatedBy': adminId,
         'moderationAction': 'approved',
       });
-
-      // Update flagged_content if exists
-      final flaggedSnapshot = await firestore
-          .collection('flagged_content')
-          .where('contentType', isEqualTo: 'review')
-          .where('contentId', isEqualTo: reviewId)
-          .where('status', isEqualTo: 'pending')
-          .get();
-
-      final batch = firestore.batch();
-      for (var doc in flaggedSnapshot.docs) {
-        batch.update(doc.reference, {
-          'status': 'resolved',
-          'resolvedAt': FieldValue.serverTimestamp(),
-          'resolvedBy': adminId,
-          'resolution': 'approved',
-        });
-      }
-      await batch.commit();
 
       // Log audit action
       await auditLogService.logAction(
@@ -168,22 +163,12 @@ class AdminReviewManagementDataSource {
         throw Exception('Admin not authenticated');
       }
 
-      // Update review
+      // Update review - flag it
       await firestore.collection('reviews').doc(reviewId).update({
         'flagged': true,
         'flagReason': reason,
         'flaggedAt': FieldValue.serverTimestamp(),
         'flaggedBy': adminId,
-      });
-
-      // Create flagged_content entry
-      await firestore.collection('flagged_content').add({
-        'contentType': 'review',
-        'contentId': reviewId,
-        'reason': reason,
-        'status': 'pending',
-        'flaggedBy': adminId,
-        'flaggedAt': FieldValue.serverTimestamp(),
       });
 
       // Log audit action
@@ -221,25 +206,6 @@ class AdminReviewManagementDataSource {
         'flagged': false, // Unflag if was flagged
       });
 
-      // Update flagged_content if exists
-      final flaggedSnapshot = await firestore
-          .collection('flagged_content')
-          .where('contentType', isEqualTo: 'review')
-          .where('contentId', isEqualTo: reviewId)
-          .where('status', isEqualTo: 'pending')
-          .get();
-
-      final batch = firestore.batch();
-      for (var doc in flaggedSnapshot.docs) {
-        batch.update(doc.reference, {
-          'status': 'resolved',
-          'resolvedAt': FieldValue.serverTimestamp(),
-          'resolvedBy': adminId,
-          'resolution': 'removed',
-        });
-      }
-      await batch.commit();
-
       // Log audit action
       await auditLogService.logReviewRemoval(
         reviewId: reviewId,
@@ -253,9 +219,9 @@ class AdminReviewManagementDataSource {
     }
   }
 
-  /// Dismiss a flagged review (mark as false positive)
+  /// Dismiss a flagged review (mark as false positive - unflag it)
   Future<void> dismissFlaggedReview({
-    required String flagId,
+    required String reviewId,
     String? reason,
   }) async {
     try {
@@ -264,15 +230,24 @@ class AdminReviewManagementDataSource {
         throw Exception('Admin not authenticated');
       }
 
-      await firestore.collection('flagged_content').doc(flagId).update({
-        'status': 'dismissed',
-        'resolvedAt': FieldValue.serverTimestamp(),
-        'resolvedBy': adminId,
-        'resolution': 'dismissed',
+      // Unflag the review (mark as false positive)
+      await firestore.collection('reviews').doc(reviewId).update({
+        'flagged': false,
+        'moderatedAt': FieldValue.serverTimestamp(),
+        'moderatedBy': adminId,
+        'moderationAction': 'dismissed',
         'dismissalReason': reason ?? 'False positive',
       });
 
-      logger.i('Flagged review $flagId dismissed');
+      // Log audit action
+      await auditLogService.logAction(
+        action: 'dismiss_flagged_review',
+        entityType: 'review',
+        entityId: reviewId,
+        reason: reason ?? 'False positive',
+      );
+
+      logger.i('Flagged review $reviewId dismissed');
     } catch (e, stackTrace) {
       logger.e('Error dismissing flagged review: $e', stackTrace: stackTrace);
       rethrow;

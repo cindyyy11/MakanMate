@@ -6,6 +6,10 @@ import 'package:makan_mate/features/admin/presentation/widgets/3d_card.dart';
 import 'package:makan_mate/features/admin/presentation/bloc/admin_user_management_bloc.dart';
 import 'package:makan_mate/features/admin/presentation/bloc/admin_user_management_event.dart';
 import 'package:makan_mate/features/admin/presentation/bloc/admin_user_management_state.dart';
+import 'package:makan_mate/features/admin/presentation/bloc/admin_review_management_bloc.dart';
+import 'package:makan_mate/features/admin/presentation/bloc/admin_review_management_event.dart';
+import 'package:makan_mate/features/admin/presentation/bloc/admin_review_management_state.dart';
+import 'package:makan_mate/features/reviews/domain/entities/admin_review_entity.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_event.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -44,10 +48,7 @@ class UserManagementPage extends StatelessWidget {
               ],
             ),
           ),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
+          automaticallyImplyLeading: false,
           title: Row(
             children: [
               Container(
@@ -349,188 +350,384 @@ class _ReviewModerationTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return ListView(
-      padding: UIConstants.paddingLg,
-      children: [
-        _buildStatsRow(context),
-        const SizedBox(height: UIConstants.spacingLg),
-        Card3D(
-          child: Container(
-            margin: const EdgeInsets.only(bottom: UIConstants.spacingMd),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-              borderRadius: UIConstants.borderRadiusLg,
-              border: Border.all(
-                color: AppColors.error.withOpacity(0.3),
-                width: 1.5,
-              ),
+    return BlocConsumer<AdminReviewManagementBloc, AdminReviewManagementState>(
+      listener: (context, state) {
+        if (state is ReviewOperationSuccess) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: AppColors.success,
             ),
-            child: Padding(
-              padding: UIConstants.paddingMd,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+          );
+          // Reload reviews after operation
+          context.read<AdminReviewManagementBloc>().add(
+                const LoadFlaggedReviews(),
+              );
+        } else if (state is AdminReviewManagementError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      },
+      builder: (context, state) {
+        if (state is AdminReviewManagementLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (state is AdminReviewManagementError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 64, color: AppColors.error),
+                const SizedBox(height: UIConstants.spacingMd),
+                Text(
+                  state.message,
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                const SizedBox(height: UIConstants.spacingMd),
+                ElevatedButton(
+                  onPressed: () {
+                    context.read<AdminReviewManagementBloc>().add(
+                          const LoadFlaggedReviews(),
+                        );
+                  },
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          );
+        }
+
+        List<AdminReviewEntity> reviews = [];
+        if (state is ReviewsLoaded) {
+          reviews = state.reviews;
+        }
+
+        // Load reviews on initial build
+        if (state is AdminReviewManagementInitial) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            context.read<AdminReviewManagementBloc>().add(
+                  const LoadFlaggedReviews(),
+                );
+          });
+        }
+
+        return RefreshIndicator(
+          onRefresh: () async {
+            context.read<AdminReviewManagementBloc>().add(
+                  const LoadFlaggedReviews(),
+                );
+          },
+          child: ListView(
+            padding: UIConstants.paddingLg,
+            children: [
+              _buildStatsRow(context, reviews),
+              const SizedBox(height: UIConstants.spacingLg),
+              if (reviews.isEmpty)
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              AppColors.error,
-                              AppColors.error.withOpacity(0.8),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(
-                          Icons.flag_rounded,
-                          color: Colors.white,
-                          size: 20,
-                        ),
+                      Icon(
+                        Icons.rate_review_outlined,
+                        size: 64,
+                        color: AppColorsExtension.getTextSecondary(context),
                       ),
-                      const SizedBox(width: UIConstants.spacingMd),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Flagged Review',
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.bold),
+                      const SizedBox(height: UIConstants.spacingMd),
+                      Text(
+                        'No flagged reviews',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: AppColorsExtension.getTextSecondary(context),
                             ),
-                            const SizedBox(height: 4),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.error.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                'Toxicity: 0.75 (High)',
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(
-                                      color: AppColors.error,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                              ),
-                            ),
-                          ],
-                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: UIConstants.spacingMd),
+                )
+              else
+                ...reviews.map((review) => _buildReviewCard(context, review)),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildReviewCard(BuildContext context, AdminReviewEntity review) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isFlagged = review.flagged == true;
+
+    return Card3D(
+      child: Container(
+        margin: const EdgeInsets.only(bottom: UIConstants.spacingMd),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          borderRadius: UIConstants.borderRadiusLg,
+          border: Border.all(
+            color: isFlagged
+                ? AppColors.error.withOpacity(0.3)
+                : AppColors.grey200.withOpacity(0.3),
+            width: 1.5,
+          ),
+        ),
+        child: Padding(
+          padding: UIConstants.paddingMd,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
                   Container(
-                    padding: UIConstants.paddingSm,
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.05)
-                          : AppColors.grey50,
-                      borderRadius: BorderRadius.circular(8),
+                      gradient: LinearGradient(
+                        colors: [
+                          isFlagged ? AppColors.error : AppColors.warning,
+                          (isFlagged ? AppColors.error : AppColors.warning)
+                              .withOpacity(0.8),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(10),
                     ),
+                    child: Icon(
+                      isFlagged ? Icons.flag_rounded : Icons.rate_review_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: UIConstants.spacingMd),
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Text(
+                          review.vendorName ?? 'Unknown Vendor',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
                         Row(
                           children: [
-                            const CircleAvatar(
-                              radius: 16,
-                              child: Icon(Icons.person, size: 18),
-                            ),
-                            const SizedBox(width: UIConstants.spacingSm),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'John Doe',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
-                                        ?.copyWith(fontWeight: FontWeight.w600),
-                                  ),
-                                  Text(
-                                    '2 days ago',
-                                    style: Theme.of(context).textTheme.bodySmall
-                                        ?.copyWith(
-                                          color:
-                                              AppColorsExtension.getTextSecondary(
-                                                context,
-                                              ),
-                                        ),
-                                  ),
-                                ],
+                            ...List.generate(
+                              5,
+                              (index) => Icon(
+                                index < review.rating.round()
+                                    ? Icons.star
+                                    : Icons.star_border,
+                                size: 16,
+                                color: AppColors.rating,
                               ),
                             ),
+                            const SizedBox(width: UIConstants.spacingSm),
+                            Text(
+                              review.rating.toStringAsFixed(1),
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
                           ],
-                        ),
-                        const SizedBox(height: UIConstants.spacingSm),
-                        Text(
-                          'This place is TERRIBLE! Don\'t waste your time or money here. The food was cold, service was rude, and the place was dirty.',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: UIConstants.spacingMd),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () {},
-                          icon: const Icon(Icons.check_rounded, size: 18),
-                          label: const Text('Keep'),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+                ],
+              ),
+              const SizedBox(height: UIConstants.spacingMd),
+              Container(
+                padding: UIConstants.paddingSm,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.05)
+                      : AppColors.grey50,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 16,
+                          backgroundImage: review.userProfileImageUrl != null
+                              ? NetworkImage(review.userProfileImageUrl!)
+                              : null,
+                          child: review.userProfileImageUrl == null
+                              ? const Icon(Icons.person, size: 18)
+                              : null,
+                        ),
+                        const SizedBox(width: UIConstants.spacingSm),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                review.userName ?? 'Anonymous',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                              Text(
+                                _formatDate(review.createdAt),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: AppColorsExtension.getTextSecondary(
+                                        context,
+                                      ),
+                                    ),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-                      const SizedBox(width: UIConstants.spacingMd),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {},
-                          icon: const Icon(Icons.delete_rounded, size: 18),
-                          label: const Text('Remove'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.error,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                      ],
+                    ),
+                    const SizedBox(height: UIConstants.spacingSm),
+                    Text(
+                      review.comment,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    if (review.flagReason != null) ...[
+                      const SizedBox(height: UIConstants.spacingSm),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.error.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              size: 16,
+                              color: AppColors.error,
                             ),
-                          ),
+                            const SizedBox(width: UIConstants.spacingSm),
+                            Expanded(
+                              child: Text(
+                                'Flag reason: ${review.flagReason}',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(color: AppColors.error),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: UIConstants.spacingMd),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        context.read<AdminReviewManagementBloc>().add(
+                              ApproveReview(
+                                reviewId: review.id,
+                                reason: 'Approved by admin',
+                              ),
+                            );
+                      },
+                      icon: const Icon(Icons.check_rounded, size: 18),
+                      label: const Text('Approve'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: UIConstants.spacingMd),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        _showRemoveDialog(context, review);
+                      },
+                      icon: const Icon(Icons.delete_rounded, size: 18),
+                      label: const Text('Remove'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.error,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
-            ),
+            ],
           ),
         ),
-      ],
+      ),
     );
   }
 
-  Widget _buildStatsRow(BuildContext context) {
+  void _showRemoveDialog(BuildContext context, AdminReviewEntity review) {
+    final reasonController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Remove Review'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Please provide a reason for removing this review:'),
+            const SizedBox(height: UIConstants.spacingMd),
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(
+                hintText: 'Reason for removal',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (reasonController.text.isNotEmpty) {
+                context.read<AdminReviewManagementBloc>().add(
+                      RemoveReview(
+                        reviewId: review.id,
+                        reason: reasonController.text,
+                      ),
+                    );
+                Navigator.of(dialogContext).pop();
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsRow(BuildContext context, List<AdminReviewEntity> reviews) {
+    final flaggedCount = reviews.where((r) => r.flagged == true).length;
+    final pendingCount = reviews.length;
+    final resolvedCount = reviews.where((r) => r.removed == true).length;
+
     return Row(
       children: [
         Expanded(
           child: _buildStatCard(
             context,
             'Flagged',
-            '12',
+            flaggedCount.toString(),
             Icons.flag_rounded,
             AppColors.error,
           ),
@@ -540,7 +737,7 @@ class _ReviewModerationTab extends StatelessWidget {
           child: _buildStatCard(
             context,
             'Pending',
-            '8',
+            pendingCount.toString(),
             Icons.pending_rounded,
             AppColors.warning,
           ),
@@ -550,7 +747,7 @@ class _ReviewModerationTab extends StatelessWidget {
           child: _buildStatCard(
             context,
             'Resolved',
-            '45',
+            resolvedCount.toString(),
             Icons.check_circle_rounded,
             AppColors.success,
           ),
@@ -610,6 +807,23 @@ class _ReviewModerationTab extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+
+    if (difference.inDays > 7) {
+      return '${date.day}/${date.month}/${date.year}';
+    } else if (difference.inDays > 0) {
+      return '${difference.inDays} ${difference.inDays == 1 ? 'day' : 'days'} ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours} ${difference.inHours == 1 ? 'hour' : 'hours'} ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes} ${difference.inMinutes == 1 ? 'minute' : 'minutes'} ago';
+    } else {
+      return 'Just now';
+    }
   }
 }
 

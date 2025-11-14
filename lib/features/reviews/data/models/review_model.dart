@@ -3,12 +3,16 @@ import 'package:makan_mate/features/reviews/domain/entities/review_entity.dart';
 
 /// Review data model (Data layer)
 /// Extends ReviewEntity and handles Firestore conversion
+/// Note: itemId references MenuItemModel.id - the id field of the menu item being reviewed
+/// Note: vendorId references VendorProfileModel.id - vendors collection contains menu items as subcollection
+/// Note: outletId references OutletEntity.id - the specific outlet/branch the review is for
 class ReviewModel extends ReviewEntity {
   const ReviewModel({
     required super.id,
     required super.userId,
-    required super.itemId,
-    required super.restaurantId,
+    required super.itemId, // References MenuItemModel.id
+    required super.vendorId, // References VendorProfileModel.id
+    super.outletId, // References OutletEntity.id
     required super.rating,
     required super.comment,
     super.imageUrls,
@@ -27,7 +31,8 @@ class ReviewModel extends ReviewEntity {
       id: doc.id,
       userId: data['userId'] as String? ?? '',
       itemId: data['itemId'] as String? ?? '',
-      restaurantId: data['restaurantId'] as String? ?? '',
+      vendorId: data['vendorId'] as String? ?? data['restaurantId'] as String? ?? '',
+      outletId: data['outletId'] as String?,
       rating: (data['rating'] as num?)?.toDouble() ?? 0.0,
       comment: data['comment'] as String? ?? '',
       imageUrls: List<String>.from(data['imageUrls'] ?? []),
@@ -50,7 +55,8 @@ class ReviewModel extends ReviewEntity {
     return {
       'userId': userId,
       'itemId': itemId,
-      'restaurantId': restaurantId,
+      'vendorId': vendorId,
+      if (outletId != null) 'outletId': outletId,
       'rating': rating,
       'comment': comment,
       'imageUrls': imageUrls,

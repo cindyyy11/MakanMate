@@ -25,8 +25,9 @@ class ReviewRepositoryImpl implements ReviewRepository {
   Future<Either<Failure, ReviewEntity>> submitReview({
     required String userId,
     required String userName,
-    required String restaurantId,
+    required String vendorId,
     required String itemId,
+    String? outletId,
     required double rating,
     String? comment,
     List<String>? imageUrls,
@@ -41,8 +42,9 @@ class ReviewRepositoryImpl implements ReviewRepository {
       final review = await remoteDataSource.submitReview(
         userId: userId,
         userName: userName,
-        restaurantId: restaurantId,
+        vendorId: vendorId,
         itemId: itemId,
+        outletId: outletId,
         rating: rating,
         comment: comment,
         imageUrls: imageUrls,
@@ -54,12 +56,12 @@ class ReviewRepositoryImpl implements ReviewRepository {
       await ActivityLogService().logReviewSubmission(
         userId,
         userName,
-        restaurantId,
+        vendorId,
       );
 
       // Check for inappropriate content (simple keyword check)
       if (comment != null) {
-        await _checkAndFlagReview(comment, review.id, restaurantId);
+        await _checkAndFlagReview(comment, review.id, vendorId);
       }
 
       return Right(review.toEntity());
@@ -74,7 +76,7 @@ class ReviewRepositoryImpl implements ReviewRepository {
 
   @override
   Future<Either<Failure, List<ReviewEntity>>> getRestaurantReviews(
-    String restaurantId, {
+    String vendorId, {
     int limit = 50,
   }) async {
     if (!await networkInfo.isConnected) {
@@ -83,7 +85,7 @@ class ReviewRepositoryImpl implements ReviewRepository {
 
     try {
       final reviews = await remoteDataSource.getRestaurantReviews(
-        restaurantId,
+        vendorId,
         limit: limit,
       );
       return Right(reviews.map((model) => model.toEntity()).toList());
@@ -214,7 +216,7 @@ class ReviewRepositoryImpl implements ReviewRepository {
   Future<void> _checkAndFlagReview(
     String comment,
     String reviewId,
-    String restaurantId,
+    String vendorId,
   ) async {
     try {
       // Simple keyword detection (in production, use ML/NLP)

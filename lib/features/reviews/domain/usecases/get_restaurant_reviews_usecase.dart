@@ -4,7 +4,7 @@ import 'package:makan_mate/core/errors/failures.dart';
 import 'package:makan_mate/features/reviews/domain/entities/review_entity.dart';
 import 'package:makan_mate/features/reviews/domain/repositories/review_repository.dart';
 
-/// Use case for getting restaurant reviews
+/// Use case for getting vendor reviews (restaurant reviews)
 class GetRestaurantReviewsUseCase {
   final ReviewRepository repository;
 
@@ -14,22 +14,22 @@ class GetRestaurantReviewsUseCase {
     GetRestaurantReviewsParams params,
   ) async {
     return await repository.getRestaurantReviews(
-      params.restaurantId,
+      params.vendorId,
       limit: params.limit,
     );
   }
 }
 
-/// Parameters for getting restaurant reviews
+/// Parameters for getting vendor reviews
 class GetRestaurantReviewsParams extends Equatable {
-  final String restaurantId;
+  final String vendorId;
   final int limit;
 
   const GetRestaurantReviewsParams({
-    required this.restaurantId,
+    required this.vendorId,
     this.limit = 50,
   });
 
   @override
-  List<Object> get props => [restaurantId, limit];
+  List<Object> get props => [vendorId, limit];
 }

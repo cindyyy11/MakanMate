@@ -13,7 +13,9 @@ import 'package:makan_mate/features/admin/presentation/pages/admin_dashboard_pag
 import 'package:makan_mate/features/admin/presentation/bloc/admin_bloc.dart';
 import 'package:makan_mate/features/admin/presentation/bloc/admin_event.dart';
 import 'package:makan_mate/features/admin/presentation/bloc/admin_user_management_bloc.dart';
+import 'package:makan_mate/features/admin/presentation/bloc/admin_voucher_management_bloc.dart';
 import 'package:makan_mate/features/admin/presentation/pages/user_details_page.dart';
+import 'package:makan_mate/features/admin/presentation/pages/admin_voucher_approval_page.dart';
 import 'package:makan_mate/features/user/domain/entities/user_entity.dart';
 import 'package:makan_mate/core/ml/model_testing_screen.dart';
 import 'package:makan_mate/core/di/injection_container.dart' as di;
@@ -75,6 +77,18 @@ class AppRouter {
             return BlocProvider.value(
               value: bloc,
               child: UserDetailsPage(user: user),
+            );
+          },
+          settings: settings,
+        );
+
+      case '/voucherApproval':
+        return MaterialPageRoute(
+          builder: (context) {
+            final bloc = context.read<AdminVoucherManagementBloc>();
+            return BlocProvider.value(
+              value: bloc,
+              child: const AdminVoucherApprovalPage(),
             );
           },
           settings: settings,
