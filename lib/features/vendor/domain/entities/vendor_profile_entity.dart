@@ -1,18 +1,39 @@
 import 'package:equatable/equatable.dart';
+import 'package:makan_mate/features/vendor/domain/entities/menu_item_entity.dart';
 
 class VendorProfileEntity extends Equatable {
   final String id;
+
+  // Images
   final String? profilePhotoUrl;
   final String? businessLogoUrl;
+  final String? bannerImageUrl;
+
+  // Business info
   final String businessName;
+  final String? cuisineType;
   final String contactNumber;
   final String emailAddress;
   final String businessAddress;
-  final Map<String, OperatingHours> operatingHours; // Day -> OperatingHours
   final String shortDescription;
+
+  // Restaurant-level info
+  final String? cuisine;
+  final String? priceRange;
+  final double? ratingAverage;
+
+  // Status
   final String approvalStatus;
+
+  // Structure
+  final Map<String, OperatingHours> operatingHours;
   final List<OutletEntity> outlets;
   final List<CertificationEntity> certifications;
+
+  // Optionally attach menu items here if you want
+  final List<MenuItemEntity> menuItems;
+
+  // Timestamps
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -20,15 +41,21 @@ class VendorProfileEntity extends Equatable {
     required this.id,
     this.profilePhotoUrl,
     this.businessLogoUrl,
+    this.bannerImageUrl,
     required this.businessName,
+    required this.cuisineType,
     required this.contactNumber,
     required this.emailAddress,
     required this.businessAddress,
     required this.operatingHours,
     required this.shortDescription,
+    this.cuisine,
+    this.priceRange,
+    this.ratingAverage,
     this.approvalStatus = 'pending',
     this.outlets = const [],
     this.certifications = const [],
+    this.menuItems = const [],
     required this.createdAt,
     required this.updatedAt,
   });
@@ -37,15 +64,21 @@ class VendorProfileEntity extends Equatable {
     String? id,
     String? profilePhotoUrl,
     String? businessLogoUrl,
+    String? bannerImageUrl,
     String? businessName,
+    String? cuisineType,
     String? contactNumber,
     String? emailAddress,
     String? businessAddress,
     Map<String, OperatingHours>? operatingHours,
     String? shortDescription,
+    String? cuisine,
+    String? priceRange,
+    double? ratingAverage,
     String? approvalStatus,
     List<OutletEntity>? outlets,
     List<CertificationEntity>? certifications,
+    List<MenuItemEntity>? menuItems,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -53,15 +86,21 @@ class VendorProfileEntity extends Equatable {
       id: id ?? this.id,
       profilePhotoUrl: profilePhotoUrl ?? this.profilePhotoUrl,
       businessLogoUrl: businessLogoUrl ?? this.businessLogoUrl,
+      bannerImageUrl: bannerImageUrl ?? this.bannerImageUrl,
       businessName: businessName ?? this.businessName,
+      cuisineType: cuisineType ?? this.cuisineType,
       contactNumber: contactNumber ?? this.contactNumber,
       emailAddress: emailAddress ?? this.emailAddress,
       businessAddress: businessAddress ?? this.businessAddress,
       operatingHours: operatingHours ?? this.operatingHours,
       shortDescription: shortDescription ?? this.shortDescription,
+      cuisine: cuisine ?? this.cuisine,
+      priceRange: priceRange ?? this.priceRange,
+      ratingAverage: ratingAverage ?? this.ratingAverage,
       approvalStatus: approvalStatus ?? this.approvalStatus,
       outlets: outlets ?? this.outlets,
       certifications: certifications ?? this.certifications,
+      menuItems: menuItems ?? this.menuItems,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -72,15 +111,21 @@ class VendorProfileEntity extends Equatable {
     id,
     profilePhotoUrl,
     businessLogoUrl,
+    bannerImageUrl,
     businessName,
+    cuisineType,
     contactNumber,
     emailAddress,
     businessAddress,
     operatingHours,
     shortDescription,
+    cuisine,
+    priceRange,
+    ratingAverage,
     approvalStatus,
     outlets,
     certifications,
+    menuItems,
     createdAt,
     updatedAt,
   ];
@@ -88,13 +133,12 @@ class VendorProfileEntity extends Equatable {
 
 class CertificationEntity extends Equatable {
   final String id;
-  final String
-  type; // 'Halal', 'Vegetarian', 'Alcohol-Free', 'Gluten-Free', etc.
-  final String? certificateImageUrl; // URL to uploaded certificate image
+  final String type;
+  final String? certificateImageUrl;
   final String? certificateNumber;
   final DateTime? expiryDate;
-  final CertificationStatus status; // pending, verified, rejected
-  final String? verifiedBy; // Admin user ID who verified
+  final CertificationStatus status;
+  final String? verifiedBy;
   final DateTime? verifiedAt;
   final String? rejectionReason;
   final DateTime createdAt;
@@ -162,8 +206,8 @@ enum CertificationStatus { pending, verified, rejected }
 
 class OperatingHours extends Equatable {
   final String day;
-  final String? openTime; // Format: "HH:mm"
-  final String? closeTime; // Format: "HH:mm"
+  final String? openTime;
+  final String? closeTime;
   final bool isClosed;
 
   const OperatingHours({
@@ -180,6 +224,7 @@ class OperatingHours extends Equatable {
 class OutletEntity extends Equatable {
   final String id;
   final String name;
+  final String? cuisineType;
   final String address;
   final String contactNumber;
   final Map<String, OperatingHours> operatingHours;
@@ -191,6 +236,7 @@ class OutletEntity extends Equatable {
   const OutletEntity({
     required this.id,
     required this.name,
+    required this.cuisineType,
     required this.address,
     required this.contactNumber,
     required this.operatingHours,
@@ -204,6 +250,7 @@ class OutletEntity extends Equatable {
   List<Object?> get props => [
     id,
     name,
+    cuisineType,
     address,
     contactNumber,
     operatingHours,

@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:makan_mate/features/home/domain/entities/restaurant_entity.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_bloc.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_state.dart';
-import 'package:makan_mate/features/home/presentation/bloc/home_event.dart';
 
 class CategoryRestaurantPage extends StatelessWidget {
   final String categoryName;
@@ -24,15 +23,13 @@ class CategoryRestaurantPage extends StatelessWidget {
           if (state is HomeLoading) {
             return const Center(child: CircularProgressIndicator());
           } else if (state is HomeLoaded) {
-            final filteredRestaurants = state.recommendations
-                .where(
-                  (r) =>
-                      r.cuisineType?.toLowerCase() ==
-                      categoryName.toLowerCase(),
-                )
+            final filteredList = state.recommendations
+                .where((r) =>
+                    (r.vendor.cuisine ?? '').toLowerCase() ==
+                    categoryName.toLowerCase())
                 .toList();
 
-            if (filteredRestaurants.isEmpty) {
+            if (filteredList.isEmpty) {
               return Center(
                 child: Text(
                   'No $categoryName restaurants found.',
@@ -43,11 +40,9 @@ class CategoryRestaurantPage extends StatelessWidget {
 
             return ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: filteredRestaurants.length,
-              itemBuilder: (context, index) {
-                final restaurant = filteredRestaurants[index];
-                return _buildRestaurantCard(context, restaurant);
-              },
+              itemCount: filteredList.length,
+              itemBuilder: (context, index) =>
+                  _buildRestaurantCard(context, filteredList[index]),
             );
           } else if (state is HomeError) {
             return Center(child: Text(state.message));
@@ -58,13 +53,14 @@ class CategoryRestaurantPage extends StatelessWidget {
     );
   }
 
-  Widget _buildRestaurantCard(
-    BuildContext context,
-    RestaurantEntity restaurant,
-  ) {
-    final imageUrl = restaurant.imageUrl?.isNotEmpty == true
-        ? restaurant.imageUrl!
+  Widget _buildRestaurantCard(BuildContext context, RestaurantEntity r) {
+    final vendor = r.vendor;
+
+    final imageUrl = vendor.businessLogoUrl?.isNotEmpty == true
+        ? vendor.businessLogoUrl!
         : 'assets/images/logos/image-not-found.jpg';
+
+    final rating = vendor.ratingAverage?.toStringAsFixed(1) ?? '-';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -76,94 +72,71 @@ class CategoryRestaurantPage extends StatelessWidget {
             color: Colors.grey.withOpacity(0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
-          ),
+          )
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            // --- Image ---
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                imageUrl,
-                width: 80,
-                height: 80,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: 80,
-                    height: 80,
-                    color: Colors.grey[200],
-                    child: const Icon(
-                      Icons.image_not_supported,
-                      color: Colors.grey,
-                    ),
-                  );
-                },
+      child: InkWell(
+        onTap: () {
+          Navigator.pushNamed(context, '/restaurantDetail', arguments: r);
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              // --- IMAGE ---
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  imageUrl,
+                  width: 80,
+                  height: 80,
+                  fit: BoxFit.cover,
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
 
-            // --- Text info ---
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    restaurant.name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+              const SizedBox(width: 12),
+
+              // --- DETAILS ---
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      vendor.businessName,
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    restaurant.description ?? '-',
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 16),
-                      const SizedBox(width: 4),
-                      Text(
-                        restaurant.rating?.toStringAsFixed(1) ?? '-',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                    const SizedBox(height: 4),
+                    Text(
+                      vendor.shortDescription,
+                      style: TextStyle(
+                          fontSize: 14, color: Colors.grey[600]),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.star,
+                            size: 16, color: Colors.amber),
+                        const SizedBox(width: 4),
+                        Text(rating),
+                        const Spacer(),
+                        Text(
+                          vendor.priceRange ?? '-',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange,
+                          ),
                         ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        restaurant.priceRange ?? '-',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orange,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-
-            // --- Favorite Button ---
-            IconButton(
-              icon: const Icon(Icons.favorite_border, color: Colors.grey),
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Added ${restaurant.name} to favorites!'),
-                  ),
-                );
-              },
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

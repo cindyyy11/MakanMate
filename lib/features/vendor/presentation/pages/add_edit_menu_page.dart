@@ -292,29 +292,101 @@ class _AddEditMenuPageState extends State<AddEditMenuPage> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Categories Field
+                    // Category Field
                     const Text(
                       'Categories',
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                     ),
                     const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _categoryController,
-                      enabled: !isLoading,
+
+                    DropdownButtonFormField<String>(
+                      value: _categoryController.text.isEmpty ? null : _categoryController.text,
                       decoration: InputDecoration(
-                        hintText: 'e.g., Mains, Appetizers, Desserts',
+                        hintText: 'Select category',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
+                      items: [
+                        const DropdownMenuItem(value: 'Mains', child: Text('Mains')),
+                        const DropdownMenuItem(value: 'Special Deals', child: Text('Special Deals')),
+                        const DropdownMenuItem(value: 'Appetizers', child: Text('Appetizers')),
+                        const DropdownMenuItem(value: 'Desserts', child: Text('Desserts')),
+                        const DropdownMenuItem(value: 'Drinks', child: Text('Drinks')),
+                        const DropdownMenuItem(value: 'Snacks', child: Text('Snacks')),
+                        const DropdownMenuItem(value: 'Vegetarian', child: Text('Vegetarian')),
+
+                        // Divider (non-selectable)
+                        const DropdownMenuItem(
+                          enabled: false,
+                          child: Divider(),
+                        ),
+
+                        // Custom category option
+                        const DropdownMenuItem(
+                          value: 'custom',
+                          child: Text(
+                            '+ Add Custom Category',
+                            style: TextStyle(color: Colors.blue),
+                          ),
+                        ),
+                      ],
+
+                      onChanged: (value) async {
+                        if (value == 'custom') {
+                          // show dialog to input custom category
+                          final customCategory = await showDialog<String>(
+                            context: context,
+                            builder: (ctx) {
+                              final TextEditingController customCtrl = TextEditingController();
+
+                              return AlertDialog(
+                                title: const Text('Add Custom Category'),
+                                content: TextField(
+                                  controller: customCtrl,
+                                  decoration: const InputDecoration(
+                                    hintText: 'Enter your custom category',
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      if (customCtrl.text.trim().isNotEmpty) {
+                                        Navigator.pop(ctx, customCtrl.text.trim());
+                                      }
+                                    },
+                                    child: const Text('Add'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+
+                          if (customCategory != null && customCategory.isNotEmpty) {
+                            setState(() {
+                              _categoryController.text = customCategory;
+                            });
+                          }
+                        } else {
+                          // normal category selection
+                          setState(() {
+                            _categoryController.text = value!;
+                          });
+                        }
+                      },
+
                       validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter a category';
+                        if (_categoryController.text.trim().isEmpty) {
+                          return 'Please select a category';
                         }
                         return null;
                       },
                     ),
-                    const SizedBox(height: 16),
+
 
                     // Price and Available Toggle
                     Row(

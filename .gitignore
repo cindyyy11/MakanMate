@@ -56,3 +56,5 @@ python_ai_training/venv/
 # Environment files
 .env
 *.env
+
+/functions/node_modules

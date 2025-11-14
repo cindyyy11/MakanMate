@@ -66,6 +66,7 @@ class AuditLogService {
         'from': 'pending',
         'to': 'approved',
       },
+
       reason: reason,
     );
   }
@@ -135,6 +136,7 @@ class AuditLogService {
       details: {
         'action': 'warning_issued',
       },
+
       reason: reason,
     );
   }
@@ -171,8 +173,8 @@ class AuditLogService {
         'enabled': enabled,
         'rolloutPercentage': rolloutPercentage,
       },
+
       reason: 'Feature flag updated',
     );
   }
 }
-

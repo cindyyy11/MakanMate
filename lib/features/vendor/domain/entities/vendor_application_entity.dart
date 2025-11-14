@@ -8,6 +8,7 @@ class VendorApplicationEntity extends Equatable {
   final String email;
   final String businessName;
   final String businessType;
+  final String? cuisineType;
   final String? businessDescription;
   final String? phoneNumber;
   final String? address;
@@ -25,6 +26,7 @@ class VendorApplicationEntity extends Equatable {
     required this.email,
     required this.businessName,
     required this.businessType,
+    required this.cuisineType,
     this.businessDescription,
     this.phoneNumber,
     this.address,
@@ -44,6 +46,7 @@ class VendorApplicationEntity extends Equatable {
         email,
         businessName,
         businessType,
+        cuisineType,
         businessDescription,
         phoneNumber,
         address,

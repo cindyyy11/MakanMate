@@ -135,7 +135,8 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
       outlets: _outlets,
       certifications: certifications,
       createdAt: createdAt,
-      updatedAt: DateTime.now(),
+      updatedAt: DateTime.now(), 
+      cuisineType: '',
     );
 
     context.read<VendorProfileBloc>().add(UpdateVendorProfileEvent(profile));
@@ -639,7 +640,8 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                                 contactNumber: contactController.text.trim(),
                                 operatingHours: outletHours,
                                 createdAt: outlet?.createdAt ?? DateTime.now(),
-                                updatedAt: DateTime.now(),
+                                updatedAt: DateTime.now(), 
+                                cuisineType: '',
                               );
 
                               setState(() {
@@ -1436,7 +1438,7 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
             // Certifications Section
             CertificationsSection(
               certifications: profile?.certifications ?? [],
-              isEditing: canEdit,
+              isEditing: false,
               isAdmin: false, // TODO: Check if user is admin
             ),
             const SizedBox(height: 32),

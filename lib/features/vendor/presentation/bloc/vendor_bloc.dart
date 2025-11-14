@@ -35,84 +35,101 @@ class VendorBloc extends Bloc<VendorEvent, VendorState> {
     emit(VendorLoading());
     try {
       final items = await getMenuItems();
+
+      // Extract unique categories
+      final Set<String> categorySet = {};
+      for (var item in items) {
+        if (item.category.isNotEmpty) {
+          categorySet.add(item.category);
+        }
+      }
+
+      final categories = ["All", ...categorySet];
+
       emit(VendorLoaded(
         items,
-        filteredMenu: items, // Initialize with all items
+        filteredMenu: items,
+        selectedCategory: null,
+        searchQuery: '',
+        categories: categories,
       ));
     } catch (e) {
       emit(VendorError(e.toString()));
     }
   }
 
+
   void _onSearchMenu(SearchMenuEvent event, Emitter emit) {
     if (state is! VendorLoaded) return;
-    
+
     final currentState = state as VendorLoaded;
     final query = event.query.toLowerCase().trim();
-    
+
     List<MenuItemEntity> filtered = currentState.menu;
-    
+
     // Apply category filter if exists
     if (currentState.selectedCategory != null) {
-      filtered = filtered.where((item) => 
-        item.category.toLowerCase() == currentState.selectedCategory!.toLowerCase()
-      ).toList();
+      filtered = filtered.where((item) =>
+          item.category.toLowerCase() ==
+          currentState.selectedCategory!.toLowerCase()).toList();
     }
-    
+
     // Apply search query
     if (query.isNotEmpty) {
-      filtered = filtered.where((item) {
-        return item.name.toLowerCase().contains(query) ||
-               item.description.toLowerCase().contains(query) ||
-               item.category.toLowerCase().contains(query);
-      }).toList();
+      filtered = filtered.where((item) =>
+          item.name.toLowerCase().contains(query) ||
+          item.description.toLowerCase().contains(query) ||
+          item.category.toLowerCase().contains(query)).toList();
     }
-    
+
     emit(VendorLoaded(
       currentState.menu,
       filteredMenu: filtered,
       selectedCategory: currentState.selectedCategory,
       searchQuery: query,
+      categories: currentState.categories,
     ));
   }
 
   void _onFilterByCategory(FilterByCategoryEvent event, Emitter emit) {
     if (state is! VendorLoaded) return;
-    
+
     final currentState = state as VendorLoaded;
     final category = event.category;
-    
+
     List<MenuItemEntity> filtered = currentState.menu;
-    
+
     // Apply category filter
     if (category != null) {
-      filtered = filtered.where((item) => 
-        item.category.toLowerCase() == category.toLowerCase()
-      ).toList();
+      filtered = filtered.where((item) =>
+          item.category.toLowerCase() == category.toLowerCase()).toList();
     }
-    
-    // Apply search query if exists
+
+    // Apply search query
     if (currentState.searchQuery.isNotEmpty) {
-      final query = currentState.searchQuery;
-      filtered = filtered.where((item) {
-        return item.name.toLowerCase().contains(query) ||
-               item.description.toLowerCase().contains(query) ||
-               item.category.toLowerCase().contains(query);
-      }).toList();
+      final query = currentState.searchQuery.toLowerCase();
+      filtered = filtered.where((item) =>
+          item.name.toLowerCase().contains(query) ||
+          item.description.toLowerCase().contains(query) ||
+          item.category.toLowerCase().contains(query)).toList();
     }
-    
+
     emit(VendorLoaded(
       currentState.menu,
       filteredMenu: filtered,
       selectedCategory: category,
       searchQuery: currentState.searchQuery,
+      categories: currentState.categories,
     ));
   }
+
 
   Future<void> _onUploadImage(UploadImageEvent event, Emitter emit) async {
     try {
       emit(ImageUploading());
-      final imageUrl = await storageService.uploadMenuItemImage(event.imageFile);
+      final imageUrl = await storageService.uploadMenuItemImage(
+        event.imageFile,
+      );
       emit(ImageUploaded(imageUrl));
     } catch (e) {
       emit(ImageUploadError('Failed to upload image: ${e.toString()}'));
@@ -122,7 +139,7 @@ class VendorBloc extends Bloc<VendorEvent, VendorState> {
   Future<void> _onAddMenu(AddMenuEvent event, Emitter emit) async {
     try {
       String imageUrl = event.item.imageUrl;
-      
+
       // Upload image if provided
       if (event.imageFile != null) {
         emit(ImageUploading());
@@ -156,7 +173,7 @@ class VendorBloc extends Bloc<VendorEvent, VendorState> {
   Future<void> _onUpdateMenu(UpdateMenuEvent event, Emitter emit) async {
     try {
       String imageUrl = event.item.imageUrl;
-      
+
       // Upload new image if provided
       if (event.imageFile != null) {
         emit(ImageUploading());

@@ -1,12 +1,12 @@
 import '../entities/restaurant_entity.dart';
 import '../repositories/restaurant_repository.dart';
 
-class GetCategoriesUseCase {
+class GetRestaurantsUseCase {
   final RestaurantRepository repository;
 
-  GetCategoriesUseCase(this.repository);
+  GetRestaurantsUseCase(this.repository);
 
-  Future<List<RestaurantEntity>> call() async {
-    return await repository.getCategories();
+  Future<List<RestaurantEntity>> call() {
+    return repository.getRestaurants();
   }
 }

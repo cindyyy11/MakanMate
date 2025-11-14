@@ -36,7 +36,9 @@ class VendorProfileBloc extends Bloc<VendorProfileEvent, VendorProfileState> {
   }
 
   Future<void> _onLoadVendorProfile(
-      LoadVendorProfileEvent event, Emitter<VendorProfileState> emit) async {
+    LoadVendorProfileEvent event,
+    Emitter<VendorProfileState> emit,
+  ) async {
     emit(const VendorProfileLoading());
     try {
       final profile = await getVendorProfile();
@@ -57,7 +59,8 @@ class VendorProfileBloc extends Bloc<VendorProfileEvent, VendorProfileState> {
             approvalStatus: 'pending',
             outlets: [],
             createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
+            updatedAt: DateTime.now(), 
+            cuisineType: '',
           );
           await createVendorProfile(defaultProfile);
           emit(VendorPendingApprovalState(defaultProfile));
@@ -71,7 +74,9 @@ class VendorProfileBloc extends Bloc<VendorProfileEvent, VendorProfileState> {
   }
 
   Future<void> _onUpdateVendorProfile(
-      UpdateVendorProfileEvent event, Emitter<VendorProfileState> emit) async {
+    UpdateVendorProfileEvent event,
+    Emitter<VendorProfileState> emit,
+  ) async {
     final previousState = state;
     emit(VendorProfileUpdating(event.profile));
     try {
@@ -89,12 +94,14 @@ class VendorProfileBloc extends Bloc<VendorProfileEvent, VendorProfileState> {
   }
 
   Future<void> _onUploadProfilePhoto(
-      UploadProfilePhotoEvent event, Emitter<VendorProfileState> emit) async {
+    UploadProfilePhotoEvent event,
+    Emitter<VendorProfileState> emit,
+  ) async {
     emit(ImageUploading(type: 'profilePhoto'));
     try {
       final imageUrl = await storageService.uploadProfilePhoto(event.imageFile);
       emit(ImageUploaded(imageUrl: imageUrl, type: 'profilePhoto'));
-      
+
       // Update profile with new photo URL
       if (state is VendorProfileReadyState) {
         final currentProfile = (state as VendorProfileReadyState).profile;
@@ -109,9 +116,10 @@ class VendorProfileBloc extends Bloc<VendorProfileEvent, VendorProfileState> {
     }
   }
 
-
   Future<void> _onAddOutlet(
-      AddOutletEvent event, Emitter<VendorProfileState> emit) async {
+    AddOutletEvent event,
+    Emitter<VendorProfileState> emit,
+  ) async {
     if (state is VendorProfileReadyState) {
       final currentProfile = (state as VendorProfileReadyState).profile;
       final updatedOutlets = [...currentProfile.outlets, event.outlet];
@@ -124,7 +132,9 @@ class VendorProfileBloc extends Bloc<VendorProfileEvent, VendorProfileState> {
   }
 
   Future<void> _onUpdateOutlet(
-      UpdateOutletEvent event, Emitter<VendorProfileState> emit) async {
+    UpdateOutletEvent event,
+    Emitter<VendorProfileState> emit,
+  ) async {
     if (state is VendorProfileReadyState) {
       final currentProfile = (state as VendorProfileReadyState).profile;
       final updatedOutlets = currentProfile.outlets.map((outlet) {
@@ -139,7 +149,9 @@ class VendorProfileBloc extends Bloc<VendorProfileEvent, VendorProfileState> {
   }
 
   Future<void> _onDeleteOutlet(
-      DeleteOutletEvent event, Emitter<VendorProfileState> emit) async {
+    DeleteOutletEvent event,
+    Emitter<VendorProfileState> emit,
+  ) async {
     if (state is VendorProfileReadyState) {
       final currentProfile = (state as VendorProfileReadyState).profile;
       final updatedOutlets = currentProfile.outlets
@@ -154,14 +166,26 @@ class VendorProfileBloc extends Bloc<VendorProfileEvent, VendorProfileState> {
   }
 
   Map<String, OperatingHours> _getDefaultOperatingHours() {
-    final days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    final days = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
     return Map.fromEntries(
-      days.map((day) => MapEntry(day, OperatingHours(day: day, isClosed: false))),
+      days.map(
+        (day) => MapEntry(day, OperatingHours(day: day, isClosed: false)),
+      ),
     );
   }
 
   Future<void> _onAddCertification(
-      AddCertificationEvent event, Emitter<VendorProfileState> emit) async {
+    AddCertificationEvent event,
+    Emitter<VendorProfileState> emit,
+  ) async {
     if (state is VendorProfileReadyState) {
       final currentProfile = (state as VendorProfileReadyState).profile;
       String? imageUrl = event.certification.certificateImageUrl;
@@ -179,12 +203,12 @@ class VendorProfileBloc extends Bloc<VendorProfileEvent, VendorProfileState> {
         }
       }
 
-      final certificationWithImage = event.certification.copyWith(
-        certificateImageUrl: imageUrl,
-        updatedAt: DateTime.now(),
-      );
+      final certificationWithImage = event.certification;
 
-      final updatedCertifications = [...currentProfile.certifications, certificationWithImage];
+      final updatedCertifications = [
+        ...currentProfile.certifications,
+        certificationWithImage,
+      ];
       final updatedProfile = currentProfile.copyWith(
         certifications: updatedCertifications,
         updatedAt: DateTime.now(),
@@ -194,7 +218,9 @@ class VendorProfileBloc extends Bloc<VendorProfileEvent, VendorProfileState> {
   }
 
   Future<void> _onUpdateCertification(
-      UpdateCertificationEvent event, Emitter<VendorProfileState> emit) async {
+    UpdateCertificationEvent event,
+    Emitter<VendorProfileState> emit,
+  ) async {
     if (state is VendorProfileReadyState) {
       final currentProfile = (state as VendorProfileReadyState).profile;
       String? imageUrl = event.certification.certificateImageUrl;
@@ -212,13 +238,12 @@ class VendorProfileBloc extends Bloc<VendorProfileEvent, VendorProfileState> {
         }
       }
 
-      final certificationWithImage = event.certification.copyWith(
-        certificateImageUrl: imageUrl,
-        updatedAt: DateTime.now(),
-      );
+      final certificationWithImage = event.certification;
 
       final updatedCertifications = currentProfile.certifications.map((cert) {
-        return cert.id == certificationWithImage.id ? certificationWithImage : cert;
+        return cert.id == certificationWithImage.id
+            ? certificationWithImage
+            : cert;
       }).toList();
 
       final updatedProfile = currentProfile.copyWith(
@@ -230,7 +255,9 @@ class VendorProfileBloc extends Bloc<VendorProfileEvent, VendorProfileState> {
   }
 
   Future<void> _onDeleteCertification(
-      DeleteCertificationEvent event, Emitter<VendorProfileState> emit) async {
+    DeleteCertificationEvent event,
+    Emitter<VendorProfileState> emit,
+  ) async {
     if (state is VendorProfileReadyState) {
       final currentProfile = (state as VendorProfileReadyState).profile;
       final updatedCertifications = currentProfile.certifications
@@ -245,7 +272,9 @@ class VendorProfileBloc extends Bloc<VendorProfileEvent, VendorProfileState> {
   }
 
   Future<void> _onUploadCertificateImage(
-      UploadCertificateImageEvent event, Emitter<VendorProfileState> emit) async {
+    UploadCertificateImageEvent event,
+    Emitter<VendorProfileState> emit,
+  ) async {
     if (state is VendorProfileReadyState) {
       try {
         final imageUrl = await storageService.uploadCertificateImage(
@@ -256,10 +285,7 @@ class VendorProfileBloc extends Bloc<VendorProfileEvent, VendorProfileState> {
         final currentProfile = (state as VendorProfileReadyState).profile;
         final updatedCertifications = currentProfile.certifications.map((cert) {
           if (cert.id == event.certificationId) {
-            return cert.copyWith(
-              certificateImageUrl: imageUrl,
-              updatedAt: DateTime.now(),
-            );
+            return cert;
           }
           return cert;
         }).toList();
@@ -276,18 +302,14 @@ class VendorProfileBloc extends Bloc<VendorProfileEvent, VendorProfileState> {
   }
 
   Future<void> _onVerifyCertification(
-      VerifyCertificationEvent event, Emitter<VendorProfileState> emit) async {
+    VerifyCertificationEvent event,
+    Emitter<VendorProfileState> emit,
+  ) async {
     if (state is VendorProfileReadyState) {
       final currentProfile = (state as VendorProfileReadyState).profile;
       final updatedCertifications = currentProfile.certifications.map((cert) {
         if (cert.id == event.certificationId) {
-          return cert.copyWith(
-            status: CertificationStatus.verified,
-            verifiedBy: event.adminUserId,
-            verifiedAt: DateTime.now(),
-            rejectionReason: null,
-            updatedAt: DateTime.now(),
-          );
+          return cert;
         }
         return cert;
       }).toList();
@@ -301,18 +323,14 @@ class VendorProfileBloc extends Bloc<VendorProfileEvent, VendorProfileState> {
   }
 
   Future<void> _onRejectCertification(
-      RejectCertificationEvent event, Emitter<VendorProfileState> emit) async {
+    RejectCertificationEvent event,
+    Emitter<VendorProfileState> emit,
+  ) async {
     if (state is VendorProfileReadyState) {
       final currentProfile = (state as VendorProfileReadyState).profile;
       final updatedCertifications = currentProfile.certifications.map((cert) {
         if (cert.id == event.certificationId) {
-          return cert.copyWith(
-            status: CertificationStatus.rejected,
-            verifiedBy: event.adminUserId,
-            verifiedAt: DateTime.now(),
-            rejectionReason: event.reason,
-            updatedAt: DateTime.now(),
-          );
+          return cert;
         }
         return cert;
       }).toList();
@@ -325,9 +343,7 @@ class VendorProfileBloc extends Bloc<VendorProfileEvent, VendorProfileState> {
     }
   }
 
-  VendorProfileReadyState _mapProfileToState(
-    VendorProfileEntity profile,
-  ) {
+  VendorProfileReadyState _mapProfileToState(VendorProfileEntity profile) {
     final status = profile.approvalStatus.toLowerCase();
     if (status == 'approved') {
       return VendorProfileLoaded(profile);
@@ -338,4 +354,3 @@ class VendorProfileBloc extends Bloc<VendorProfileEvent, VendorProfileState> {
     }
   }
 }
-

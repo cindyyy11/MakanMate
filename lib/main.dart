@@ -16,7 +16,7 @@ import 'package:makan_mate/services/metrics_service.dart';
 // Local imports
 import 'firebase_options.dart';
 import 'core/di/injection_container.dart' as di;
-import 'features/home/presentation/bloc/home_bloc.dart';
+import 'features/home/presentation/bloc/home_bloc.dart'; 
 
 // Vendor Feature imports
 import 'features/vendor/presentation/bloc/vendor_bloc.dart';
@@ -99,6 +99,8 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => di.sl<HomeBloc>()),
         BlocProvider(create: (_) => di.sl<AuthBloc>()..add(AppStarted())),
         BlocProvider(create: (_) => di.sl<VendorBloc>()..add(LoadMenuEvent())),
+        BlocProvider(create: (_) => AuthBloc()),
+        BlocProvider(create: (_) => di.sl<MapBloc>()),
       ],
       child: MaterialApp(
         title: 'MakanMate',

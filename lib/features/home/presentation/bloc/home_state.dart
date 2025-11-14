@@ -5,26 +5,30 @@ abstract class HomeState extends Equatable {
   const HomeState();
 
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
-class HomeInitial extends HomeState {}
+class HomeInitial extends HomeState {
+  const HomeInitial();
+}
 
-class HomeLoading extends HomeState {}
+class HomeLoading extends HomeState {
+  const HomeLoading();
+}
 
 class HomeLoaded extends HomeState {
   final List<RestaurantEntity> categories;
   final List<RestaurantEntity> recommendations;
   final List<RestaurantEntity> restaurants;
 
-  HomeLoaded({
+  const HomeLoaded({
     required this.categories,
     required this.recommendations,
     required this.restaurants,
   });
 
   @override
-  List<Object> get props => [restaurants];
+  List<Object?> get props => [categories, recommendations];
 }
 
 class HomeError extends HomeState {
@@ -33,5 +37,5 @@ class HomeError extends HomeState {
   const HomeError(this.message);
 
   @override
-  List<Object> get props => [message];
+  List<Object?> get props => [message];
 }

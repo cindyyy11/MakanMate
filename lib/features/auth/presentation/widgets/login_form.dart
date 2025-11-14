@@ -32,13 +32,11 @@ class _LoginFormState extends State<LoginForm> {
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
-        if (state is Authenticated) {
-          // Navigate only when user is authenticated
-          Navigator.pushReplacementNamed(context, '/home');
-        } else if (state is AuthError) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(state.message)));
+        if (state is AuthError) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message)),
+          );
         }
       },
       child: Form(

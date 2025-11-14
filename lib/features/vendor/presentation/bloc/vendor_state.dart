@@ -8,14 +8,16 @@ class VendorLoading extends VendorState {}
 
 class VendorLoaded extends VendorState {
   final List<MenuItemEntity> menu;
-  final List<MenuItemEntity> filteredMenu; // Filtered/search results
+  final List<MenuItemEntity> filteredMenu;
   final String? selectedCategory;
+  final List<String> categories;
   final String searchQuery;
   
   VendorLoaded(
     this.menu, {
     List<MenuItemEntity>? filteredMenu,
     this.selectedCategory,
+    this.categories = const [],  
     this.searchQuery = '',
   }) : filteredMenu = filteredMenu ?? menu;
 }
