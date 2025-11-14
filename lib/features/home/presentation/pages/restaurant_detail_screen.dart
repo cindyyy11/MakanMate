@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:makan_mate/features/home/domain/entities/restaurant_entity.dart';
 
 class RestaurantDetailScreen extends StatelessWidget {
-  const RestaurantDetailScreen({super.key});
+  const RestaurantDetailScreen({super.key, required this.restaurant});
+    final RestaurantEntity restaurant;
 
   @override
   Widget build(BuildContext context) {

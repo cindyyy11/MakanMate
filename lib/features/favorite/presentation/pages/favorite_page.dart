@@ -1,11 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:makan_mate/core/widgets/bottom_nav_widget.dart';
-import 'package:makan_mate/features/map/presentation/bloc/map_bloc.dart';
-import 'package:makan_mate/features/home/presentation/pages/spin_wheel_page.dart';
-import 'package:makan_mate/features/home/presentation/pages/home_page.dart';
+import 'package:makan_mate/features/home/domain/entities/restaurant_entity.dart';
+import 'package:makan_mate/features/home/presentation/pages/restaurant_detail_page.dart';
+import 'package:makan_mate/features/home/presentation/pages/restaurant_detail_screen.dart';
+import 'package:makan_mate/features/vendor/domain/entities/vendor_profile_entity.dart';
 
 class FavoritePage extends StatelessWidget {
   const FavoritePage({Key? key}) : super(key: key);
@@ -90,93 +89,130 @@ class FavoritePage extends StatelessWidget {
               final imageUrl =
                   fav['image'] ?? 'assets/images/logos/image-not-found.jpg';
 
-              return Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
+              return GestureDetector(
+                onTap: () {
+                  final vendor = VendorProfileEntity(
+                    id: fav['id'] ?? '',
+                    businessName: fav['name'] ?? '',
+                    cuisineType: fav['cuisine'],       
+                    businessAddress: '',              
+                    contactNumber: '',                
+                    emailAddress: '',                 
+                    shortDescription: fav['description'] ?? '',
+                    businessLogoUrl: fav['image'],
+                    bannerImageUrl: null,
+                    profilePhotoUrl: null,
+                    cuisine: fav['cuisine'], 
+                    priceRange: fav['priceRange'],
+                    ratingAverage: (fav['rating'] is num)
+                        ? fav['rating'].toDouble()
+                        : double.tryParse(fav['rating']?.toString() ?? ''),
+                    approvalStatus: 'verified',
+
+                    operatingHours: const {},
+                    outlets: const [],
+                    certifications: const [],
+                    menuItems: const [],
+
+                    createdAt: DateTime.now(),
+                    updatedAt: DateTime.now(),
+                  );
+
+                  final restaurant = RestaurantEntity(
+                    vendor: vendor,
+                    menuItems: const [],
+                    cuisine: fav['cuisine'],
+                    priceRange: fav['priceRange'],
+                    ratingAverage: (fav['rating'] is num)
+                        ? fav['rating'].toDouble()
+                        : double.tryParse(fav['rating']?.toString() ?? ''),
+                  );
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => RestaurantDetailPage(restaurant: restaurant),
                     ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.network(
-                          imageUrl,
-                          width: 80,
-                          height: 80,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Container(
-                                color: Colors.grey[200],
-                                width: 80,
-                                height: 80,
-                                child: const Icon(
-                                  Icons.image_not_supported,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              fav['name'] ?? '-',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.star,
-                                  color: Colors.amber,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  fav['rating']?.toString() ?? '-',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                const Spacer(),
-                                Text(
-                                  fav['priceRange'] ?? '-',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.orange,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.delete_outline,
-                          color: Colors.grey,
-                        ),
-                        onPressed: () =>
-                            _confirmAndDelete(context, docId, fav['name']),
+                  );
+                },
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
                       ),
                     ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            imageUrl,
+                            width: 80,
+                            height: 80,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              width: 80,
+                              height: 80,
+                              color: Colors.grey[200],
+                              child: const Icon(Icons.image_not_supported),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                fav['name'] ?? '-',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  const Icon(Icons.star, color: Colors.amber, size: 16),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    fav['rating']?.toString() ?? '-',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    fav['priceRange'] ?? '-',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.orange,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline, color: Colors.grey),
+                          onPressed: () => _confirmAndDelete(context, docId, fav['name']),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -184,6 +220,8 @@ class FavoritePage extends StatelessWidget {
           );
         },
       ),
+
+
       /* bottomNavigationBar: BottomNavWidget(
         currentIndex: 1,
         onTap: (index) {

@@ -60,7 +60,7 @@ class AppRouter {
       case '/restaurantDetail':
         final restaurant = settings.arguments as RestaurantEntity;
         return MaterialPageRoute(
-          builder: (_) => RestaurantDetailScreen(),
+          builder: (_) => RestaurantDetailScreen(restaurant: restaurant,),
           settings: settings,
         );
 

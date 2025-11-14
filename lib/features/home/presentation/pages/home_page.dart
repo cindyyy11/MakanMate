@@ -9,6 +9,7 @@ import 'package:makan_mate/features/home/presentation/bloc/home_event.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_state.dart';
 import 'package:makan_mate/features/home/domain/entities/restaurant_entity.dart';
 import 'package:makan_mate/features/home/presentation/pages/categories_restaurant_page.dart';
+import 'package:makan_mate/features/home/presentation/pages/restaurant_detail_page.dart';
 import 'package:makan_mate/features/map/presentation/bloc/map_bloc.dart';
 import 'package:makan_mate/features/map/presentation/pages/map_page.dart';
 import 'package:makan_mate/features/map/presentation/bloc/map_event.dart' as map;
@@ -424,13 +425,22 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildFoodCard(RestaurantEntity food) {
-    final vendor = food.vendor;
+  final vendor = food.vendor;
 
-    final image = vendor.businessLogoUrl?.isNotEmpty == true
-        ? vendor.businessLogoUrl!
-        : 'assets/images/logos/image-not-found.jpg';
+  final image = vendor.businessLogoUrl?.isNotEmpty == true
+      ? vendor.businessLogoUrl!
+      : 'assets/images/logos/image-not-found.jpg';
 
-    return Container(
+  return GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => RestaurantDetailPage(restaurant: food),
+        ),
+      );
+    },
+    child: Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -511,8 +521,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   @override
   void dispose() {
