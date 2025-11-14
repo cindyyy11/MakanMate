@@ -350,12 +350,6 @@ Future<void> _initRecommendations() async {
   sl.registerLazySingleton(() => GetSimilarItemsUseCase(sl()));
   sl.registerLazySingleton(() => TrackInteractionUseCase(sl()));
 
-  sl.registerLazySingleton(() => GetContextualRecommendationsUseCase(sl()));
-
-  sl.registerLazySingleton(() => GetSimilarItemsUseCase(sl()));
-
-  sl.registerLazySingleton(() => TrackInteractionUseCase(sl()));
-
   // BLoC
   sl.registerFactory(
     () => RecommendationBloc(
@@ -367,6 +361,7 @@ Future<void> _initRecommendations() async {
     ),
   );
 }
+
 
 // ---------------------------
 // Admin
@@ -390,54 +385,9 @@ void _initAdmin() {
       getMetricTrend: sl(),
       getActivityLogs: sl(),
       getNotifications: sl(),
-      exportMetrics: sl(),
-      streamSystemMetrics: sl(),
-      adminRepository: sl(),
-      logger: logger,
-    ),
-  );
-
-  // Use cases
-  sl.registerLazySingleton(() => GetPlatformMetricsUseCase(sl()));
-  sl.registerLazySingleton(() => GetMetricTrendUseCase(sl()));
-  sl.registerLazySingleton(() => GetActivityLogsUseCase(sl()));
-  sl.registerLazySingleton(() => GetNotificationsUseCase(sl()));
-  sl.registerLazySingleton(() => ExportMetricsUseCase(sl()));
-  sl.registerLazySingleton(() => StreamSystemMetricsUseCase(sl()));
-  // Bloc
-  sl.registerFactory(
-    () => RecommendationBloc(
-      getRecommendations: sl(),
-      getContextualRecommendations: sl(),
-      getSimilarItems: sl(),
-      trackInteraction: sl(),
-      logger: logger,
-    ),
-  );
-}
-
-// ---------------------------
-// Admin
-// ---------------------------
-void _initAdmin() {
-  // Logger for admin
-  final logger = Logger(
-    printer: PrettyPrinter(
-      methodCount: 2,
-      errorMethodCount: 5,
-      lineLength: 80,
-      colors: true,
-      printEmojis: true,
-    ),
-  );
-
-  // BLoC
-  sl.registerFactory(
-    () => AdminBloc(
-      getPlatformMetrics: sl(),
-      getMetricTrend: sl(),
-      getActivityLogs: sl(),
-      getNotifications: sl(),
+      getDataQualityMetrics: sl(),
+      getFairnessMetrics: sl(),
+      getSeasonalTrends: sl(),
       exportMetrics: sl(),
       streamSystemMetrics: sl(),
       adminRepository: sl(),
