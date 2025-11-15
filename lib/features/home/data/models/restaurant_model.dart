@@ -15,7 +15,7 @@ class RestaurantModel {
     return RestaurantEntity(
       vendor: vendorModel.toEntity(),
       menuItems: menuItemModels.map((m) => m.toEntity()).toList(),
-      cuisine: vendorModel.cuisine,
+      cuisine: vendorModel.cuisineType,
       priceRange: vendorModel.priceRange,
       ratingAverage: vendorModel.ratingAverage,
     );

@@ -56,7 +56,7 @@ class RestaurantDetailScreen extends StatelessWidget {
 
                   const SizedBox(height: 12),
 
-                  Text("Cuisine: ${vendor.cuisine ?? '-'}"),
+                  Text("Cuisine: ${vendor.cuisineType ?? '-'}"),
                   Text("Price Range: ${vendor.priceRange ?? '-'}"),
 
                   const SizedBox(height: 12),

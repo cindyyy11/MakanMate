@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 enum VendorNavItem {
   home('Home', 'assets/icons/icon_home.png'),
   menu('Menu', 'assets/icons/icon_menu.png'),
+  analytics('Analytics', 'assets/icons/icon_voucher.png'),
   review('Review', 'assets/icons/icon_review.png'),
-  voucher('Voucher', 'assets/icons/icon_voucher.png'),
   settings('Settings', 'assets/icons/icon_settings.png');
 
   final String label;
@@ -18,9 +18,9 @@ enum VendorNavItem {
         return 0;
       case VendorNavItem.menu:
         return 1;
-      case VendorNavItem.review:
+      case VendorNavItem.analytics:
         return 2;
-      case VendorNavItem.voucher:
+      case VendorNavItem.review:
         return 3;
       case VendorNavItem.settings:
         return 4;

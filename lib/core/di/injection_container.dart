@@ -154,6 +154,11 @@ import 'package:makan_mate/features/vendor/domain/usecases/create_vendor_profile
 import 'package:makan_mate/features/vendor/presentation/bloc/vendor_profile_bloc.dart';
 import 'package:makan_mate/features/vendor/domain/usecases/get_all_approved_vendors_usecase.dart';
 import 'package:makan_mate/features/vendor/domain/usecases/get_vendor_menu_items_usecase.dart';
+import 'package:makan_mate/features/vendor/data/datasources/analytics_remote_datasource.dart';
+import 'package:makan_mate/features/vendor/data/repositories/analytics_repository_impl.dart';
+import 'package:makan_mate/features/vendor/domain/repositories/analytics_repository.dart';
+import 'package:makan_mate/features/vendor/presentation/bloc/analytics_bloc.dart';
+import 'package:makan_mate/features/vendor/data/services/promotion_analytics_service.dart';
 
 final sl = GetIt.instance;
 
@@ -774,5 +779,23 @@ void _initVendor() {
   );
   sl.registerLazySingleton<GetRestaurantDetailsUseCase>(
     () => GetRestaurantDetailsUseCase(sl()),
+  );
+
+  // Analytics Feature
+  sl.registerLazySingleton<AnalyticsRemoteDataSource>(
+    () => AnalyticsRemoteDataSourceImpl(firestore: sl()),
+  );
+
+  sl.registerLazySingleton<AnalyticsRepository>(
+    () => AnalyticsRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerFactory(
+    () => AnalyticsBloc(analyticsRepository: sl()),
+  );
+
+  // Promotion Analytics Service
+  sl.registerLazySingleton<PromotionAnalyticsService>(
+    () => PromotionAnalyticsService(firestore: sl()),
   );
 }

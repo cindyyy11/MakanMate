@@ -150,7 +150,7 @@ class _SpinWheelPageState extends State<SpinWheelPage> {
                     const Icon(Icons.image_not_supported, size: 60),
               ),
               const SizedBox(height: 12),
-              Text("Cuisine: ${vendor.cuisine ?? '-'}"),
+              Text("Cuisine: ${vendor.cuisineType ?? '-'}"),
               Text("Price Range: ${vendor.priceRange ?? '-'}"),
               const SizedBox(height: 4),
               Row(

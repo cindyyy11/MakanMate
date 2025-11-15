@@ -7,6 +7,7 @@ import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_event.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_bloc.dart';
 import 'package:makan_mate/features/map/presentation/bloc/map_bloc.dart';
+import 'package:makan_mate/features/vendor/presentation/bloc/analytics_bloc.dart';
 import 'package:makan_mate/features/vendor/presentation/bloc/promotion_bloc.dart';
 import 'package:makan_mate/features/vendor/presentation/bloc/promotion_event.dart';
 import 'package:makan_mate/features/vendor/presentation/bloc/vendor_bloc.dart';
@@ -40,6 +41,7 @@ class MakanMateApp extends StatelessWidget {
         BlocProvider(create: (_) => di.sl<AdminUserManagementBloc>()),
         BlocProvider(create: (_) => di.sl<AdminReviewManagementBloc>()),
         BlocProvider(create: (_) => di.sl<AdminVoucherManagementBloc>()),
+        BlocProvider(create: (_) => di.sl<AnalyticsBloc>()),
       ],
       child: BlocBuilder<ThemeBloc, ThemeState>(
         builder: (context, themeState) {
