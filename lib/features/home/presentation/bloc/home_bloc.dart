@@ -47,11 +47,11 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     final result = <RestaurantEntity>[];
 
     for (final r in allRestaurants) {
-      final cuisine = r.cuisine?.trim();
-      if (cuisine == null || cuisine.isEmpty) continue;
+      final cuisineType = r.cuisineType?.trim();
+      if (cuisineType == null || cuisineType.isEmpty) continue;
 
-      if (!seen.contains(cuisine)) {
-        seen.add(cuisine);
+      if (!seen.contains(cuisineType)) {
+        seen.add(cuisineType);
         result.add(r);
       }
     }

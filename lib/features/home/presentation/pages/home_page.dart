@@ -50,39 +50,26 @@ class _HomeScreenState extends State<HomeScreen> {
           return const SizedBox();
         },
       ),
-      // bottomNavigationBar: BottomNavWidget(
-      //   currentIndex: 0,
-      //   onTap: (index) {
-      //     switch (index) {
-      //       case 0:
-      //         break;
-      //       case 1:
-      //         Navigator.push(
-      //           context,
-      //           MaterialPageRoute(builder: (_) => const FavoritePage()),
-      //         );
-      //         break;
-      //       case 2:
-      //         Navigator.pushReplacement(
-      //         context,
-      //         MaterialPageRoute(
-      //           builder: (_) => BlocProvider.value(
-      //             value: context.read<MapBloc>(), 
-      //             child: const SpinWheelPage(),
-      //           ),
-      //         ),
-      //       );
-      //         break;
-      //       case 3:
-      //         ScaffoldMessenger.of(context).showSnackBar(
-      //           const SnackBar(content: Text('Profile feature coming soon!')),
-      //         );
-      //         break;
-      //     }
-      //   },
-      // ),
     );
   }
+
+  Stream<double> _watchVendorRating(String vendorId) {
+  return FirebaseFirestore.instance
+      .collection('reviews')
+      .where('vendorId', isEqualTo: vendorId)
+      .snapshots()
+      .map((snap) {
+        if (snap.docs.isEmpty) return 0.0;
+
+        double total = 0;
+        for (var doc in snap.docs) {
+          final r = (doc['rating'] as num?)?.toDouble() ?? 0.0;
+          total += r;
+        }
+
+        return total / snap.docs.length;
+      });
+}
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
@@ -282,7 +269,7 @@ class _HomeScreenState extends State<HomeScreen> {
             itemCount: categories.length,
             itemBuilder: (context, index) {
               final restaurant = categories[index];
-              final cuisine = restaurant.vendor.cuisine ?? "Unknown";
+              final cuisineType = restaurant.vendor.cuisineType ?? "Unknown";
 
               return Container(
                 width: 80,
@@ -294,7 +281,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       MaterialPageRoute(
                         builder: (_) => BlocProvider.value(
                           value: context.read<HomeBloc>(),
-                          child: CategoryRestaurantPage(categoryName: cuisine),
+                          child: CategoryRestaurantPage(categoryName: cuisineType),
                         ),
                       ),
                     );
@@ -312,7 +299,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        cuisine,
+                        cuisineType,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontSize: 12,
@@ -408,7 +395,7 @@ class _HomeScreenState extends State<HomeScreen> {
               await ref.set({
                 'id': vendor.id,
                 'name': vendor.businessName,
-                'cuisine': vendor.cuisine,
+                'cuisineType': vendor.cuisineType,
                 'rating': vendor.ratingAverage,
                 'priceRange': vendor.priceRange,
                 'image': vendor.businessLogoUrl,
@@ -422,105 +409,125 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildFoodCard(RestaurantEntity food) {
-  final vendor = food.vendor;
+    final vendor = food.vendor;
 
-  final image = vendor.businessLogoUrl?.isNotEmpty == true
-      ? vendor.businessLogoUrl!
-      : 'assets/images/logos/image-not-found.jpg';
+    final image = vendor.businessLogoUrl?.isNotEmpty == true
+        ? vendor.businessLogoUrl!
+        : 'assets/images/logos/image-not-found.jpg';
 
-  return GestureDetector(
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => RestaurantDetailPage(restaurant: food),
-        ),
-      );
-    },
-    child: Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => RestaurantDetailPage(restaurant: food),
           ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                image,
-                width: 80,
-                height: 80,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: Colors.grey[200],
-                    width: 80,
-                    height: 80,
-                    child: const Icon(Icons.image_not_supported, color: Colors.grey),
-                  );
-                },
-              ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    vendor.businessName,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    vendor.shortDescription,
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 16),
-                      const SizedBox(width: 4),
-                      Text(
-                        vendor.ratingAverage?.toStringAsFixed(1) ?? '-',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        vendor.priceRange ?? '-',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orange,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            _buildFavoriteButton(food),
           ],
         ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  image,
+                  width: 80,
+                  height: 80,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    width: 80,
+                    height: 80,
+                    color: Colors.grey[200],
+                    child: const Icon(Icons.image_not_supported),
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      vendor.businessName,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(height: 4),
+
+                    Text(
+                      vendor.shortDescription,
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    Row(
+                      children: [
+                        const Icon(Icons.star, color: Colors.amber, size: 16),
+                        const SizedBox(width: 4),
+
+                        StreamBuilder<double>(
+                          stream: _watchVendorRating(vendor.id),
+                          builder: (context, snap) {
+                            if (!snap.hasData) {
+                              return const Text("-");
+                            }
+
+                            final avg = snap.data!;
+                            return Text(
+                              avg > 0 ? avg.toStringAsFixed(1) : "-",
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            );
+                          },
+                        ),
+
+                        const Spacer(),
+
+                        Text(
+                          vendor.priceRange ?? "-",
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              _buildFavoriteButton(food),
+            ],
+          ),
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
 
   @override

@@ -25,13 +25,11 @@ class RestaurantCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       child: InkWell(
         onTap: () {
-          // Navigate to restaurant details
           Navigator.pushNamed(
             context,
             '/restaurantDetail',
             arguments: restaurant,
           );
-          print('restaurant args $restaurant');
         },
         borderRadius: UIConstants.borderRadiusMd,
         child: Column(
@@ -50,7 +48,7 @@ class RestaurantCard extends StatelessWidget {
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
 
-                  Text(vendor.cuisine ?? '-'),
+                  Text(vendor.cuisineType ?? '-'),
                   Text(vendor.priceRange ?? '-'),
 
                   Row(
@@ -80,9 +78,9 @@ class RestaurantCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  // Cuisine and price
+                  // cuisineType and price
                   Text(
-                    '${restaurant.cuisine ?? '-'} • ${restaurant.priceRange ?? '-'}',
+                    '${restaurant.cuisineType ?? '-'} • ${restaurant.priceRange ?? '-'}',
                     style: const TextStyle(
                       color: AppColors.grey600,
                       fontSize: UIConstants.fontSizeMd,
