@@ -17,6 +17,8 @@ import 'package:makan_mate/features/vendor/presentation/pages/vendor_home_page.d
 import 'package:makan_mate/features/vendor/presentation/pages/vendor_onboarding_page.dart';
 import 'package:makan_mate/features/vendor/presentation/pages/vendor_reviews_page.dart';
 import 'package:makan_mate/features/vendor/presentation/pages/vendor_settings_page.dart';
+import 'package:makan_mate/features/vendor/presentation/pages/vendor_analytics_page.dart';
+import 'package:makan_mate/features/vendor/presentation/bloc/analytics_bloc.dart';
 
 class MainScaffold extends StatefulWidget {
   final UserEntity user;
@@ -57,6 +59,7 @@ class _MainScaffoldState extends State<MainScaffold> {
           const VendorHomePage(),
           const MenuManagementPage(),
           const PromotionManagementPage(),
+          const VendorAnalyticsPage(),
           const VendorReviewsPage(),
           const VendorSettingsPage(),
         ];
@@ -80,7 +83,14 @@ class _MainScaffoldState extends State<MainScaffold> {
             icon: Icon(Icons.local_offer),
             label: 'Promotions',
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.star), label: 'Reviews'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.analytics_outlined),
+            label: 'Analytics',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.star),
+            label: 'Reviews',
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
             label: 'App Settings',

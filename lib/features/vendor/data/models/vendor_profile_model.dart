@@ -12,7 +12,6 @@ class VendorProfileModel {
   final String emailAddress;
   final String businessAddress;
   final String shortDescription;
-  final String? cuisine;
   final String? priceRange;
   final double? ratingAverage;
   final String approvalStatus;
@@ -33,7 +32,6 @@ class VendorProfileModel {
     required this.emailAddress,
     required this.businessAddress,
     required this.shortDescription,
-    this.cuisine,
     this.priceRange,
     this.ratingAverage,
     this.approvalStatus = 'pending',
@@ -55,7 +53,6 @@ class VendorProfileModel {
       'emailAddress': emailAddress,
       'businessAddress': businessAddress,
       'shortDescription': shortDescription,
-      'cuisine': cuisine,
       'priceRange': priceRange,
       'ratingAverage': ratingAverage,
       'approvalStatus': approvalStatus,
@@ -64,6 +61,43 @@ class VendorProfileModel {
             'closeTime': value.closeTime,
             'isClosed': value.isClosed,
           })),
+      'outlets': outlets.map((outlet) {
+        return {
+          'id': outlet.id,
+          'name': outlet.name,
+          'cuisineType': outlet.cuisineType,
+          'address': outlet.address,
+          'contactNumber': outlet.contactNumber,
+          'operatingHours': outlet.operatingHours.map((day, hours) {
+            return MapEntry(day, {
+              'openTime': hours.openTime,
+              'closeTime': hours.closeTime,
+              'isClosed': hours.isClosed,
+            });
+          }),
+          'latitude': outlet.latitude,
+          'longitude': outlet.longitude,
+          'createdAt': Timestamp.fromDate(outlet.createdAt),
+          'updatedAt': Timestamp.fromDate(outlet.updatedAt),
+        };
+      }).toList(),
+      'certifications': certifications.map((cert) {
+        return {
+          'id': cert.id,
+          'type': cert.type,
+          'certificateImageUrl': cert.certificateImageUrl,
+          'certificateNumber': cert.certificateNumber,
+          'expiryDate':
+              cert.expiryDate != null ? Timestamp.fromDate(cert.expiryDate!) : null,
+          'status': cert.status.name,
+          'verifiedBy': cert.verifiedBy,
+          'verifiedAt':
+              cert.verifiedAt != null ? Timestamp.fromDate(cert.verifiedAt!) : null,
+          'rejectionReason': cert.rejectionReason,
+          'createdAt': Timestamp.fromDate(cert.createdAt),
+          'updatedAt': Timestamp.fromDate(cert.updatedAt),
+        };
+      }).toList(),
     };
   }
 
@@ -86,7 +120,6 @@ class VendorProfileModel {
       emailAddress: entity.emailAddress,
       businessAddress: entity.businessAddress,
       shortDescription: entity.shortDescription,
-      cuisine: entity.cuisine,
       priceRange: entity.priceRange,
       ratingAverage: entity.ratingAverage,
       approvalStatus: entity.approvalStatus,
@@ -100,7 +133,6 @@ class VendorProfileModel {
 
   factory VendorProfileModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
-
     final operatingHoursMap = <String, OperatingHours>{};
     final rawHours = data['operatingHours'] as Map<String, dynamic>?;
 
@@ -127,13 +159,12 @@ class VendorProfileModel {
       emailAddress: data['emailAddress'] ?? '',
       businessAddress: data['businessAddress'] ?? '',
       shortDescription: data['shortDescription'] ?? '',
-      cuisine: data['cuisine'],
       priceRange: data['priceRange'],
       ratingAverage: (data['ratingAverage'] as num?)?.toDouble(),
       approvalStatus: data['approvalStatus'] ?? 'pending',
       operatingHours: operatingHoursMap,
-      outlets: const [],
-      certifications: const [],
+      outlets: _parseOutlets(data['outlets']),
+      certifications: _parseCertifications(data['certifications']),
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
@@ -152,7 +183,6 @@ class VendorProfileModel {
       businessAddress: businessAddress,
       operatingHours: operatingHours,
       shortDescription: shortDescription,
-      cuisine: cuisine,
       priceRange: priceRange,
       ratingAverage: ratingAverage,
       approvalStatus: approvalStatus,
@@ -162,4 +192,76 @@ class VendorProfileModel {
       updatedAt: updatedAt,
     );
   }
+}
+
+List<OutletEntity> _parseOutlets(dynamic raw) {
+  if (raw is! List) return const <OutletEntity>[];
+  final rawList = raw.cast<dynamic>();
+  return rawList.map((item) {
+    final data = Map<String, dynamic>.from(item as Map);
+    final rawHours = data['operatingHours'] as Map<String, dynamic>? ?? {};
+    final operatingHours = rawHours.map((day, value) {
+      final map = Map<String, dynamic>.from(value as Map);
+      return MapEntry(
+        day,
+        OperatingHours(
+          day: day,
+          openTime: map['openTime'],
+          closeTime: map['closeTime'],
+          isClosed: map['isClosed'] ?? false,
+        ),
+      );
+    });
+    return OutletEntity(
+      id: data['id'] ?? '',
+      name: data['name'] ?? '',
+      cuisineType: data['cuisineType'],
+      address: data['address'] ?? '',
+      contactNumber: data['contactNumber'] ?? '',
+      operatingHours: operatingHours,
+      latitude: (data['latitude'] as num?)?.toDouble(),
+      longitude: (data['longitude'] as num?)?.toDouble(),
+      createdAt: _timestampToDate(data['createdAt']) ?? DateTime.now(),
+      updatedAt: _timestampToDate(data['updatedAt']) ?? DateTime.now(),
+    );
+  }).toList();
+}
+
+List<CertificationEntity> _parseCertifications(dynamic raw) {
+  if (raw is! List) return const <CertificationEntity>[];
+  final rawList = raw.cast<dynamic>();
+  return rawList.map((item) {
+    final data = Map<String, dynamic>.from(item as Map);
+    return CertificationEntity(
+      id: data['id'] ?? '',
+      type: data['type'] ?? '',
+      certificateImageUrl: data['certificateImageUrl'],
+      certificateNumber: data['certificateNumber'],
+      expiryDate: _timestampToDate(data['expiryDate']),
+      status: _statusFromString(data['status']),
+      verifiedBy: data['verifiedBy'],
+      verifiedAt: _timestampToDate(data['verifiedAt']),
+      rejectionReason: data['rejectionReason'],
+      createdAt: _timestampToDate(data['createdAt']) ?? DateTime.now(),
+      updatedAt: _timestampToDate(data['updatedAt']) ?? DateTime.now(),
+    );
+  }).toList();
+}
+
+CertificationStatus _statusFromString(dynamic status) {
+  switch (status) {
+    case 'verified':
+      return CertificationStatus.verified;
+    case 'rejected':
+      return CertificationStatus.rejected;
+    case 'pending':
+    default:
+      return CertificationStatus.pending;
+  }
+}
+
+DateTime? _timestampToDate(dynamic value) {
+  if (value is Timestamp) return value.toDate();
+  if (value is DateTime) return value;
+  return null;
 }

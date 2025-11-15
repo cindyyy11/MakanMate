@@ -25,7 +25,7 @@ class CategoryRestaurantPage extends StatelessWidget {
           } else if (state is HomeLoaded) {
             final filteredList = state.recommendations
                 .where((r) =>
-                    (r.vendor.cuisine ?? '').toLowerCase() ==
+                    (r.vendor.cuisineType ?? '').toLowerCase() ==
                     categoryName.toLowerCase())
                 .toList();
 

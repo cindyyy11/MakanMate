@@ -50,7 +50,7 @@ class RestaurantCard extends StatelessWidget {
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
 
-                  Text(vendor.cuisine ?? '-'),
+                  Text(vendor.cuisineType ?? '-'),
                   Text(vendor.priceRange ?? '-'),
 
                   Row(

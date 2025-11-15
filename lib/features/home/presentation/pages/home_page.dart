@@ -284,7 +284,7 @@ class _HomeScreenState extends State<HomeScreen> {
             itemCount: categories.length,
             itemBuilder: (context, index) {
               final restaurant = categories[index];
-              final cuisine = restaurant.vendor.cuisine ?? "Unknown";
+              final cuisine = restaurant.vendor.cuisineType ?? "Unknown";
 
               return Container(
                 width: 80,
@@ -410,7 +410,7 @@ class _HomeScreenState extends State<HomeScreen> {
               await ref.set({
                 'id': vendor.id,
                 'name': vendor.businessName,
-                'cuisine': vendor.cuisine,
+                'cuisine': vendor.cuisineType,
                 'rating': vendor.ratingAverage,
                 'priceRange': vendor.priceRange,
                 'image': vendor.businessLogoUrl,

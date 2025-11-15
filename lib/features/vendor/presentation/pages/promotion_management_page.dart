@@ -117,96 +117,42 @@ class _PromotionManagementPageState extends State<PromotionManagementPage> {
                   // Filter Buttons
                   Padding(
                     padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildFilterButton(
-                                'All',
-                                selectedStatus == null,
-                                Colors.blue,
-                                () {
-                                  context.read<PromotionBloc>().add(
-                                        FilterPromotionsByStatusEvent(null),
-                                      );
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _buildFilterButton(
-                                'Pending',
-                                selectedStatus == 'pending',
-                                Colors.orange,
-                                () {
-                                  context.read<PromotionBloc>().add(
-                                        FilterPromotionsByStatusEvent('pending'),
-                                      );
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _buildFilterButton(
-                                'Active',
-                                selectedStatus == 'active',
-                                Colors.green,
-                                () {
-                                  context.read<PromotionBloc>().add(
-                                        FilterPromotionsByStatusEvent('active'),
-                                      );
-                                },
-                              ),
-                            ),
-                          ],
+                    child: DropdownButtonFormField<String>(
+                      value: selectedStatus,
+                      decoration: InputDecoration(
+                        labelText: 'Filter by status',
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(
+                            color: Colors.orange,    // <- Visible border color
+                            width: 1.5,
+                          ),
                         ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildFilterButton(
-                                'Approved',
-                                selectedStatus == 'approved',
-                                Colors.blue,
-                                () {
-                                  context.read<PromotionBloc>().add(
-                                        FilterPromotionsByStatusEvent('approved'),
-                                      );
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _buildFilterButton(
-                                'Rejected',
-                                selectedStatus == 'rejected',
-                                Colors.red,
-                                () {
-                                  context.read<PromotionBloc>().add(
-                                        FilterPromotionsByStatusEvent('rejected'),
-                                      );
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _buildFilterButton(
-                                'Expired',
-                                selectedStatus == 'expired',
-                                Colors.grey,
-                                () {
-                                  context.read<PromotionBloc>().add(
-                                        FilterPromotionsByStatusEvent('expired'),
-                                      );
-                                },
-                              ),
-                            ),
-                          ],
+                        // Border when clicked (focused)
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Colors.deepOrange, // <- Stronger focus color
+                            width: 2.0,
+                          ),
                         ),
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: null, child: Text('All')),
+                        DropdownMenuItem(value: 'pending', child: Text('Pending')),
+                        DropdownMenuItem(value: 'approved', child: Text('Approved')),
+                        DropdownMenuItem(value: 'active', child: Text('Active')),
+                        DropdownMenuItem(value: 'expired', child: Text('Expired')),
+                        DropdownMenuItem(value: 'rejected', child: Text('Rejected')),
+                        DropdownMenuItem(value: 'deactivated', child: Text('Deactivated')),
                       ],
+                      onChanged: (value) {
+                        context.read<PromotionBloc>()
+                            .add(FilterPromotionsByStatusEvent(value));
+                      },
                     ),
                   ),
+
 
                   // Create New Promotion Button
                   Padding(
