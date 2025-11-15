@@ -6,7 +6,7 @@ import 'package:makan_mate/features/ratings/data/repositories/ratings_repository
 import 'package:makan_mate/features/ratings/domain/usecases/submit_rating_usecase.dart';
 import 'package:makan_mate/features/ratings/presentation/bloc/ratings_bloc.dart';
 import 'package:makan_mate/features/ratings/presentation/pages/submit_rating_page.dart';
-import 'package:url_launcher/url_launcher.dart';   // <-- ADDED
+import 'package:url_launcher/url_launcher.dart'; // <-- ADDED
 import 'package:makan_mate/features/home/domain/entities/restaurant_entity.dart';
 import 'package:makan_mate/features/vendor/domain/entities/vendor_profile_entity.dart';
 import 'package:makan_mate/features/vendor/domain/entities/menu_item_entity.dart';
@@ -87,10 +87,8 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
         operatingHours: hours,
         latitude: (d['latitude'] as num?)?.toDouble(),
         longitude: (d['longitude'] as num?)?.toDouble(),
-        createdAt:
-            (d['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-        updatedAt:
-            (d['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+        createdAt: (d['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+        updatedAt: (d['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       );
     }).toList();
 
@@ -121,7 +119,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
   }
 
   // Map Vendor Profile
-  VendorProfileEntity _mapVendor(String vendorId, Map<String, dynamic> d){
+  VendorProfileEntity _mapVendor(String vendorId, Map<String, dynamic> d) {
     final hours = <String, OperatingHours>{};
 
     if (d['operatingHours'] != null) {
@@ -146,10 +144,10 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
       shortDescription: d['shortDescription'] ?? "",
       contactNumber: d['contactNumber'] ?? "",
       emailAddress: d['emailAddress'] ?? "",
-      cuisine: d['cuisine'],
       priceRange: d['priceRange'],
-      ratingAverage:
-          d['ratingAverage'] != null ? (d['ratingAverage'] as num).toDouble() : null,
+      ratingAverage: d['ratingAverage'] != null
+          ? (d['ratingAverage'] as num).toDouble()
+          : null,
       approvalStatus: d['approvalStatus'] ?? "verified",
       operatingHours: hours,
       createdAt: (d['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
@@ -176,9 +174,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
   @override
   Widget build(BuildContext context) {
     if (loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
@@ -204,7 +200,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
           const SizedBox(height: 24),
           _operatingHoursSection(),
           const SizedBox(height: 24),
-          _directionsSection(), 
+          _directionsSection(),
         ],
       ),
     );
@@ -220,49 +216,45 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
         height: 200,
         width: double.infinity,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Container(
-          height: 200,
-          color: Colors.grey[300],
-        ),
+        errorBuilder: (_, __, ___) =>
+            Container(height: 200, color: Colors.grey[300]),
       ),
     );
   }
 
   Widget _header() {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        vendor!.businessName,
-        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          vendor!.businessName,
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        ),
 
-      const SizedBox(height: 8),
+        const SizedBox(height: 8),
 
-      Row(
-        children: [
-          const Icon(Icons.star, size: 18, color: Colors.amber),
-          const SizedBox(width: 4),
-          Text(
-            vendor!.ratingAverage?.toStringAsFixed(1) ?? "-",
-            style: const TextStyle(fontSize: 16),
-          ),
-        ],
-      ),
+        Row(
+          children: [
+            const Icon(Icons.star, size: 18, color: Colors.amber),
+            const SizedBox(width: 4),
+            Text(
+              vendor!.ratingAverage?.toStringAsFixed(1) ?? "-",
+              style: const TextStyle(fontSize: 16),
+            ),
+          ],
+        ),
 
-      const SizedBox(height: 12),
-    ],
-  );
-}
+        const SizedBox(height: 12),
+      ],
+    );
+  }
 
   Widget _tags() {
     return Wrap(
       spacing: 10,
       children: [
-        if (vendor!.cuisineType != null)
-          _tag(vendor!.cuisineType!),
-        if (vendor!.priceRange != null)
-          _tag(vendor!.priceRange!),
+        if (vendor!.cuisineType != null) _tag(vendor!.cuisineType!),
+        if (vendor!.priceRange != null) _tag(vendor!.priceRange!),
       ],
     );
   }
@@ -292,21 +284,15 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
           backgroundColor: Colors.black,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         child: const Text(
           "Rate This Restaurant",
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
         ),
       ),
     );
   }
-
 
   Widget _tag(String text) {
     return Container(
@@ -323,12 +309,13 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Menu",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        const Text(
+          "Menu",
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 12),
 
-        if (menuItems.isEmpty)
-          const Text("No items available."),
+        if (menuItems.isEmpty) const Text("No items available."),
 
         if (menuItems.isNotEmpty)
           GridView.count(
@@ -344,33 +331,38 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
-                    BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 6)
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      blurRadius: 6,
+                    ),
                   ],
                 ),
                 child: Column(
                   children: [
                     ClipRRect(
-                      borderRadius:
-                          const BorderRadius.vertical(top: Radius.circular(12)),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(12),
+                      ),
                       child: Image.network(
                         m.imageUrl,
                         height: 100,
                         width: double.infinity,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                          height: 100,
-                          color: Colors.grey[300],
-                        ),
+                        errorBuilder: (_, __, ___) =>
+                            Container(height: 100, color: Colors.grey[300]),
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.all(8),
-                      child: Text(m.name,
-                          style:
-                              const TextStyle(fontWeight: FontWeight.w600)),
+                      child: Text(
+                        m.name,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
                     ),
-                    Text("RM ${m.price.toStringAsFixed(2)}",
-                        style: const TextStyle(color: Colors.grey)),
+                    Text(
+                      "RM ${m.price.toStringAsFixed(2)}",
+                      style: const TextStyle(color: Colors.grey),
+                    ),
                   ],
                 ),
               );
@@ -396,8 +388,10 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
 
     // Sort map entries by weekday order
     final sortedEntries = hours.entries.toList()
-      ..sort((a, b) =>
-          weekdayOrder.indexOf(a.key).compareTo(weekdayOrder.indexOf(b.key)));
+      ..sort(
+        (a, b) =>
+            weekdayOrder.indexOf(a.key).compareTo(weekdayOrder.indexOf(b.key)),
+      );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -408,8 +402,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
         ),
         const SizedBox(height: 12),
 
-        if (hours.isEmpty)
-          const Text("Operating hours not available."),
+        if (hours.isEmpty) const Text("Operating hours not available."),
 
         if (hours.isNotEmpty)
           Container(
@@ -443,7 +436,6 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
     );
   }
 
-
   // Get Directions Section (GrabFood style)
   Widget _directionsSection() {
     final address = selectedOutlet?.address ?? vendor!.businessAddress;
@@ -475,10 +467,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
             children: [
               Text(
                 address,
-                style: const TextStyle(
-                  fontSize: 15,
-                  color: Colors.black87,
-                ),
+                style: const TextStyle(fontSize: 15, color: Colors.black87),
               ),
 
               const SizedBox(height: 14),
@@ -490,10 +479,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                   icon: const Icon(Icons.directions, size: 20),
                   label: const Text(
                     "Get Directions",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green, // GrabFood green

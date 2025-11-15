@@ -94,15 +94,14 @@ class FavoritePage extends StatelessWidget {
                   final vendor = VendorProfileEntity(
                     id: fav['id'] ?? '',
                     businessName: fav['name'] ?? '',
-                    cuisineType: fav['cuisine'],       
-                    businessAddress: '',              
-                    contactNumber: '',                
-                    emailAddress: '',                 
+                    cuisineType: fav['cuisine'],
+                    businessAddress: '',
+                    contactNumber: '',
+                    emailAddress: '',
                     shortDescription: fav['description'] ?? '',
                     businessLogoUrl: fav['image'],
                     bannerImageUrl: null,
                     profilePhotoUrl: null,
-                    cuisine: fav['cuisine'], 
                     priceRange: fav['priceRange'],
                     ratingAverage: (fav['rating'] is num)
                         ? fav['rating'].toDouble()
@@ -131,7 +130,8 @@ class FavoritePage extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => RestaurantDetailPage(restaurant: restaurant),
+                      builder: (_) =>
+                          RestaurantDetailPage(restaurant: restaurant),
                     ),
                   );
                 },
@@ -183,7 +183,11 @@ class FavoritePage extends StatelessWidget {
                               const SizedBox(height: 4),
                               Row(
                                 children: [
-                                  const Icon(Icons.star, color: Colors.amber, size: 16),
+                                  const Icon(
+                                    Icons.star,
+                                    color: Colors.amber,
+                                    size: 16,
+                                  ),
                                   const SizedBox(width: 4),
                                   Text(
                                     fav['rating']?.toString() ?? '-',
@@ -208,8 +212,12 @@ class FavoritePage extends StatelessWidget {
                         ),
 
                         IconButton(
-                          icon: const Icon(Icons.delete_outline, color: Colors.grey),
-                          onPressed: () => _confirmAndDelete(context, docId, fav['name']),
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            color: Colors.grey,
+                          ),
+                          onPressed: () =>
+                              _confirmAndDelete(context, docId, fav['name']),
                         ),
                       ],
                     ),
@@ -220,7 +228,6 @@ class FavoritePage extends StatelessWidget {
           );
         },
       ),
-
 
       /* bottomNavigationBar: BottomNavWidget(
         currentIndex: 1,
