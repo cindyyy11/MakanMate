@@ -5,14 +5,14 @@ import '../../../vendor/domain/entities/vendor_profile_entity.dart';
 class RestaurantEntity {
   final VendorProfileEntity vendor;
   final List<MenuItemEntity> menuItems;
-  final String? cuisine;
+  final String? cuisineType;
   final String? priceRange;
   final double? ratingAverage;
 
   const RestaurantEntity({
     required this.vendor,
     required this.menuItems,
-    this.cuisine,
+    this.cuisineType,
     this.priceRange,
     this.ratingAverage,
   });
@@ -20,7 +20,7 @@ class RestaurantEntity {
   List<Object> get props => [
     vendor,
     menuItems,
-    cuisine ?? '',
+    cuisineType ?? '',
     priceRange ?? '',
     ratingAverage ?? 0.0,
   ];

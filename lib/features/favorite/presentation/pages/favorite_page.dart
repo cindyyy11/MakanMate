@@ -3,11 +3,28 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:makan_mate/features/home/domain/entities/restaurant_entity.dart';
 import 'package:makan_mate/features/home/presentation/pages/restaurant_detail_page.dart';
-import 'package:makan_mate/features/home/presentation/pages/restaurant_detail_screen.dart';
 import 'package:makan_mate/features/vendor/domain/entities/vendor_profile_entity.dart';
 
 class FavoritePage extends StatelessWidget {
   const FavoritePage({Key? key}) : super(key: key);
+
+  Stream<double> _watchVendorRating(String vendorId) {
+    return FirebaseFirestore.instance
+        .collection('reviews')
+        .where('vendorId', isEqualTo: vendorId)
+        .snapshots()
+        .map((snap) {
+      if (snap.docs.isEmpty) return 0.0;
+
+      double total = 0;
+      for (var doc in snap.docs) {
+        final r = (doc['rating'] as num?)?.toDouble() ?? 0.0;
+        total += r;
+      }
+
+      return total / snap.docs.length;
+    });
+  }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> _favoritesStream() {
     final user = FirebaseAuth.instance.currentUser;
@@ -23,10 +40,7 @@ class FavoritePage extends StatelessWidget {
   }
 
   Future<void> _confirmAndDelete(
-    BuildContext context,
-    String docId,
-    String name,
-  ) async {
+      BuildContext context, String docId, String name) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
@@ -34,16 +48,14 @@ class FavoritePage extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Remove Favorite'),
-        content: Text('Are you sure you want to remove $name from favorites?'),
+        content: Text('Remove $name from favorites?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Remove', style: TextStyle(color: Colors.red)),
-          ),
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Remove', style: TextStyle(color: Colors.red))),
         ],
       ),
     );
@@ -65,6 +77,7 @@ class FavoritePage extends StatelessWidget {
         title: const Text('My Favorites'),
         backgroundColor: Colors.orange,
       ),
+
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: _favoritesStream(),
         builder: (context, snapshot) {
@@ -86,15 +99,13 @@ class FavoritePage extends StatelessWidget {
             itemBuilder: (context, index) {
               final fav = docs[index].data();
               final docId = docs[index].id;
-              final imageUrl =
-                  fav['image'] ?? 'assets/images/logos/image-not-found.jpg';
 
               return GestureDetector(
                 onTap: () {
                   final vendor = VendorProfileEntity(
                     id: fav['id'] ?? '',
                     businessName: fav['name'] ?? '',
-                    cuisineType: fav['cuisine'],
+                    cuisineType: fav['cuisineType'],
                     businessAddress: '',
                     contactNumber: '',
                     emailAddress: '',
@@ -103,16 +114,12 @@ class FavoritePage extends StatelessWidget {
                     bannerImageUrl: null,
                     profilePhotoUrl: null,
                     priceRange: fav['priceRange'],
-                    ratingAverage: (fav['rating'] is num)
-                        ? fav['rating'].toDouble()
-                        : double.tryParse(fav['rating']?.toString() ?? ''),
+                    ratingAverage: null,
                     approvalStatus: 'verified',
-
                     operatingHours: const {},
                     outlets: const [],
                     certifications: const [],
                     menuItems: const [],
-
                     createdAt: DateTime.now(),
                     updatedAt: DateTime.now(),
                   );
@@ -120,107 +127,116 @@ class FavoritePage extends StatelessWidget {
                   final restaurant = RestaurantEntity(
                     vendor: vendor,
                     menuItems: const [],
-                    cuisine: fav['cuisine'],
+                    cuisineType: fav['cuisineType'],
                     priceRange: fav['priceRange'],
-                    ratingAverage: (fav['rating'] is num)
-                        ? fav['rating'].toDouble()
-                        : double.tryParse(fav['rating']?.toString() ?? ''),
+                    ratingAverage: null,
                   );
 
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) =>
-                          RestaurantDetailPage(restaurant: restaurant),
+                      builder: (_) => RestaurantDetailPage(
+                        restaurant: restaurant,
+                      ),
                     ),
                   );
                 },
+
+                // Favorite card UI
                 child: Container(
                   margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.grey.withOpacity(0.1),
-                        blurRadius: 10,
+                        blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
                     ],
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.network(
-                            imageUrl,
+                  child: Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.network(
+                          fav['image'] ?? "",
+                          width: 80,
+                          height: 80,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
                             width: 80,
                             height: 80,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                              width: 80,
-                              height: 80,
-                              color: Colors.grey[200],
-                              child: const Icon(Icons.image_not_supported),
+                            color: Colors.grey[200],
+                            child: const Icon(Icons.image_not_supported),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              fav['name'] ?? '-',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
 
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                fav['name'] ?? '-',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                            const SizedBox(height: 4),
+
+                            Row(
+                              children: [
+                                const Icon(Icons.star,
+                                    color: Colors.amber, size: 16),
+                                const SizedBox(width: 4),
+
+                                StreamBuilder<double>(
+                                  stream: _watchVendorRating(fav['id']),
+                                  builder: (context, snap) {
+                                    if (!snap.hasData) {
+                                      return const Text("-");
+                                    }
+
+                                    final avg = snap.data!;
+                                    return Text(
+                                      avg > 0 ? avg.toStringAsFixed(1) : "-",
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    );
+                                  },
                                 ),
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.star,
-                                    color: Colors.amber,
-                                    size: 16,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    fav['rating']?.toString() ?? '-',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  Text(
-                                    fav['priceRange'] ?? '-',
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.orange,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
 
-                        IconButton(
-                          icon: const Icon(
-                            Icons.delete_outline,
-                            color: Colors.grey,
-                          ),
-                          onPressed: () =>
-                              _confirmAndDelete(context, docId, fav['name']),
+                                const Spacer(),
+
+                                Text(
+                                  fav['priceRange'] ?? '-',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.orange,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline,
+                            color: Colors.grey),
+                        onPressed: () =>
+                            _confirmAndDelete(context, docId, fav['name']),
+                      ),
+                    ],
                   ),
                 ),
               );
@@ -228,43 +244,6 @@ class FavoritePage extends StatelessWidget {
           );
         },
       ),
-
-      /* bottomNavigationBar: BottomNavWidget(
-        currentIndex: 1,
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => BlocProvider.value(
-                    value: context.read<MapBloc>(),
-                    child: const HomeScreen(),
-                  ),
-                ),
-              );
-              break;
-            case 1:
-              break;
-            case 2:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => BlocProvider.value(
-                    value: context.read<MapBloc>(),
-                    child: const SpinWheelPage(),
-                  ),
-                ),
-              );
-              break;
-            case 3:
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Profile feature coming soon!')),
-              );
-              break;
-          }
-        },
-      ), */
     );
   }
 }
