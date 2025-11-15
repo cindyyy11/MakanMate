@@ -16,13 +16,39 @@ class ReviewRepositoryImpl implements ReviewRepository {
     // Query without orderBy to avoid index requirement, then sort manually
     yield [];
 
+    // Try both restaurantId and vendorId fields
+    // Start with restaurantId query
     yield* firestore
         .collection(reviewsCollection)
         .where('restaurantId', isEqualTo: restaurantId)
         .snapshots()
-        .map((snap) {
-          print('Fetched ${snap.docs.length} reviews for $restaurantId');
-          final reviews = snap.docs.map(_mapDocToEntity).toList();
+        .asyncMap((snapshot) async {
+          final allDocs = <String, DocumentSnapshot<Map<String, dynamic>>>{};
+          
+          // Add restaurantId results
+          for (var doc in snapshot.docs) {
+            allDocs[doc.id] = doc;
+          }
+          
+          // Also try vendorId query and merge results
+          try {
+            final vendorSnapshot = await firestore
+                .collection(reviewsCollection)
+                .where('vendorId', isEqualTo: restaurantId)
+                .get();
+            
+            for (var doc in vendorSnapshot.docs) {
+              allDocs[doc.id] = doc as DocumentSnapshot<Map<String, dynamic>>; // Will overwrite if duplicate
+            }
+          } catch (e) {
+            // If vendorId query fails, just use restaurantId results
+            print('Note: vendorId query failed, using restaurantId only: $e');
+          }
+          
+          print('Fetched ${allDocs.length} reviews for $restaurantId');
+          final reviews = allDocs.values
+              .map((doc) => _mapDocToEntity(doc))
+              .toList();
           reviews.sort((a, b) => b.createdAt.compareTo(a.createdAt));
           return reviews;
         });

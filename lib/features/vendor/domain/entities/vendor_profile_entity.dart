@@ -3,37 +3,22 @@ import 'package:makan_mate/features/vendor/domain/entities/menu_item_entity.dart
 
 class VendorProfileEntity extends Equatable {
   final String id;
-
-  // Images
   final String? profilePhotoUrl;
   final String? businessLogoUrl;
   final String? bannerImageUrl;
-
-  // Business info
   final String businessName;
   final String? cuisineType;
   final String contactNumber;
   final String emailAddress;
   final String businessAddress;
   final String shortDescription;
-
-  // Restaurant-level info
-  final String? cuisine;
   final String? priceRange;
   final double? ratingAverage;
-
-  // Status
   final String approvalStatus;
-
-  // Structure
   final Map<String, OperatingHours> operatingHours;
   final List<OutletEntity> outlets;
   final List<CertificationEntity> certifications;
-
-  // Optionally attach menu items here if you want
   final List<MenuItemEntity> menuItems;
-
-  // Timestamps
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? rejectedAt;
@@ -52,7 +37,6 @@ class VendorProfileEntity extends Equatable {
     required this.businessAddress,
     required this.operatingHours,
     required this.shortDescription,
-    this.cuisine,
     this.priceRange,
     this.ratingAverage,
     this.approvalStatus = 'pending',
@@ -78,7 +62,6 @@ class VendorProfileEntity extends Equatable {
     String? businessAddress,
     Map<String, OperatingHours>? operatingHours,
     String? shortDescription,
-    String? cuisine,
     String? priceRange,
     double? ratingAverage,
     String? approvalStatus,
@@ -103,7 +86,6 @@ class VendorProfileEntity extends Equatable {
       businessAddress: businessAddress ?? this.businessAddress,
       operatingHours: operatingHours ?? this.operatingHours,
       shortDescription: shortDescription ?? this.shortDescription,
-      cuisine: cuisine ?? this.cuisine,
       priceRange: priceRange ?? this.priceRange,
       ratingAverage: ratingAverage ?? this.ratingAverage,
       approvalStatus: approvalStatus ?? this.approvalStatus,
@@ -131,7 +113,6 @@ class VendorProfileEntity extends Equatable {
     businessAddress,
     operatingHours,
     shortDescription,
-    cuisine,
     priceRange,
     ratingAverage,
     approvalStatus,

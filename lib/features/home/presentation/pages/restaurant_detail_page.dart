@@ -88,10 +88,8 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
         operatingHours: hours,
         latitude: (d['latitude'] as num?)?.toDouble(),
         longitude: (d['longitude'] as num?)?.toDouble(),
-        createdAt:
-            (d['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-        updatedAt:
-            (d['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+        createdAt: (d['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+        updatedAt: (d['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       );
     }).toList();
 
@@ -145,7 +143,6 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
       shortDescription: d['shortDescription'] ?? "",
       contactNumber: d['contactNumber'] ?? "",
       emailAddress: d['emailAddress'] ?? "",
-      cuisine: d['cuisine'],
       priceRange: d['priceRange'],
       ratingAverage: d['ratingAverage'] != null
           ? (d['ratingAverage'] as num).toDouble()
@@ -264,9 +261,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
   @override
   Widget build(BuildContext context) {
     if (loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
@@ -310,10 +305,8 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
         height: 200,
         width: double.infinity,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Container(
-          height: 200,
-          color: Colors.grey[300],
-        ),
+        errorBuilder: (_, __, ___) =>
+            Container(height: 200, color: Colors.grey[300]),
       ),
     );
   }
@@ -515,10 +508,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
         ),
         child: const Text(
           "Rate This Restaurant",
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
         ),
       ),
     );
@@ -528,8 +518,10 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Menu",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        const Text(
+          "Menu",
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 12),
         if (menuItems.isEmpty) const Text("No items available."),
         if (menuItems.isNotEmpty)
@@ -562,10 +554,8 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                         height: 100,
                         width: double.infinity,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                          height: 100,
-                          color: Colors.grey[300],
-                        ),
+                        errorBuilder: (_, __, ___) =>
+                            Container(height: 100, color: Colors.grey[300]),
                       ),
                     ),
                     Padding(
@@ -604,8 +594,10 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
     ];
 
     final sortedEntries = hours.entries.toList()
-      ..sort((a, b) =>
-          weekdayOrder.indexOf(a.key).compareTo(weekdayOrder.indexOf(b.key)));
+      ..sort(
+        (a, b) =>
+            weekdayOrder.indexOf(a.key).compareTo(weekdayOrder.indexOf(b.key)),
+      );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -676,10 +668,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
             children: [
               Text(
                 address,
-                style: const TextStyle(
-                  fontSize: 15,
-                  color: Colors.black87,
-                ),
+                style: const TextStyle(fontSize: 15, color: Colors.black87),
               ),
               const SizedBox(height: 14),
               SizedBox(
@@ -689,10 +678,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                   icon: const Icon(Icons.directions, size: 20),
                   label: const Text(
                     "Get Directions",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,

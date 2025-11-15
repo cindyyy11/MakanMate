@@ -15,7 +15,7 @@ class CategorySection extends StatelessWidget {
         itemCount: categories.length,
         itemBuilder: (_, i) {
           final r = categories[i];
-          final cuisineName = r.vendor.cuisine ?? "Unknown";
+          final cuisineName = r.vendor.cuisineType ?? "Unknown";
 
           return Container(
             width: 80,

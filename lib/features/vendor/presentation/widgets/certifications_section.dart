@@ -353,6 +353,7 @@ class CertificationsSection extends StatelessWidget {
   }
 
   void _showAddCertificationDialog(BuildContext context) {
+    final bloc = context.read<VendorProfileBloc>();
     final availableTypes = [
       'Halal',
       'Vegetarian',
@@ -363,7 +364,7 @@ class CertificationsSection extends StatelessWidget {
       'Kosher',
       'Other',
     ];
-    String? selectedType;
+    String? selectedType = availableTypes.first;
     final certificateNumberController = TextEditingController();
     DateTime? expiryDate;
     File? certificateImage;
@@ -418,6 +419,7 @@ class CertificationsSection extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         DropdownButtonFormField<String>(
+                          value: selectedType,
                           decoration: const InputDecoration(
                             labelText: 'Certification Type',
                             border: OutlineInputBorder(),
@@ -559,7 +561,7 @@ class CertificationsSection extends StatelessWidget {
                                   updatedAt: DateTime.now(),
                                 );
 
-                                context.read<VendorProfileBloc>().add(
+                                bloc.add(
                                   AddCertificationEvent(
                                     certification,
                                     certificateImageFile: certificateImage,
@@ -588,6 +590,7 @@ class CertificationsSection extends StatelessWidget {
     BuildContext context,
     CertificationEntity certification,
   ) {
+    final bloc = context.read<VendorProfileBloc>();
     final availableTypes = [
       'Halal',
       'Vegetarian',
@@ -809,7 +812,7 @@ class CertificationsSection extends StatelessWidget {
                             updatedAt: DateTime.now(),
                           );
 
-                          context.read<VendorProfileBloc>().add(
+                          bloc.add(
                             UpdateCertificationEvent(
                               updatedCertification,
                               certificateImageFile: certificateImage,

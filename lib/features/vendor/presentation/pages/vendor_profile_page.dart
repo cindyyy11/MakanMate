@@ -27,6 +27,35 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
   final _imagePicker = ImagePicker();
   final Uuid _uuid = const Uuid();
 
+  // Cuisine type & price range options
+  final List<String> _cuisineTypes = const [
+    "Malay",
+    "Chinese",
+    "Indian",
+    "Halal",
+    "Western",
+    "Japanese",
+    "Korean",
+    "Thai",
+    "Middle Eastern",
+    "Fast Food",
+    "Desserts",
+    "Bakery",
+    "Vegetarian",
+    "Healthy",
+  ];
+
+  final List<String> _priceRanges = const [
+    "RM 1 – RM 10",
+    "RM 11 – RM 20",
+    "RM 21 – RM 40",
+    "RM 41 – RM 60",
+    "Above RM 60",
+  ];
+
+  String? _selectedCuisineType;
+  String? _selectedPriceRange;
+
   bool _isEditing = false;
   File? _selectedProfilePhoto;
   Map<String, OperatingHours> _operatingHours = {};
@@ -52,14 +81,21 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
   }
 
   void _populateFields(VendorProfileEntity profile) {
-    _businessNameController.text = profile.businessName;
-    _contactNumberController.text = profile.contactNumber;
-    _emailController.text = profile.emailAddress;
-    _businessAddressController.text = profile.businessAddress;
-    _shortDescriptionController.text = profile.shortDescription;
-    _operatingHours = Map.from(profile.operatingHours);
-    _outlets = List.from(profile.outlets);
-    _approvalStatus = profile.approvalStatus;
+    setState(() {
+      _businessNameController.text = profile.businessName;
+      _contactNumberController.text = profile.contactNumber;
+      _emailController.text = profile.emailAddress;
+      _businessAddressController.text = profile.businessAddress;
+      _shortDescriptionController.text = profile.shortDescription;
+      _operatingHours = Map.from(profile.operatingHours);
+      _outlets = List.from(profile.outlets);
+      _approvalStatus = profile.approvalStatus;
+
+      _selectedCuisineType =
+          (profile.cuisineType?.isEmpty ?? true) ? null : profile.cuisineType;
+      _selectedPriceRange =
+          (profile.priceRange?.isEmpty ?? true) ? null : profile.priceRange;
+    });
   }
 
   Future<void> _pickImage(ImageSource source) async {
@@ -71,7 +107,9 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
       setState(() {
         _selectedProfilePhoto = File(image.path);
       });
-      context.read<VendorProfileBloc>().add(UploadProfilePhotoEvent(_selectedProfilePhoto!));
+      context
+          .read<VendorProfileBloc>()
+          .add(UploadProfilePhotoEvent(_selectedProfilePhoto!));
     }
   }
 
@@ -111,15 +149,20 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    // Get current profile to preserve photo URL and certifications
+    // Get current profile to preserve existing data
     final currentState = context.read<VendorProfileBloc>().state;
     String? profilePhotoUrl;
     List<CertificationEntity> certifications = [];
     DateTime createdAt = DateTime.now();
+    String? existingCuisineType;
+    String? existingPriceRange;
+
     if (currentState is VendorProfileReadyState) {
       profilePhotoUrl = currentState.profile.profilePhotoUrl;
       certifications = currentState.profile.certifications;
       createdAt = currentState.profile.createdAt;
+      existingCuisineType = currentState.profile.cuisineType;
+      existingPriceRange = currentState.profile.priceRange;
     }
 
     final profile = VendorProfileEntity(
@@ -135,15 +178,24 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
       outlets: _outlets,
       certifications: certifications,
       createdAt: createdAt,
-      updatedAt: DateTime.now(), 
-      cuisineType: '',
+      updatedAt: DateTime.now(),
+      cuisineType: _selectedCuisineType ?? existingCuisineType ?? '',
+      priceRange: _selectedPriceRange ?? existingPriceRange,
     );
 
     context.read<VendorProfileBloc>().add(UpdateVendorProfileEvent(profile));
   }
 
   void _showOperatingHoursDialog() {
-    final days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    final days = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday'
+    ];
     final selectedDays = <String>{};
     String? bulkOpenTime;
     String? bulkCloseTime;
@@ -153,7 +205,8 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           child: Container(
             constraints: const BoxConstraints(maxWidth: 500, maxHeight: 700),
             child: Column(
@@ -206,7 +259,8 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                               children: [
                                 Row(
                                   children: [
-                                    Icon(Icons.edit_calendar, color: Colors.blue[700]),
+                                    Icon(Icons.edit_calendar,
+                                        color: Colors.blue[700]),
                                     const SizedBox(width: 8),
                                     const Text(
                                       'Bulk Edit',
@@ -263,7 +317,8 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                                             labelText: 'Open Time',
                                             hintText: '09:00',
                                             border: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(8),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
                                             ),
                                           ),
                                           onChanged: (value) {
@@ -278,7 +333,8 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                                             labelText: 'Close Time',
                                             hintText: '18:00',
                                             border: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(8),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
                                             ),
                                           ),
                                           onChanged: (value) {
@@ -293,7 +349,8 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                                     width: double.infinity,
                                     child: ElevatedButton.icon(
                                       icon: const Icon(Icons.check),
-                                      label: const Text('Apply to Selected Days'),
+                                      label: const Text(
+                                          'Apply to Selected Days'),
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.blue,
                                         foregroundColor: Colors.white,
@@ -303,20 +360,27 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                                           : () {
                                               setDialogState(() {
                                                 for (final day in selectedDays) {
-                                                  _operatingHours[day] = OperatingHours(
+                                                  _operatingHours[day] =
+                                                      OperatingHours(
                                                     day: day,
-                                                    openTime: bulkIsClosed ? null : bulkOpenTime,
-                                                    closeTime: bulkIsClosed ? null : bulkCloseTime,
+                                                    openTime: bulkIsClosed
+                                                        ? null
+                                                        : bulkOpenTime,
+                                                    closeTime: bulkIsClosed
+                                                        ? null
+                                                        : bulkCloseTime,
                                                     isClosed: bulkIsClosed,
                                                   );
                                                 }
                                               });
-                                              ScaffoldMessenger.of(context).showSnackBar(
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
                                                 SnackBar(
                                                   content: Text(
                                                     'Applied to ${selectedDays.length} day(s)',
                                                   ),
-                                                  duration: const Duration(seconds: 1),
+                                                  duration: const Duration(
+                                                      seconds: 1),
                                                 ),
                                               );
                                             },
@@ -362,7 +426,8 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                               children: [
                                 Padding(
                                   padding: const EdgeInsets.all(16),
-                                  child: _buildDayHoursEditor(day, hours, setDialogState),
+                                  child: _buildDayHoursEditor(
+                                      day, hours, setDialogState),
                                 ),
                               ],
                             ),
@@ -414,8 +479,10 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
 
   Widget _buildDayHoursEditor(
       String day, OperatingHours hours, StateSetter setDialogState) {
-    final openTimeController = TextEditingController(text: hours.openTime ?? '09:00');
-    final closeTimeController = TextEditingController(text: hours.closeTime ?? '18:00');
+    final openTimeController =
+        TextEditingController(text: hours.openTime ?? '09:00');
+    final closeTimeController =
+        TextEditingController(text: hours.closeTime ?? '18:00');
     bool isClosed = hours.isClosed;
 
     return StatefulBuilder(
@@ -495,15 +562,19 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
   void _showOutletDialog({OutletEntity? outlet}) {
     final isEdit = outlet != null;
     final nameController = TextEditingController(text: outlet?.name ?? '');
-    final addressController = TextEditingController(text: outlet?.address ?? '');
-    final contactController = TextEditingController(text: outlet?.contactNumber ?? '');
-    Map<String, OperatingHours> outletHours = Map.from(outlet?.operatingHours ?? {});
+    final addressController =
+        TextEditingController(text: outlet?.address ?? '');
+    final contactController =
+        TextEditingController(text: outlet?.contactNumber ?? '');
+    Map<String, OperatingHours> outletHours =
+        Map.from(outlet?.operatingHours ?? {});
 
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           child: Container(
             constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
             child: Column(
@@ -520,7 +591,8 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                   ),
                   child: Row(
                     children: [
-                      Icon(isEdit ? Icons.edit : Icons.add, color: Colors.white),
+                      Icon(isEdit ? Icons.edit : Icons.add,
+                          color: Colors.white),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -572,11 +644,19 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                         const SizedBox(height: 16),
                         const Text(
                           'Operating Hours',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16),
                         ),
                         const SizedBox(height: 8),
-                        ...['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-                            .map((day) {
+                        ...[
+                          'Monday',
+                          'Tuesday',
+                          'Wednesday',
+                          'Thursday',
+                          'Friday',
+                          'Saturday',
+                          'Sunday'
+                        ].map((day) {
                           final dayHours = outletHours[day] ??
                               OperatingHours(day: day, isClosed: true);
                           return ListTile(
@@ -586,7 +666,8 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                                 : '${dayHours.openTime} - ${dayHours.closeTime}'),
                             trailing: const Icon(Icons.chevron_right),
                             onTap: () {
-                              _showOutletHoursDialog(day, outletHours, (updatedHours) {
+                              _showOutletHoursDialog(
+                                  day, outletHours, (updatedHours) {
                                 setDialogState(() {
                                   outletHours = updatedHours;
                                 });
@@ -612,11 +693,14 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                     children: [
                       if (isEdit)
                         TextButton.icon(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          label: const Text('Delete', style: TextStyle(color: Colors.red)),
+                          icon:
+                              const Icon(Icons.delete, color: Colors.red),
+                          label: const Text('Delete',
+                              style: TextStyle(color: Colors.red)),
                           onPressed: () {
                             setState(() {
-                              _outlets.removeWhere((o) => o.id == outlet.id);
+                              _outlets.removeWhere(
+                                  (o) => o.id == outlet!.id);
                             });
                             Navigator.pop(context);
                             _saveProfile();
@@ -637,16 +721,19 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                                 id: outlet?.id ?? _uuid.v4(),
                                 name: nameController.text.trim(),
                                 address: addressController.text.trim(),
-                                contactNumber: contactController.text.trim(),
+                                contactNumber:
+                                    contactController.text.trim(),
                                 operatingHours: outletHours,
-                                createdAt: outlet?.createdAt ?? DateTime.now(),
-                                updatedAt: DateTime.now(), 
+                                createdAt:
+                                    outlet?.createdAt ?? DateTime.now(),
+                                updatedAt: DateTime.now(),
                                 cuisineType: '',
                               );
 
                               setState(() {
                                 if (isEdit) {
-                                  final index = _outlets.indexWhere((o) => o.id == outlet.id);
+                                  final index = _outlets.indexWhere(
+                                      (o) => o.id == outlet!.id);
                                   if (index != -1) {
                                     _outlets[index] = newOutlet;
                                   }
@@ -676,11 +763,16 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
     );
   }
 
-  void _showOutletHoursDialog(String day, Map<String, OperatingHours> hours,
+  void _showOutletHoursDialog(
+      String day,
+      Map<String, OperatingHours> hours,
       Function(Map<String, OperatingHours>) onUpdate) {
-    final dayHours = hours[day] ?? OperatingHours(day: day, isClosed: true);
-    final openTimeController = TextEditingController(text: dayHours.openTime ?? '09:00');
-    final closeTimeController = TextEditingController(text: dayHours.closeTime ?? '18:00');
+    final dayHours =
+        hours[day] ?? OperatingHours(day: day, isClosed: true);
+    final openTimeController =
+        TextEditingController(text: dayHours.openTime ?? '09:00');
+    final closeTimeController =
+        TextEditingController(text: dayHours.closeTime ?? '18:00');
     bool isClosed = dayHours.isClosed;
 
     showDialog(
@@ -704,12 +796,14 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                 const SizedBox(height: 16),
                 TextField(
                   controller: openTimeController,
-                  decoration: const InputDecoration(labelText: 'Open Time (HH:mm)'),
+                  decoration: const InputDecoration(
+                      labelText: 'Open Time (HH:mm)'),
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: closeTimeController,
-                  decoration: const InputDecoration(labelText: 'Close Time (HH:mm)'),
+                  decoration: const InputDecoration(
+                      labelText: 'Close Time (HH:mm)'),
                 ),
               ],
             ],
@@ -721,7 +815,8 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
             ),
             ElevatedButton(
               onPressed: () {
-                final updatedHours = Map<String, OperatingHours>.from(hours);
+                final updatedHours =
+                    Map<String, OperatingHours>.from(hours);
                 updatedHours[day] = OperatingHours(
                   day: day,
                   openTime: isClosed ? null : openTimeController.text,
@@ -818,7 +913,8 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                    const Icon(Icons.error_outline,
+                        size: 64, color: Colors.red),
                     const SizedBox(height: 16),
                     Text(state.message),
                     const SizedBox(height: 16),
@@ -942,7 +1038,8 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
           // Business Info Card
           Card(
             elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16)),
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -970,7 +1067,16 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                   const SizedBox(height: 12),
                   _buildInfoRow(Icons.email, 'Email', profile.emailAddress),
                   const SizedBox(height: 12),
-                  _buildInfoRow(Icons.location_on, 'Address', profile.businessAddress),
+                  _buildInfoRow(
+                      Icons.location_on, 'Address', profile.businessAddress),
+                  const SizedBox(height: 12),
+                  _buildInfoRow(
+                      Icons.restaurant_menu,
+                      'Cuisine Type',
+                      profile.cuisineType ?? ''),
+                  const SizedBox(height: 12),
+                  _buildInfoRow(Icons.attach_money, 'Price Range',
+                      profile.priceRange ?? ''),
                   if (profile.shortDescription.isNotEmpty) ...[
                     const SizedBox(height: 20),
                     const Divider(),
@@ -997,7 +1103,8 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
           // Operating Hours Card
           Card(
             elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16)),
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -1017,8 +1124,15 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  ...['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-                      .map((day) {
+                  ...[
+                    'Monday',
+                    'Tuesday',
+                    'Wednesday',
+                    'Thursday',
+                    'Friday',
+                    'Saturday',
+                    'Sunday'
+                  ].map((day) {
                     final hours = profile.operatingHours[day] ??
                         OperatingHours(day: day, isClosed: true);
                     return Padding(
@@ -1028,14 +1142,17 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                         children: [
                           Text(
                             day,
-                            style: const TextStyle(fontWeight: FontWeight.w500),
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w500),
                           ),
                           Text(
                             hours.isClosed
                                 ? 'Closed'
                                 : '${hours.openTime ?? 'N/A'} - ${hours.closeTime ?? 'N/A'}',
                             style: TextStyle(
-                              color: hours.isClosed ? Colors.grey : Colors.green[700],
+                              color: hours.isClosed
+                                  ? Colors.grey
+                                  : Colors.green[700],
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -1052,7 +1169,8 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
           // Outlets Card
           Card(
             elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16)),
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -1092,29 +1210,33 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                       ),
                     )
                   else
-                    ...profile.outlets.map((outlet) => Card(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          color: Colors.grey[50],
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: Colors.orange[100],
-                              child: Icon(Icons.store, color: Colors.orange[700]),
-                            ),
-                            title: Text(
-                              outlet.name,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 4),
-                                Text(outlet.address),
-                                const SizedBox(height: 4),
-                                Text(outlet.contactNumber),
-                              ],
-                            ),
+                    ...profile.outlets.map(
+                      (outlet) => Card(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        color: Colors.grey[50],
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: Colors.orange[100],
+                            child: Icon(Icons.store,
+                                color: Colors.orange[700]),
                           ),
-                        )),
+                          title: Text(
+                            outlet.name,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 4),
+                              Text(outlet.address),
+                              const SizedBox(height: 4),
+                              Text(outlet.contactNumber),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -1135,6 +1257,7 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
 
   Widget _buildEditView(VendorProfileEntity? profile, bool isLoading) {
     final bool canEdit = _isProfileEditable && !isLoading;
+    final certifications = profile?.certifications ?? [];
 
     return Form(
       key: _formKey,
@@ -1151,11 +1274,11 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                     radius: 70,
                     backgroundColor: Colors.grey[300],
                     backgroundImage: _selectedProfilePhoto != null
-                        ? FileImage(_selectedProfilePhoto!)
-                        : (profile?.profilePhotoUrl != null &&
-                                profile!.profilePhotoUrl!.isNotEmpty
-                            ? NetworkImage(profile.profilePhotoUrl!)
-                            : null) as ImageProvider?,
+                      ? FileImage(_selectedProfilePhoto!)
+                      : (profile?.profilePhotoUrl != null &&
+                              profile!.profilePhotoUrl!.isNotEmpty
+                          ? NetworkImage(profile.profilePhotoUrl!)
+                          : null),
                     child: _selectedProfilePhoto == null &&
                             (profile?.profilePhotoUrl == null ||
                                 profile!.profilePhotoUrl!.isEmpty)
@@ -1169,8 +1292,9 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                       radius: 24,
                       backgroundColor: Colors.orange,
                       child: IconButton(
-                        icon: const Icon(Icons.camera_alt, size: 24, color: Colors.white),
-                    onPressed: canEdit ? _showImagePickerDialog : null,
+                        icon: const Icon(Icons.camera_alt,
+                            size: 24, color: Colors.white),
+                        onPressed: canEdit ? _showImagePickerDialog : null,
                       ),
                     ),
                   ),
@@ -1187,35 +1311,35 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
             ),
             const SizedBox(height: 32),
 
-          if (!canEdit) ...[
-            Card(
-              color: Colors.orange[50],
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.lock, color: Colors.orange[600]),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Profile editing is available once your account is approved.',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.orange[800],
-                          height: 1.4,
+            if (!canEdit) ...[
+              Card(
+                color: Colors.orange[50],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.lock, color: Colors.orange[600]),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Profile editing is available once your account is approved.',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.orange[800],
+                            height: 1.4,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 24),
-          ],
+              const SizedBox(height: 24),
+            ],
 
             // Business Name
             _buildTextField(
@@ -1283,10 +1407,74 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
             ),
             const SizedBox(height: 20),
 
+            // Cuisine Type & Price Range side-by-side
+          Row(
+          children: [
+            Flexible(
+              flex: 1,
+              child: DropdownButtonFormField<String>(
+                isExpanded: true,
+                value: _selectedCuisineType,
+                decoration: InputDecoration(
+                  labelText: 'Cuisine Type',
+                  prefixIcon: const Icon(Icons.restaurant_menu),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                items: _cuisineTypes
+                    .map(
+                      (cuisine) => DropdownMenuItem<String>(
+                        value: cuisine,
+                        child: Text(cuisine, overflow: TextOverflow.ellipsis),
+                      ),
+                    )
+                    .toList(),
+                onChanged: canEdit
+                    ? (value) => setState(() => _selectedCuisineType = value)
+                    : null,
+                validator: (value) =>
+                    value == null ? 'Select cuisine type' : null,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Flexible(
+              flex: 1,
+              child: DropdownButtonFormField<String>(
+                isExpanded: true,
+                value: _selectedPriceRange,
+                decoration: InputDecoration(
+                  labelText: 'Price Range',
+                  prefixIcon: const Icon(Icons.attach_money),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                items: _priceRanges
+                    .map(
+                      (range) => DropdownMenuItem<String>(
+                        value: range,
+                        child: Text(range, overflow: TextOverflow.ellipsis),
+                      ),
+                    )
+                    .toList(),
+                onChanged: canEdit
+                    ? (value) => setState(() => _selectedPriceRange = value)
+                    : null,
+                validator: (value) =>
+                    value == null ? 'Select price range' : null,
+              ),
+            ),
+          ],
+        ),
+
+            const SizedBox(height: 20),
+
             // Operating Hours
             Card(
               elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -1297,7 +1485,8 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.access_time, color: Colors.orange[700]),
+                            Icon(Icons.access_time,
+                                color: Colors.orange[700]),
                             const SizedBox(width: 12),
                             const Text(
                               'Operating Hours',
@@ -1317,14 +1506,22 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    ...['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-                        .map((day) {
+                    ...[
+                      'Monday',
+                      'Tuesday',
+                      'Wednesday',
+                      'Thursday',
+                      'Friday',
+                      'Saturday',
+                      'Sunday'
+                    ].map((day) {
                       final hours = _operatingHours[day] ??
                           OperatingHours(day: day, isClosed: true);
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 8),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment:
+                              MainAxisAlignment.spaceBetween,
                           children: [
                             Text(day),
                             Text(
@@ -1332,7 +1529,9 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                                   ? 'Closed'
                                   : '${hours.openTime ?? 'N/A'} - ${hours.closeTime ?? 'N/A'}',
                               style: TextStyle(
-                                color: hours.isClosed ? Colors.grey : Colors.green[700],
+                                color: hours.isClosed
+                                    ? Colors.grey
+                                    : Colors.green[700],
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -1365,18 +1564,21 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
             // Outlets Section
             Card(
               elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment:
+                          MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.store, color: Colors.orange[700]),
+                            Icon(Icons.store,
+                                color: Colors.orange[700]),
                             const SizedBox(width: 12),
                             const Text(
                               'Outlets',
@@ -1411,24 +1613,28 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                         ),
                       )
                     else
-                      ..._outlets.map((outlet) => Card(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            color: Colors.grey[50],
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: Colors.orange[100],
-                                child: Icon(Icons.store, color: Colors.orange[700]),
-                              ),
-                              title: Text(outlet.name),
-                              subtitle: Text(outlet.address),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.edit),
-                                onPressed: canEdit
-                                    ? () => _showOutletDialog(outlet: outlet)
-                                    : null,
-                              ),
+                      ..._outlets.map(
+                        (outlet) => Card(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          color: Colors.grey[50],
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: Colors.orange[100],
+                              child: Icon(Icons.store,
+                                  color: Colors.orange[700]),
                             ),
-                          )),
+                            title: Text(outlet.name),
+                            subtitle: Text(outlet.address),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.edit),
+                              onPressed: canEdit
+                                  ? () =>
+                                      _showOutletDialog(outlet: outlet)
+                                  : null,
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -1437,8 +1643,8 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
 
             // Certifications Section
             CertificationsSection(
-              certifications: profile?.certifications ?? [],
-              isEditing: false,
+              certifications: certifications,
+              isEditing: canEdit,
               isAdmin: false, // TODO: Check if user is admin
             ),
             const SizedBox(height: 32),
@@ -1454,11 +1660,14 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                             setState(() {
                               _isEditing = false;
                             });
-                            context.read<VendorProfileBloc>().add(LoadVendorProfileEvent());
+                            context
+                                .read<VendorProfileBloc>()
+                                .add(LoadVendorProfileEvent());
                           },
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      side: BorderSide(color: Colors.orange),
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 16),
+                      side: const BorderSide(color: Colors.orange),
                     ),
                     child: const Text('Cancel'),
                   ),
@@ -1482,12 +1691,16 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                             width: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
                             ),
                           )
                         : const Text(
                             'Save Profile',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold),
                           ),
                   ),
                 ),

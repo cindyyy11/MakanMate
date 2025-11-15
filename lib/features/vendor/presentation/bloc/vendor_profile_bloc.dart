@@ -203,7 +203,11 @@ class VendorProfileBloc extends Bloc<VendorProfileEvent, VendorProfileState> {
         }
       }
 
-      final certificationWithImage = event.certification;
+      final certificationWithImage = event.certification.copyWith(
+        certificateImageUrl: imageUrl,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
 
       final updatedCertifications = [
         ...currentProfile.certifications,
@@ -238,7 +242,9 @@ class VendorProfileBloc extends Bloc<VendorProfileEvent, VendorProfileState> {
         }
       }
 
-      final certificationWithImage = event.certification;
+      final certificationWithImage = event.certification.copyWith(
+        certificateImageUrl: imageUrl ?? event.certification.certificateImageUrl,
+      );
 
       final updatedCertifications = currentProfile.certifications.map((cert) {
         return cert.id == certificationWithImage.id
