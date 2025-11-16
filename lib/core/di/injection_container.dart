@@ -35,8 +35,6 @@ import 'package:makan_mate/features/recommendations/domain/usecases/get_contextu
 import 'package:makan_mate/features/recommendations/domain/usecases/get_similar_items_usecase.dart';
 import 'package:makan_mate/features/recommendations/domain/usecases/track_interaction_usecase.dart';
 import 'package:makan_mate/features/recommendations/presentation/bloc/recommendation_bloc.dart';
-import 'package:makan_mate/features/restaurant/data/datasources/restaurant_remote_datasource.dart';
-import 'package:makan_mate/features/restaurant/data/repositories/restaurant_repository_impl.dart';
 import 'package:makan_mate/features/home/domain/repositories/restaurant_repository.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:logger/logger.dart';
@@ -110,6 +108,14 @@ import 'package:makan_mate/features/food/domain/usecases/get_food_item_usecase.d
 import 'package:makan_mate/features/food/domain/usecases/get_food_items_by_restaurant_usecase.dart';
 import 'package:makan_mate/features/food/domain/usecases/search_food_items_usecase.dart';
 import 'package:makan_mate/features/food/domain/usecases/get_popular_food_items_usecase.dart';
+import 'package:makan_mate/features/search/data/datasources/search_remote_datasource.dart';
+import 'package:makan_mate/features/search/data/repositories/search_repository_impl.dart';
+import 'package:makan_mate/features/search/domain/repositories/search_repository.dart';
+import 'package:makan_mate/features/search/domain/usecases/add_search_history_usecase.dart';
+import 'package:makan_mate/features/search/domain/usecases/get_search_history_usecase.dart';
+import 'package:makan_mate/features/search/domain/usecases/search_food_usecase.dart';
+import 'package:makan_mate/features/search/domain/usecases/search_restaurant_usecase.dart';
+import 'package:makan_mate/features/search/presentation/bloc/search_bloc.dart';
 import 'package:makan_mate/features/user/data/datasources/user_remote_datasource.dart';
 import 'package:makan_mate/features/user/data/repositories/user_repository_impl.dart';
 import 'package:makan_mate/features/user/domain/repositories/user_repository.dart';
@@ -295,7 +301,7 @@ void _initHome() {
 
   // Use cases
   sl.registerLazySingleton(() => GetRestaurantsUseCase(sl()));
-
+  
   // Bloc
   sl.registerFactory(
     () => HomeBloc(getRestaurantDetails: sl(), getRestaurants: sl()),
@@ -798,4 +804,32 @@ void _initVendor() {
   sl.registerLazySingleton<PromotionAnalyticsService>(
     () => PromotionAnalyticsService(firestore: sl()),
   );
+
+  // Restaurant DataSources
+  sl.registerLazySingleton<SearchRemoteDataSource>(() => SearchRemoteDataSourceImpl(
+        firestore: sl(),
+        firebaseAuth: sl(),
+      ));
+
+  // Repositories
+  sl.registerLazySingleton<SearchRepository>(() => SearchRepositoryImpl(
+        remoteDataSource: sl(),
+        networkInfo: sl(),
+      ));
+
+  // Usecases
+  sl.registerLazySingleton(() => SearchRestaurantUsecase(sl()));
+  sl.registerLazySingleton(() => SearchFoodUsecase(sl()));
+  sl.registerLazySingleton(() => GetSearchHistoryUsecase(sl()));
+  sl.registerLazySingleton(() => AddSearchHistoryUsecase(sl()));
+
+  // Bloc
+  sl.registerFactory(() => SearchBloc(
+        searchRestaurantUsecase: sl(),
+        searchFoodUsecase: sl(),
+        getSearchHistoryUsecase: sl(),
+        addSearchHistoryUsecase: sl(),
+      ));
+
+
 }
