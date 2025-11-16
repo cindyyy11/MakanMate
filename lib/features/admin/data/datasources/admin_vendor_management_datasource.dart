@@ -343,7 +343,6 @@ class AdminVendorManagementDataSource {
         emailAddress: model.emailAddress,
         businessAddress: model.businessAddress,
         shortDescription: model.shortDescription,
-        cuisine: model.cuisine,
         priceRange: model.priceRange,
         ratingAverage: model.ratingAverage,
         approvalStatus: model.approvalStatus,

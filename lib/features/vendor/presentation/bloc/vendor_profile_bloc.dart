@@ -188,6 +188,7 @@ class VendorProfileBloc extends Bloc<VendorProfileEvent, VendorProfileState> {
   ) async {
     if (state is VendorProfileReadyState) {
       final currentProfile = (state as VendorProfileReadyState).profile;
+      String? imageUrl = event.certification.certificateImageUrl;
 
       // Upload image if provided
       if (event.certificateImageFile != null) {
@@ -226,6 +227,7 @@ class VendorProfileBloc extends Bloc<VendorProfileEvent, VendorProfileState> {
   ) async {
     if (state is VendorProfileReadyState) {
       final currentProfile = (state as VendorProfileReadyState).profile;
+      String? imageUrl = event.certification.certificateImageUrl;
 
       // Upload new image if provided
       if (event.certificateImageFile != null) {
