@@ -96,9 +96,11 @@ import 'package:makan_mate/features/admin/domain/usecases/get_user_violation_his
 import 'package:makan_mate/features/admin/domain/usecases/delete_user_data_usecase.dart';
 import 'package:makan_mate/features/admin/presentation/bloc/admin_bloc.dart';
 import 'package:makan_mate/features/reviews/data/datasources/review_remote_datasource.dart';
+import 'package:makan_mate/features/reviews/domain/usecases/flag_review_usecase.dart';
 import 'package:makan_mate/features/reviews/domain/usecases/get_item_reviews_usecase.dart';
 import 'package:makan_mate/features/reviews/domain/usecases/get_restaurant_reviews_usecase.dart';
 import 'package:makan_mate/features/reviews/domain/usecases/submit_review_usecase.dart';
+import 'package:makan_mate/features/reviews/presentation/bloc/review_bloc.dart';
 import 'package:makan_mate/features/food/data/datasources/food_remote_datasource.dart';
 import 'package:makan_mate/features/food/data/repositories/food_repository_impl.dart';
 import 'package:makan_mate/features/food/domain/repositories/food_repository.dart';
@@ -163,29 +165,6 @@ import 'package:makan_mate/features/vendor/data/repositories/analytics_repositor
 import 'package:makan_mate/features/vendor/domain/repositories/analytics_repository.dart';
 import 'package:makan_mate/features/vendor/presentation/bloc/analytics_bloc.dart';
 import 'package:makan_mate/features/vendor/data/services/promotion_analytics_service.dart';
-import 'package:makan_mate/features/splash/data/datasources/splash_local_datasource.dart';
-import 'package:makan_mate/features/splash/data/repositories/splash_repository_impl.dart';
-import 'package:makan_mate/features/splash/domain/repositories/splash_repository.dart';
-import 'package:makan_mate/features/splash/domain/usecases/check_onboarding_status_usecase.dart';
-import 'package:makan_mate/features/splash/presentation/bloc/splash_bloc.dart';
-import 'package:makan_mate/features/onboarding/data/datasources/onboarding_local_datasource.dart';
-import 'package:makan_mate/features/onboarding/data/repositories/onboarding_repository_impl.dart';
-import 'package:makan_mate/features/onboarding/domain/repositories/onboarding_repository.dart';
-import 'package:makan_mate/features/onboarding/domain/usecases/complete_onboarding_usecase.dart';
-import 'package:makan_mate/features/onboarding/domain/usecases/get_onboarding_pages_usecase.dart';
-import 'package:makan_mate/features/onboarding/presentation/bloc/onboarding_bloc.dart';
-import 'package:makan_mate/features/tickets/data/datasources/ticket_remote_datasource.dart';
-import 'package:makan_mate/features/tickets/data/repositories/ticket_repository_impl.dart';
-import 'package:makan_mate/features/tickets/domain/repositories/ticket_repository.dart';
-import 'package:makan_mate/features/tickets/domain/usecases/get_support_tickets_usecase.dart';
-import 'package:makan_mate/features/tickets/domain/usecases/respond_to_support_ticket_usecase.dart';
-import 'package:makan_mate/features/analytics/data/datasources/user_analytics_remote_datasource.dart';
-import 'package:makan_mate/features/analytics/data/repositories/user_analytics_repository_impl.dart';
-import 'package:makan_mate/features/analytics/domain/repositories/user_analytics_repository.dart';
-import 'package:makan_mate/features/analytics/domain/usecases/get_user_analytics_usecase.dart';
-import 'package:makan_mate/core/navigation/admin_nav_controller.dart';
-import 'package:makan_mate/features/admin/presentation/bloc/admin_user_analytics_bloc.dart';
-import 'package:makan_mate/features/admin/presentation/bloc/admin_support_ticket_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -193,94 +172,14 @@ Future<void> init() async {
   // Order matters for clarity: External → Core → Features
   await _initExternal();
   await _initCore();
-  _initSplash();
-  _initOnboarding();
   _initAuth();
   _initHome();
   await _initRecommendations();
   _initAdmin();
-  _initTickets();
-  _initAnalytics();
   _initReviews();
   _initFood();
   _initUser();
   _initVendor();
-}
-
-// ---------------------------
-// Splash
-// ---------------------------
-void _initSplash() {
-  // Logger for splash
-  final logger = Logger(
-    printer: PrettyPrinter(
-      methodCount: 2,
-      errorMethodCount: 5,
-      lineLength: 80,
-      colors: true,
-      printEmojis: true,
-    ),
-  );
-
-  // BLoC
-  sl.registerFactory(
-    () => SplashBloc(
-      checkOnboardingStatus: sl(),
-      logger: logger,
-    ),
-  );
-
-  // Use cases
-  sl.registerLazySingleton(() => CheckOnboardingStatusUseCase(sl()));
-
-  // Repository
-  sl.registerLazySingleton<SplashRepository>(
-    () => SplashRepositoryImpl(localDataSource: sl()),
-  );
-
-  // Data sources
-  sl.registerLazySingleton<SplashLocalDataSource>(
-    () => SplashLocalDataSourceImpl(sharedPreferences: sl()),
-  );
-}
-
-// ---------------------------
-// Onboarding
-// ---------------------------
-void _initOnboarding() {
-  // Logger for onboarding
-  final logger = Logger(
-    printer: PrettyPrinter(
-      methodCount: 2,
-      errorMethodCount: 5,
-      lineLength: 80,
-      colors: true,
-      printEmojis: true,
-    ),
-  );
-
-  // BLoC
-  sl.registerFactory(
-    () => OnboardingBloc(
-      getOnboardingPages: sl(),
-      completeOnboarding: sl(),
-      logger: logger,
-    ),
-  );
-
-  // Use cases
-  sl.registerLazySingleton(() => GetOnboardingPagesUseCase(sl()));
-  sl.registerLazySingleton(() => CompleteOnboardingUseCase(sl()));
-
-  // Repository
-  sl.registerLazySingleton<OnboardingRepository>(
-    () => OnboardingRepositoryImpl(localDataSource: sl()),
-  );
-
-  // Data sources
-  sl.registerLazySingleton<OnboardingLocalDataSource>(
-    () => OnboardingLocalDataSourceImpl(sharedPreferences: sl()),
-  );
 }
 
 // ---------------------------
@@ -414,10 +313,6 @@ void _initHome() {
 // ---------------------------
 Future<void> _initCore() async {
   sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
-  // Admin navigation controller to enable in-shell navigation requests
-  if (!sl.isRegistered<AdminNavController>()) {
-    sl.registerLazySingleton<AdminNavController>(() => AdminNavController());
-  }
 }
 
 // ---------------------------
@@ -517,6 +412,7 @@ Future<void> _initRecommendations() async {
   );
 }
 
+
 // ---------------------------
 // Admin
 // ---------------------------
@@ -550,29 +446,21 @@ void _initAdmin() {
   );
 
   sl.registerFactory(() => AdminUserManagementBloc(repository: sl()));
+  
+  sl.registerFactory(() => AdminReviewManagementBloc(
+    getFlaggedReviewsUseCase: sl(),
+    getAllReviewsUseCase: sl(),
+    approveReviewUseCase: sl(),
+    flagReviewUseCase: sl(),
+    removeReviewUseCase: sl(),
+    dismissFlaggedReviewUseCase: sl(),
+  ));
 
-  sl.registerFactory(
-    () => AdminReviewManagementBloc(
-      getFlaggedReviewsUseCase: sl(),
-      getAllReviewsUseCase: sl(),
-      approveReviewUseCase: sl(),
-      flagReviewUseCase: sl(),
-      removeReviewUseCase: sl(),
-      dismissFlaggedReviewUseCase: sl(),
-    ),
-  );
-  sl.registerFactory(() => AdminSupportTicketBloc(
-        getSupportTickets: sl(),
-        respondToSupportTicket: sl(),
-      ));
-
-  sl.registerFactory(
-    () => AdminVoucherManagementBloc(
-      getPendingVouchersUseCase: sl(),
-      approveVoucherUseCase: sl(),
-      rejectVoucherUseCase: sl(),
-    ),
-  );
+  sl.registerFactory(() => AdminVoucherManagementBloc(
+    getPendingVouchersUseCase: sl(),
+    approveVoucherUseCase: sl(),
+    rejectVoucherUseCase: sl(),
+  ));
 
   // Use cases
   sl.registerLazySingleton(() => GetPlatformMetricsUseCase(sl()));
@@ -661,7 +549,10 @@ void _initAdmin() {
 
   // Review management repository
   sl.registerLazySingleton<AdminReviewRepository>(
-    () => AdminReviewRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
+    () => AdminReviewRepositoryImpl(
+      remoteDataSource: sl(),
+      networkInfo: sl(),
+    ),
   );
 
   // Services
@@ -675,19 +566,19 @@ void _initAdmin() {
   sl.registerLazySingleton(() => RejectVendorUseCase(sl()));
   sl.registerLazySingleton(() => GetPendingPromotionsUseCase(sl()));
   sl.registerLazySingleton(() => ApprovePromotionUseCase(sl()));
-
+  
   // Voucher management use cases
   sl.registerLazySingleton(() => GetPendingVouchersUseCase(sl(), sl()));
   sl.registerLazySingleton(() => ApproveVoucherUseCase(sl(), sl()));
   sl.registerLazySingleton(() => RejectVoucherUseCase(sl(), sl()));
-
+  
   // Review management use cases
   sl.registerLazySingleton(() => GetFlaggedReviewsUseCase(sl()));
   sl.registerLazySingleton(() => GetAllReviewsUseCase(sl()));
   sl.registerLazySingleton(() => ApproveReviewUseCase(sl()));
   sl.registerLazySingleton(() => RemoveReviewUseCase(sl()));
   sl.registerLazySingleton(() => DismissFlaggedReviewUseCase(sl()));
-
+  
   sl.registerLazySingleton(() => GetPendingMenuItemsUseCase(sl()));
   sl.registerLazySingleton(() => ApproveMenuItemUseCase(sl()));
 
@@ -703,61 +594,20 @@ void _initAdmin() {
 }
 
 // ---------------------------
-// Tickets
-// ---------------------------
-void _initTickets() {
-  final logger = Logger(
-    printer: PrettyPrinter(
-      methodCount: 2,
-      errorMethodCount: 5,
-      lineLength: 80,
-      colors: true,
-      printEmojis: true,
-    ),
-  );
-  // Data source
-  sl.registerLazySingleton<TicketRemoteDataSource>(
-    () => TicketRemoteDataSourceImpl(firestore: sl(), logger: logger),
-  );
-  // Repository
-  sl.registerLazySingleton<TicketRepository>(
-    () => TicketRepositoryImpl(remote: sl(), networkInfo: sl()),
-  );
-  // Use case
-  sl.registerLazySingleton(() => GetSupportTicketsUseCase(sl()));
-  sl.registerLazySingleton(() => RespondToSupportTicketUseCase(sl()));
-}
-
-// ---------------------------
-// User Analytics
-// ---------------------------
-void _initAnalytics() {
-  final logger = Logger(
-    printer: PrettyPrinter(
-      methodCount: 2,
-      errorMethodCount: 5,
-      lineLength: 80,
-      colors: true,
-      printEmojis: true,
-    ),
-  );
-  // Data source
-  sl.registerLazySingleton<UserAnalyticsRemoteDataSource>(
-    () => UserAnalyticsRemoteDataSourceImpl(firestore: sl(), logger: logger),
-  );
-  // Repository
-  sl.registerLazySingleton<UserAnalyticsRepository>(
-    () => UserAnalyticsRepositoryImpl(remote: sl(), networkInfo: sl()),
-  );
-  // Use case
-  sl.registerLazySingleton(() => GetUserAnalyticsUseCase(sl()));
-  // Bloc
-  sl.registerFactory(() => AdminUserAnalyticsBloc(getUserAnalytics: sl()));
-}
-// ---------------------------
 // Reviews
 // ---------------------------
 void _initReviews() {
+  // Logger for reviews
+  final logger = Logger(
+    printer: PrettyPrinter(
+      methodCount: 2,
+      errorMethodCount: 5,
+      lineLength: 80,
+      colors: true,
+      printEmojis: true,
+    ),
+  );
+
   // BLoC
   // sl.registerFactory(
   //   () => ReviewBloc(

@@ -1,3 +1,4 @@
+import 'package:dartz/dartz.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../vendor/data/models/vendor_profile_model.dart';

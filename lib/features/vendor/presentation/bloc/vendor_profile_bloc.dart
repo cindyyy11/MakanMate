@@ -59,7 +59,7 @@ class VendorProfileBloc extends Bloc<VendorProfileEvent, VendorProfileState> {
             approvalStatus: 'pending',
             outlets: [],
             createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
+            updatedAt: DateTime.now(), 
             cuisineType: '',
           );
           await createVendorProfile(defaultProfile);
@@ -188,11 +188,12 @@ class VendorProfileBloc extends Bloc<VendorProfileEvent, VendorProfileState> {
   ) async {
     if (state is VendorProfileReadyState) {
       final currentProfile = (state as VendorProfileReadyState).profile;
+      String? imageUrl = event.certification.certificateImageUrl;
 
       // Upload image if provided
       if (event.certificateImageFile != null) {
         try {
-          await storageService.uploadCertificateImage(
+          imageUrl = await storageService.uploadCertificateImage(
             event.certificateImageFile!,
             event.certification.id,
           );
@@ -226,11 +227,12 @@ class VendorProfileBloc extends Bloc<VendorProfileEvent, VendorProfileState> {
   ) async {
     if (state is VendorProfileReadyState) {
       final currentProfile = (state as VendorProfileReadyState).profile;
+      String? imageUrl = event.certification.certificateImageUrl;
 
       // Upload new image if provided
       if (event.certificateImageFile != null) {
         try {
-          await storageService.uploadCertificateImage(
+          imageUrl = await storageService.uploadCertificateImage(
             event.certificateImageFile!,
             event.certification.id,
           );
@@ -281,7 +283,7 @@ class VendorProfileBloc extends Bloc<VendorProfileEvent, VendorProfileState> {
   ) async {
     if (state is VendorProfileReadyState) {
       try {
-        await storageService.uploadCertificateImage(
+        final imageUrl = await storageService.uploadCertificateImage(
           event.imageFile,
           event.certificationId,
         );

@@ -22,14 +22,6 @@ class UserModel extends BaseModel {
   final Map<String, double> behaviorPatterns;
   final DateTime createdAt;
   final DateTime updatedAt;
-  // Admin moderation fields
-  final bool isBanned;
-  final String? banReason;
-  final DateTime? bannedAt;
-  final DateTime? bannedUntil;
-  final String? bannedBy;
-  // Optional warnings list on user doc (each: reason, warnedBy, warnedAt)
-  final List<Map<String, dynamic>> warnings;
 
   const UserModel({
     required this.id,
@@ -46,12 +38,6 @@ class UserModel extends BaseModel {
     this.behaviorPatterns = const {},
     required this.createdAt,
     required this.updatedAt,
-    this.isBanned = false,
-    this.banReason,
-    this.bannedAt,
-    this.bannedUntil,
-    this.bannedBy,
-    this.warnings = const [],
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) =>
@@ -75,12 +61,6 @@ class UserModel extends BaseModel {
       'behaviorPatterns': behaviorPatterns,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
-      'isBanned': isBanned,
-      'banReason': banReason,
-      'bannedAt': bannedAt?.toIso8601String(),
-      'bannedUntil': bannedUntil?.toIso8601String(),
-      'bannedBy': bannedBy,
-      'warnings': warnings,
     };
   }
 
@@ -146,8 +126,6 @@ class UserModel extends BaseModel {
     jsonData['spiceTolerance'] ??= 0.5;
     jsonData['culturalBackground'] ??= 'mixed';
     jsonData['behaviorPatterns'] ??= {};
-    jsonData['isBanned'] ??= false;
-    jsonData['warnings'] ??= const [];
 
     // Handle currentLocation - provide default if missing or invalid
     if (jsonData['currentLocation'] == null ||
@@ -202,8 +180,6 @@ class UserModel extends BaseModel {
       behaviorPatterns: const {},
       createdAt: user.metadata.creationTime ?? now,
       updatedAt: user.metadata.lastSignInTime ?? now,
-      isBanned: false,
-      warnings: const [],
     );
   }
 
@@ -253,12 +229,6 @@ class UserModel extends BaseModel {
     String? culturalBackground,
     Location? currentLocation,
     Map<String, double>? behaviorPatterns,
-    bool? isBanned,
-    String? banReason,
-    DateTime? bannedAt,
-    DateTime? bannedUntil,
-    String? bannedBy,
-    List<Map<String, dynamic>>? warnings,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -275,12 +245,6 @@ class UserModel extends BaseModel {
       culturalBackground: culturalBackground ?? this.culturalBackground,
       currentLocation: currentLocation ?? this.currentLocation,
       behaviorPatterns: behaviorPatterns ?? this.behaviorPatterns,
-      isBanned: isBanned ?? this.isBanned,
-      banReason: banReason ?? this.banReason,
-      bannedAt: bannedAt ?? this.bannedAt,
-      bannedUntil: bannedUntil ?? this.bannedUntil,
-      bannedBy: bannedBy ?? this.bannedBy,
-      warnings: warnings ?? this.warnings,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -301,12 +265,6 @@ class UserModel extends BaseModel {
     createdAt,
     updatedAt,
     isVerified,
-    isBanned,
-    banReason,
-    bannedAt,
-    bannedUntil,
-    bannedBy,
-    warnings,
   ];
 }
 
@@ -405,11 +363,6 @@ extension UserModelToEntity on UserModel {
       email: email,
       role: role,
       isVerified: isVerified,
-      isBanned: isBanned,
-      banReason: banReason,
-      bannedAt: bannedAt,
-      bannedUntil: bannedUntil,
-      bannedBy: bannedBy,
       profileImageUrl: profileImageUrl,
       dietaryRestrictions: dietaryRestrictions,
       cuisinePreferences: cuisinePreferences,
@@ -433,11 +386,6 @@ extension UserEntityToModel on UserEntity {
       email: email,
       role: role,
       isVerified: isVerified,
-      isBanned: isBanned,
-      banReason: banReason,
-      bannedAt: bannedAt,
-      bannedUntil: bannedUntil,
-      bannedBy: bannedBy,
       profileImageUrl: profileImageUrl,
       dietaryRestrictions: dietaryRestrictions,
       cuisinePreferences: cuisinePreferences,

@@ -19,8 +19,6 @@ import 'package:makan_mate/features/admin/presentation/widgets/creative_bottom_n
 import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_event.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:makan_mate/core/navigation/admin_nav_controller.dart';
-import 'package:makan_mate/core/di/injection_container.dart' as di;
 
 /// Main admin page with navigation drawer
 class AdminMainPage extends StatefulWidget {
@@ -33,13 +31,10 @@ class AdminMainPage extends StatefulWidget {
 class _AdminMainPageState extends State<AdminMainPage> {
   int _selectedIndex = 0;
   final PageController _pageController = PageController();
-  late final AdminNavController _navController;
 
   @override
   void initState() {
     super.initState();
-    _navController = di.sl<AdminNavController>();
-    _navController.addListener(_handleAdminNavRequest);
   }
 
   // Expose navigateToPage for external access
@@ -50,19 +45,8 @@ class _AdminMainPageState extends State<AdminMainPage> {
 
   @override
   void dispose() {
-    _navController.removeListener(_handleAdminNavRequest);
     _pageController.dispose();
     super.dispose();
-  }
-
-  void _handleAdminNavRequest() {
-    final title = _navController.targetSectionTitle;
-    if (title == null) return;
-    final idx = _navItems.indexWhere((item) => item.title == title);
-    if (idx != -1) {
-      navigateToPage(idx);
-    }
-    _navController.clear();
   }
 
   final List<AdminNavItem> _navItems = [

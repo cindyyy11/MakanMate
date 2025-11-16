@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:makan_mate/core/constants/ui_constants.dart';
 import 'package:makan_mate/core/theme/app_colors.dart';
 import 'package:makan_mate/core/theme/app_theme.dart';
@@ -24,13 +23,12 @@ import 'package:makan_mate/features/admin/presentation/widgets/quick_action_card
 import 'package:makan_mate/features/admin/presentation/widgets/metric_trend_indicator.dart';
 import 'package:makan_mate/features/admin/presentation/widgets/3d_card.dart';
 import 'package:makan_mate/features/admin/presentation/widgets/animated_background.dart';
-import 'package:makan_mate/features/admin/presentation/utils/admin_utils.dart';
+import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:makan_mate/features/auth/presentation/bloc/auth_event.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:makan_mate/core/navigation/admin_nav_controller.dart';
-import 'package:makan_mate/core/di/injection_container.dart' as di;
 
 /// Admin dashboard page showing platform analytics
 class AdminDashboardPage extends StatefulWidget {
@@ -89,37 +87,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     );
   }
 
-  Widget _buildGreeting(BuildContext context, bool isSmallScreen) {
-    final user = FirebaseAuth.instance.currentUser;
-    final userName =
-        user?.displayName ?? user?.email?.split('@').first ?? 'Admin';
-
-    return RichText(
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      text: TextSpan(
-        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-          fontWeight: FontWeight.bold,
-          color: AppColorsExtension.getTextPrimary(context),
-        ),
-        children: [
-          const TextSpan(text: 'Hi '),
-          TextSpan(
-            text: userName,
-            style: TextStyle(
-              color: AppColors.primary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          TextSpan(
-            text: ' 👋',
-            style: TextStyle(fontSize: isSmallScreen ? 18 : 22),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildEnhancedAppBar(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
@@ -159,6 +126,31 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       ),
       child: Row(
         children: [
+          // Logo/Icon with animation
+          Container(
+            padding: EdgeInsets.all(isSmallScreen ? 8 : 12),
+            decoration: BoxDecoration(
+              gradient: AppColors.primaryGradient,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.4),
+                  blurRadius: 12,
+                  spreadRadius: 0,
+                ),
+              ],
+            ),
+            child: Icon(
+              Icons.dashboard_rounded,
+              color: Colors.white,
+              size: isSmallScreen ? 20 : 28,
+            ),
+          ),
+          SizedBox(
+            width: isSmallScreen
+                ? UIConstants.spacingSm
+                : UIConstants.spacingMd,
+          ),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -166,7 +158,20 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               children: [
                 Row(
                   children: [
-                    Flexible(child: _buildGreeting(context, isSmallScreen)),
+                    Flexible(
+                      child: Text(
+                        'Admin Dashboard',
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppColorsExtension.getTextPrimary(context),
+                              letterSpacing: -0.5,
+                              fontSize: isSmallScreen ? 18 : null,
+                            ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                     if (!isSmallScreen) ...[
                       const SizedBox(width: UIConstants.spacingSm),
                       Container(
@@ -255,74 +260,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             : 0;
 
         if (isSmallScreen) {
-          // On small screens, show notifications + logout + profile + menu
-          final user = FirebaseAuth.instance.currentUser;
+          // On small screens, show theme toggle + popup menu
           return Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Notifications button
-              if (unreadCount > 0)
-                _buildActionButton(
-                  context: context,
-                  icon: Icons.notifications_rounded,
-                  tooltip: 'Notifications',
-                  badge: unreadCount,
-                  onTap: () {
-                    showModalBottomSheet(
-                      context: context,
-                      backgroundColor: Colors.transparent,
-                      isScrollControlled: true,
-                      builder: (context) =>
-                          _buildAlertsBottomSheet(context, state),
-                    );
-                  },
-                ),
-              if (unreadCount > 0) const SizedBox(width: UIConstants.spacingXs),
-              // Logout Button (Visible)
-              IconButton(
-                icon: Icon(
-                  Icons.logout_rounded,
-                  color: AppColors.error,
-                  size: 22,
-                ),
-                tooltip: 'Logout',
-                onPressed: () => AdminUtils.showLogoutDialog(context),
-                style: IconButton.styleFrom(
-                  backgroundColor: AppColors.error.withOpacity(0.1),
-                  padding: const EdgeInsets.all(10),
-                ),
-              ),
-              const SizedBox(width: UIConstants.spacingXs),
-              // Profile Button (Beside menu)
-              Tooltip(
-                message: 'View Profile',
-                child: GestureDetector(
-                  onTap: () => Navigator.of(context).pushNamed('/adminProfile'),
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.primary, width: 2),
-                    ),
-                    child: CircleAvatar(
-                      radius: 16,
-                      backgroundImage: user?.photoURL != null
-                          ? NetworkImage(user!.photoURL!)
-                          : null,
-                      backgroundColor: AppColors.primary.withOpacity(0.1),
-                      child: user?.photoURL == null
-                          ? Icon(
-                              Icons.person_rounded,
-                              size: 18,
-                              color: AppColors.primary,
-                            )
-                          : null,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: UIConstants.spacingXs),
-              // Menu for less important actions (Refresh, Export, Theme)
+              // Theme Toggle Button
+              _buildThemeToggleButton(context, isDark),
+              const SizedBox(width: UIConstants.spacingSm),
+              // Popup Menu Button
               PopupMenuButton<String>(
                 icon: Container(
                   padding: const EdgeInsets.all(8),
@@ -361,13 +306,17 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                         builder: (context) => _buildExportBottomSheet(context),
                       );
                       break;
-                    case 'theme':
-                      // Theme toggle
-                      final currentMode = Theme.of(context).brightness;
-                      final newMode = currentMode == Brightness.dark
-                          ? ThemeMode.light
-                          : ThemeMode.dark;
-                      context.read<ThemeBloc>().add(ThemeChanged(newMode));
+                    case 'notifications':
+                      showModalBottomSheet(
+                        context: context,
+                        backgroundColor: Colors.transparent,
+                        isScrollControlled: true,
+                        builder: (context) =>
+                            _buildAlertsBottomSheet(context, state),
+                      );
+                      break;
+                    case 'logout':
+                      _showLogoutDialog(context);
                       break;
                   }
                 },
@@ -401,18 +350,61 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     ),
                   ),
                   PopupMenuItem(
-                    value: 'theme',
+                    value: 'notifications',
+                    child: Row(
+                      children: [
+                        Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Icon(
+                              Icons.notifications_rounded,
+                              size: 20,
+                              color: AppColorsExtension.getTextPrimary(context),
+                            ),
+                            if (unreadCount > 0)
+                              Positioned(
+                                right: -4,
+                                top: -4,
+                                child: Container(
+                                  padding: const EdgeInsets.all(2),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.error,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 12,
+                                    minHeight: 12,
+                                  ),
+                                  child: Text(
+                                    unreadCount > 9 ? '9+' : '$unreadCount',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(width: UIConstants.spacingSm),
+                        const Text('Notifications'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                    value: 'logout',
                     child: Row(
                       children: [
                         Icon(
-                          isDark
-                              ? Icons.light_mode_rounded
-                              : Icons.dark_mode_rounded,
+                          Icons.logout_rounded,
                           size: 20,
-                          color: AppColorsExtension.getTextPrimary(context),
+                          color: AppColors.error,
                         ),
                         const SizedBox(width: UIConstants.spacingSm),
-                        Text(isDark ? 'Light Mode' : 'Dark Mode'),
+                        const Text('Logout'),
                       ],
                     ),
                   ),
@@ -422,86 +414,62 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           );
         }
 
-        // On larger screens, show logout + profile + menu
-        final user = FirebaseAuth.instance.currentUser;
+        // On larger screens, show all buttons
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Notifications button (visible if there are notifications)
-            if (unreadCount > 0) ...[
-              _buildActionButton(
-                context: context,
-                icon: Icons.notifications_rounded,
-                tooltip: 'Alerts & Notifications',
-                badge: unreadCount,
-                onTap: () {
-                  final screenWidth = MediaQuery.of(context).size.width;
-                  if (screenWidth > 600) {
-                    Scaffold.of(context).openEndDrawer();
-                  } else {
-                    showModalBottomSheet(
-                      context: context,
-                      backgroundColor: Colors.transparent,
-                      isScrollControlled: true,
-                      builder: (context) =>
-                          _buildAlertsBottomSheet(context, state),
-                    );
-                  }
-                },
-              ),
-              const SizedBox(width: UIConstants.spacingXs),
-            ],
-            // Logout Button (Visible and prominent)
-            OutlinedButton.icon(
-              onPressed: () => AdminUtils.showLogoutDialog(context),
-              icon: const Icon(Icons.logout_rounded, size: 18),
-              label: const Text(
-                'Logout',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-              ),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                foregroundColor: AppColors.error,
-                side: BorderSide(color: AppColors.error, width: 1.5),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
+            // Refresh button
+            _buildActionButton(
+              context: context,
+              icon: Icons.refresh_rounded,
+              tooltip: 'Refresh',
+              onTap: () {
+                context.read<AdminBloc>().add(const LoadPlatformMetrics());
+              },
             ),
             const SizedBox(width: UIConstants.spacingXs),
-            // Profile Button (Beside menu)
-            Tooltip(
-              message: 'View Profile',
-              child: GestureDetector(
-                onTap: () => Navigator.of(context).pushNamed('/adminProfile'),
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.primary, width: 2),
-                  ),
-                  child: CircleAvatar(
-                    radius: 18,
-                    backgroundImage: user?.photoURL != null
-                        ? NetworkImage(user!.photoURL!)
-                        : null,
-                    backgroundColor: AppColors.primary.withOpacity(0.1),
-                    child: user?.photoURL == null
-                        ? Icon(
-                            Icons.person_rounded,
-                            size: 20,
-                            color: AppColors.primary,
-                          )
-                        : null,
-                  ),
-                ),
-              ),
+            // Export button
+            _buildActionButton(
+              context: context,
+              icon: Icons.download_rounded,
+              tooltip: 'Export Data',
+              onTap: () {
+                showModalBottomSheet(
+                  context: context,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => _buildExportBottomSheet(context),
+                );
+              },
             ),
             const SizedBox(width: UIConstants.spacingXs),
-            // Menu for less important actions (Refresh, Export, Theme)
+            // Alerts button with badge
+            _buildActionButton(
+              context: context,
+              icon: unreadCount > 0
+                  ? Icons.notifications_rounded
+                  : Icons.notifications_outlined,
+              tooltip: 'Alerts & Notifications',
+              badge: unreadCount > 0 ? unreadCount : null,
+              onTap: () {
+                final screenWidth = MediaQuery.of(context).size.width;
+                if (screenWidth > 600) {
+                  Scaffold.of(context).openEndDrawer();
+                } else {
+                  showModalBottomSheet(
+                    context: context,
+                    backgroundColor: Colors.transparent,
+                    isScrollControlled: true,
+                    builder: (context) =>
+                        _buildAlertsBottomSheet(context, state),
+                  );
+                }
+              },
+            ),
+            const SizedBox(width: UIConstants.spacingXs),
+            // Theme toggle button
+            _buildThemeToggleButton(context, isDark),
+            const SizedBox(width: UIConstants.spacingXs),
+            // More menu with logout
             PopupMenuButton<String>(
               icon: Container(
                 padding: const EdgeInsets.all(8),
@@ -527,75 +495,117 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 borderRadius: UIConstants.borderRadiusMd,
               ),
               onSelected: (value) {
-                switch (value) {
-                  case 'refresh':
-                    context.read<AdminBloc>().add(const LoadPlatformMetrics());
-                    break;
-                  case 'export':
-                    showModalBottomSheet(
-                      context: context,
-                      backgroundColor: Colors.transparent,
-                      builder: (context) => _buildExportBottomSheet(context),
-                    );
-                    break;
-                  case 'theme':
-                    // Theme toggle
-                    final currentMode = Theme.of(context).brightness;
-                    final newMode = currentMode == Brightness.dark
-                        ? ThemeMode.light
-                        : ThemeMode.dark;
-                    context.read<ThemeBloc>().add(ThemeChanged(newMode));
-                    break;
+                if (value == 'logout') {
+                  _showLogoutDialog(context);
                 }
               },
               itemBuilder: (context) => [
                 PopupMenuItem(
-                  value: 'refresh',
+                  value: 'logout',
                   child: Row(
                     children: [
                       Icon(
-                        Icons.refresh_rounded,
+                        Icons.logout_rounded,
                         size: 20,
-                        color: AppColorsExtension.getTextPrimary(context),
+                        color: AppColors.error,
                       ),
                       const SizedBox(width: UIConstants.spacingSm),
-                      const Text('Refresh'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'export',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.download_rounded,
-                        size: 20,
-                        color: AppColorsExtension.getTextPrimary(context),
-                      ),
-                      const SizedBox(width: UIConstants.spacingSm),
-                      const Text('Export Data'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'theme',
-                  child: Row(
-                    children: [
-                      Icon(
-                        isDark
-                            ? Icons.light_mode_rounded
-                            : Icons.dark_mode_rounded,
-                        size: 20,
-                        color: AppColorsExtension.getTextPrimary(context),
-                      ),
-                      const SizedBox(width: UIConstants.spacingSm),
-                      Text(isDark ? 'Light Mode' : 'Dark Mode'),
+                      const Text('Logout'),
                     ],
                   ),
                 ),
               ],
             ),
           ],
+        );
+      },
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: UIConstants.borderRadiusLg),
+        title: const Row(
+          children: [
+            Icon(Icons.logout_rounded, color: AppColors.error),
+            SizedBox(width: UIConstants.spacingSm),
+            Text('Logout'),
+          ],
+        ),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.read<AuthBloc>().add(SignOutRequested());
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildThemeToggleButton(BuildContext context, bool isDark) {
+    return BlocBuilder<ThemeBloc, ThemeState>(
+      builder: (context, themeState) {
+        final currentMode = themeState.themeMode;
+        final isCurrentlyDark =
+            currentMode == ThemeMode.dark ||
+            (currentMode == ThemeMode.system &&
+                MediaQuery.of(context).platformBrightness == Brightness.dark);
+
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              final newMode = isCurrentlyDark
+                  ? ThemeMode.light
+                  : ThemeMode.dark;
+              context.read<ThemeBloc>().add(ThemeChanged(newMode));
+              HapticFeedback.lightImpact();
+            },
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? Colors.white.withOpacity(0.1)
+                    : AppColors.grey100,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.1)
+                      : AppColors.grey300,
+                  width: 1,
+                ),
+              ),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                transitionBuilder: (child, animation) {
+                  return RotationTransition(
+                    turns: animation,
+                    child: ScaleTransition(scale: animation, child: child),
+                  );
+                },
+                child: Icon(
+                  key: ValueKey(isCurrentlyDark),
+                  isCurrentlyDark
+                      ? Icons.light_mode_rounded
+                      : Icons.dark_mode_rounded,
+                  size: 20,
+                  color: AppColorsExtension.getTextPrimary(context),
+                ),
+              ),
+            ),
+          ),
         );
       },
     );
@@ -2046,7 +2056,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             Expanded(
               child: AnimatedMetricCard(
                 title: 'Total Users',
-                value: AdminUtils.formatNumber(metrics.totalUsers),
+                value: _formatNumber(metrics.totalUsers),
                 icon: Icons.people,
                 color: AppColors.info,
                 gradient: AppColors.infoGradient,
@@ -2061,7 +2071,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             Expanded(
               child: AnimatedMetricCard(
                 title: 'Active Today',
-                value: AdminUtils.formatNumber(metrics.todaysActiveUsers),
+                value: _formatNumber(metrics.todaysActiveUsers),
                 icon: Icons.trending_up,
                 color: AppColors.success,
                 gradient: AppColors.successGradient,
@@ -2082,7 +2092,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             Expanded(
               child: AnimatedMetricCard(
                 title: 'Total Vendors',
-                value: AdminUtils.formatNumber(metrics.totalVendors),
+                value: _formatNumber(metrics.totalVendors),
                 icon: Icons.store,
                 color: AppColors.primary,
                 gradient: AppColors.primaryGradient,
@@ -2104,7 +2114,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         const SizedBox(height: UIConstants.spacingMd),
         AnimatedMetricCard(
           title: 'Pending Applications',
-          value: AdminUtils.formatNumber(metrics.pendingApplications),
+          value: _formatNumber(metrics.pendingApplications),
           icon: Icons.pending_actions,
           color: AppColors.warning,
           gradient: AppColors.warningGradient,
@@ -2124,7 +2134,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             Expanded(
               child: AnimatedMetricCard(
                 title: 'Restaurants',
-                value: AdminUtils.formatNumber(metrics.totalRestaurants),
+                value: _formatNumber(metrics.totalRestaurants),
                 icon: Icons.restaurant,
                 color: AppColors.secondary,
                 gradient: AppColors.secondaryGradient,
@@ -2134,7 +2144,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             Expanded(
               child: AnimatedMetricCard(
                 title: 'Food Items',
-                value: AdminUtils.formatNumber(metrics.totalFoodItems),
+                value: _formatNumber(metrics.totalFoodItems),
                 icon: Icons.fastfood,
                 color: AppColors.aiPrimary,
                 gradient: AppColors.aiGradient,
@@ -2161,7 +2171,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             Expanded(
               child: AnimatedMetricCard(
                 title: 'Flagged Reviews',
-                value: AdminUtils.formatNumber(metrics.flaggedReviews),
+                value: _formatNumber(metrics.flaggedReviews),
                 icon: Icons.flag,
                 color: AppColors.error,
                 gradient: AppColors.errorGradient,
@@ -2196,81 +2206,55 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               childAspectRatio: childAspectRatio,
               children: [
                 Card3D(
-                  onTap: () {
-                    di.sl<AdminNavController>().goTo('Vendor Management');
-                    Navigator.of(context).pushNamed('/admin');
-                  },
+                  onTap: () => Navigator.of(context).pushNamed('/admin'),
                   child: QuickActionCard(
                     title: 'Vendor Applications',
                     subtitle: 'Review pending applications',
                     icon: Icons.store_rounded,
                     color: AppColors.warning,
                     badgeCount: metrics.pendingApplications,
-                    onTap: () {
-                      di.sl<AdminNavController>().goTo('Vendor Management');
-                      Navigator.of(context).pushNamed('/admin');
-                    },
+                    onTap: () => Navigator.of(context).pushNamed('/admin'),
                   ),
                 ),
                 Card3D(
-                  onTap: () {
-                    di.sl<AdminNavController>().goTo('User Management');
-                    Navigator.of(context).pushNamed('/admin');
-                  },
+                  onTap: () => Navigator.of(context).pushNamed('/admin'),
                   child: QuickActionCard(
                     title: 'Review Moderation',
                     subtitle: 'Moderate flagged reviews',
                     icon: Icons.flag_rounded,
                     color: AppColors.error,
                     badgeCount: metrics.flaggedReviews,
-                    onTap: () {
-                      di.sl<AdminNavController>().goTo('User Management');
-                      Navigator.of(context).pushNamed('/admin');
-                    },
+                    onTap: () => Navigator.of(context).pushNamed('/admin'),
                   ),
                 ),
                 Card3D(
-                  onTap: () =>
-                      Navigator.of(context).pushNamed('/voucherApproval'),
+                  onTap: () => Navigator.of(context).pushNamed('/voucherApproval'),
                   child: QuickActionCard(
                     title: 'Voucher Approvals',
                     subtitle: 'Approve pending vouchers',
                     icon: Icons.card_giftcard_rounded,
                     color: AppColors.secondary,
-                    onTap: () =>
-                        Navigator.of(context).pushNamed('/voucherApproval'),
+                    onTap: () => Navigator.of(context).pushNamed('/voucherApproval'),
                   ),
                 ),
                 Card3D(
-                  onTap: () {
-                    di.sl<AdminNavController>().goTo('Audit Log Viewer');
-                    Navigator.of(context).pushNamed('/admin');
-                  },
+                  onTap: () => Navigator.of(context).pushNamed('/admin'),
                   child: QuickActionCard(
                     title: 'Audit Logs',
                     subtitle: 'View admin action history',
                     icon: Icons.history_rounded,
                     color: AppColors.info,
-                    onTap: () {
-                      di.sl<AdminNavController>().goTo('Audit Log Viewer');
-                      Navigator.of(context).pushNamed('/admin');
-                    },
+                    onTap: () => Navigator.of(context).pushNamed('/admin'),
                   ),
                 ),
                 Card3D(
-                  onTap: () {
-                    di.sl<AdminNavController>().goTo('System Configuration');
-                    Navigator.of(context).pushNamed('/admin');
-                  },
+                  onTap: () => Navigator.of(context).pushNamed('/admin'),
                   child: QuickActionCard(
                     title: 'System Config',
                     subtitle: 'Manage settings & flags',
                     icon: Icons.settings_rounded,
                     color: AppColors.primary,
-                    onTap: () {
-                      di.sl<AdminNavController>().goTo('System Configuration');
-                      Navigator.of(context).pushNamed('/admin');
-                    },
+                    onTap: () => Navigator.of(context).pushNamed('/admin'),
                   ),
                 ),
               ],
@@ -2279,5 +2263,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         ),
       ],
     );
+  }
+
+  String _formatNumber(int number) {
+    if (number >= 1000000) {
+      return '${(number / 1000000).toStringAsFixed(1)}M';
+    } else if (number >= 1000) {
+      return '${(number / 1000).toStringAsFixed(1)}K';
+    }
+    return number.toString();
   }
 }

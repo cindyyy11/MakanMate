@@ -23,6 +23,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
+  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -133,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: Colors.black87,
                 ),
               ),
-              _buildMapSection(),
+              _buildMapSection(), 
               const SizedBox(height: 24),
               _buildCategoriesSection(categories),
               const SizedBox(height: 24),
@@ -144,6 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
+
 
   Widget _buildWelcomeSection() {
     return Container(
@@ -173,7 +175,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 SizedBox(height: 8),
                 Text(
                   'Discover amazing local food around you',
-                  style: TextStyle(color: Colors.white70, fontSize: 16),
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 16,
+                  ),
                 ),
               ],
             ),
@@ -228,11 +233,13 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       clipBehavior: Clip.hardEdge,
       child: BlocProvider.value(
-        value: context.read<MapBloc>()..add(map.LoadMapEvent()),
+        value: context.read<MapBloc>()..add(map.LoadMapEvent()), 
         child: const MapPage(),
       ),
     );
   }
+
+
 
   Widget _buildCategoriesSection(List<RestaurantEntity> categories) {
     return Column(
@@ -363,9 +370,7 @@ class _HomeScreenState extends State<HomeScreen> {
             final user = FirebaseAuth.instance.currentUser;
             if (user == null) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Please log in to add favorites.'),
-                ),
+                const SnackBar(content: Text('Please log in to add favorites.')),
               );
               return;
             }
@@ -507,6 +512,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
+
               _buildFavoriteButton(food),
             ],
           ),
@@ -514,6 +520,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
 
   @override
   void dispose() {

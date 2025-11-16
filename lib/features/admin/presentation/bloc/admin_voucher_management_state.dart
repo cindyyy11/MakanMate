@@ -42,3 +42,4 @@ class VoucherOperationSuccess extends AdminVoucherManagementState {
   @override
   List<Object?> get props => [message];
 }
+

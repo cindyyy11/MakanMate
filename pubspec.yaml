@@ -182,10 +182,10 @@ flutter:
   assets:
     - assets/images/
     - assets/images/logos/
-    - assets/lottie/
     # - assets/images/placeholders/
     # - assets/icons/
     # - assets/ml_models/
+    # - assets/lottie/
     - .env
 
   # fonts:

@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/vendor_profile_entity.dart';
-import 'menu_item_model.dart';
 
 class VendorProfileModel {
   final String id;
@@ -19,23 +18,11 @@ class VendorProfileModel {
   final Map<String, OperatingHours> operatingHours;
   final List<OutletEntity> outlets;
   final List<CertificationEntity> certifications;
-  final List<MenuItemModel> menuItems;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? rejectedAt;
   final String? rejectedBy; // Admin user ID
   final String? rejectionReason;
-
-  // Suspension fields
-  final DateTime? suspendedAt;
-  final String? suspendedBy; // Admin user ID
-  final String? suspensionReason;
-  final DateTime? suspendedUntil;
-
-  // Deactivation fields
-  final DateTime? deactivatedAt;
-  final String? deactivatedBy; // Admin user ID
-  final String? deactivationReason;
 
   const VendorProfileModel({
     required this.id,
@@ -54,19 +41,11 @@ class VendorProfileModel {
     required this.operatingHours,
     required this.outlets,
     required this.certifications,
-    this.menuItems = const [],
     required this.createdAt,
     required this.updatedAt,
     this.rejectedAt,
     this.rejectedBy,
     this.rejectionReason,
-    this.suspendedAt,
-    this.suspendedBy,
-    this.suspensionReason,
-    this.suspendedUntil,
-    this.deactivatedAt,
-    this.deactivatedBy,
-    this.deactivationReason,
   });
 
   Map<String, dynamic> toMap() {
@@ -121,26 +100,17 @@ class VendorProfileModel {
           'type': cert.type,
           'certificateImageUrl': cert.certificateImageUrl,
           'certificateNumber': cert.certificateNumber,
-          'expiryDate': cert.expiryDate != null
-              ? Timestamp.fromDate(cert.expiryDate!)
-              : null,
+          'expiryDate':
+              cert.expiryDate != null ? Timestamp.fromDate(cert.expiryDate!) : null,
           'status': cert.status.name,
           'verifiedBy': cert.verifiedBy,
-          'verifiedAt': cert.verifiedAt != null
-              ? Timestamp.fromDate(cert.verifiedAt!)
-              : null,
+          'verifiedAt':
+              cert.verifiedAt != null ? Timestamp.fromDate(cert.verifiedAt!) : null,
           'rejectionReason': cert.rejectionReason,
           'createdAt': Timestamp.fromDate(cert.createdAt),
           'updatedAt': Timestamp.fromDate(cert.updatedAt),
         };
       }).toList(),
-      if (suspendedAt != null) 'suspendedAt': suspendedAt,
-      if (suspendedBy != null) 'suspendedBy': suspendedBy,
-      if (suspensionReason != null) 'suspensionReason': suspensionReason,
-      if (suspendedUntil != null) 'suspendedUntil': suspendedUntil,
-      if (deactivatedAt != null) 'deactivatedAt': deactivatedAt,
-      if (deactivatedBy != null) 'deactivatedBy': deactivatedBy,
-      if (deactivationReason != null) 'deactivationReason': deactivationReason,
     };
   }
 
@@ -153,27 +123,6 @@ class VendorProfileModel {
     }
     if (rejectedBy != null) {
       data['rejectedBy'] = rejectedBy;
-    }
-    if (suspendedAt != null) {
-      data['suspendedAt'] = Timestamp.fromDate(suspendedAt!);
-    }
-    if (suspendedBy != null) {
-      data['suspendedBy'] = suspendedBy;
-    }
-    if (suspensionReason != null) {
-      data['suspensionReason'] = suspensionReason;
-    }
-    if (suspendedUntil != null) {
-      data['suspendedUntil'] = Timestamp.fromDate(suspendedUntil!);
-    }
-    if (deactivatedAt != null) {
-      data['deactivatedAt'] = Timestamp.fromDate(deactivatedAt!);
-    }
-    if (deactivatedBy != null) {
-      data['deactivatedBy'] = deactivatedBy;
-    }
-    if (deactivationReason != null) {
-      data['deactivationReason'] = deactivationReason;
     }
     return data;
   }
@@ -201,13 +150,6 @@ class VendorProfileModel {
       rejectedAt: entity.rejectedAt,
       rejectedBy: entity.rejectedBy,
       rejectionReason: entity.rejectionReason,
-      suspendedAt: entity.suspendedAt,
-      suspendedBy: entity.suspendedBy,
-      suspensionReason: entity.suspensionReason,
-      suspendedUntil: entity.suspendedUntil,
-      deactivatedAt: entity.deactivatedAt,
-      deactivatedBy: entity.deactivatedBy,
-      deactivationReason: entity.deactivationReason,
     );
   }
 
@@ -245,20 +187,11 @@ class VendorProfileModel {
       operatingHours: operatingHoursMap,
       outlets: _parseOutlets(data['outlets']),
       certifications: _parseCertifications(data['certifications']),
-      menuItems:
-          const [], // Menu items are fetched separately from subcollection
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       rejectedAt: _parseTimestampNullable(data['rejectedAt']),
       rejectedBy: data['rejectedBy'] as String?,
       rejectionReason: data['rejectionReason'] as String?,
-      suspendedAt: _parseTimestampNullable(data['suspendedAt']),
-      suspendedBy: data['suspendedBy'] as String?,
-      suspensionReason: data['suspensionReason'] as String?,
-      suspendedUntil: _parseTimestampNullable(data['suspendedUntil']),
-      deactivatedAt: _parseTimestampNullable(data['deactivatedAt']),
-      deactivatedBy: data['deactivatedBy'] as String?,
-      deactivationReason: data['deactivationReason'] as String?,
     );
   }
 
@@ -280,19 +213,11 @@ class VendorProfileModel {
       approvalStatus: approvalStatus,
       outlets: outlets,
       certifications: certifications,
-      menuItems: menuItems.map((m) => m.toEntity()).toList(),
       createdAt: createdAt,
       updatedAt: updatedAt,
       rejectedAt: rejectedAt,
       rejectedBy: rejectedBy,
       rejectionReason: rejectionReason,
-      suspendedAt: suspendedAt,
-      suspendedBy: suspendedBy,
-      suspensionReason: suspensionReason,
-      suspendedUntil: suspendedUntil,
-      deactivatedAt: deactivatedAt,
-      deactivatedBy: deactivatedBy,
-      deactivationReason: deactivationReason,
     );
   }
 

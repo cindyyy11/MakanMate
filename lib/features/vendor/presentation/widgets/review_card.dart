@@ -2,8 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:makan_mate/features/auth/presentation/bloc/auth_state.dart';
 import '../../domain/entities/review_entity.dart';
 
 class ReviewCard extends StatefulWidget {

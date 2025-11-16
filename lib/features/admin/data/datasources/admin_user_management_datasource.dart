@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:logger/logger.dart';
 import 'package:makan_mate/features/admin/data/services/audit_log_service.dart';
 import 'package:makan_mate/features/auth/data/models/user_models.dart';
-import 'package:makan_mate/features/admin/domain/entities/user_ban_entity.dart';
 
 /// Data source for user management operations
 class AdminUserManagementDataSource {
@@ -272,105 +271,6 @@ class AdminUserManagementDataSource {
       logger.i('User data $userId deleted');
     } catch (e, stackTrace) {
       logger.e('Error deleting user data: $e', stackTrace: stackTrace);
-      rethrow;
-    }
-  }
-
-  /// Get all bans (from users collection)
-  Future<List<UserBanEntity>> getBansAndWarnings({
-    String? type,
-    bool? isActive,
-  }) async {
-    try {
-      // We only support bans via users collection for now.
-      // Warnings are stored on user doc in 'warnings' but this endpoint returns bans list.
-      Query query = firestore.collection('users').where('isBanned', isEqualTo: true);
-
-      // Active filter (based on bannedUntil)
-      if (isActive != null) {
-        // We'll filter client-side after fetching since Firestore where on computed isn't trivial
-      }
-
-      query = query.orderBy('bannedAt', descending: true).limit(100);
-
-      final snapshot = await query.get();
-      final List<UserBanEntity> bans = [];
-
-      for (var doc in snapshot.docs) {
-        try {
-          final user = UserModel.fromFirestore(doc);
-
-          // Determine active state based on bannedUntil and isBanned
-          bool currentlyActive = user.isBanned;
-          if (user.bannedUntil != null && DateTime.now().isAfter(user.bannedUntil!)) {
-            currentlyActive = false;
-          }
-
-          // Apply isActive filter if provided
-          if (isActive != null && currentlyActive != isActive) {
-            continue;
-          }
-
-          final ban = UserBanEntity(
-            id: user.id, // using user id as the ban id
-            userId: user.id,
-            userName: user.name,
-            userEmail: user.email,
-            userProfileImageUrl: user.profileImageUrl,
-            type: 'ban',
-            reason: user.banReason ?? '',
-            details: null,
-            createdAt: user.bannedAt ?? user.createdAt,
-            expiresAt: user.bannedUntil,
-            isActive: currentlyActive,
-            adminId: user.bannedBy ?? '',
-            adminName: null,
-          );
-
-          bans.add(ban);
-        } catch (e) {
-          logger.w('Error parsing banned user ${doc.id}: $e');
-        }
-      }
-
-      logger.i('Fetched ${bans.length} banned users');
-      return bans;
-    } catch (e, stackTrace) {
-      logger.e('Error fetching banned users: $e', stackTrace: stackTrace);
-      return [];
-    }
-  }
-
-  /// Lift a ban or remove a warning
-  Future<void> liftBanOrWarning({
-    required String banId,
-    required String reason,
-  }) async {
-    try {
-      final adminId = auth.currentUser?.uid;
-      if (adminId == null) {
-        throw Exception('Admin not authenticated');
-      }
-      // With users collection approach, banId is the userId
-      final userId = banId;
-      await firestore.collection('users').doc(userId).update({
-        'isBanned': false,
-        'unbannedAt': FieldValue.serverTimestamp(),
-        'unbannedBy': adminId,
-        'unbanReason': reason,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-
-      await auditLogService.logAction(
-        action: 'lift_ban',
-        entityType: 'user',
-        entityId: userId,
-        reason: reason,
-      );
-
-      logger.i('Ban for user $userId lifted');
-    } catch (e, stackTrace) {
-      logger.e('Error lifting ban: $e', stackTrace: stackTrace);
       rethrow;
     }
   }

@@ -9,11 +9,6 @@ class UserEntity extends Equatable {
   final String email;
   final String role;
   final bool isVerified;
-  final bool isBanned;
-  final String? banReason;
-  final DateTime? bannedAt;
-  final DateTime? bannedUntil;
-  final String? bannedBy;
   final String? profileImageUrl;
   final List<String> dietaryRestrictions;
   final Map<String, double> cuisinePreferences;
@@ -30,11 +25,6 @@ class UserEntity extends Equatable {
     required this.email,
     this.role = 'user',
     required this.isVerified,
-    this.isBanned = false,
-    this.banReason,
-    this.bannedAt,
-    this.bannedUntil,
-    this.bannedBy,
     this.profileImageUrl,
     this.dietaryRestrictions = const [],
     this.cuisinePreferences = const {},
@@ -55,11 +45,6 @@ class UserEntity extends Equatable {
     profileImageUrl,
     dietaryRestrictions,
     cuisinePreferences,
-    isBanned,
-    banReason,
-    bannedAt,
-    bannedUntil,
-    bannedBy,
     spiceTolerance,
     culturalBackground,
     currentLocation,
