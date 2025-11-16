@@ -110,7 +110,7 @@ class _VendorHomePageState extends State<VendorHomePage> {
 
             // Popular Menu Carousel (Dynamic Firebase Menu)
             const Text(
-              "Popular Menu",
+              "Menu Overview",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
@@ -456,22 +456,7 @@ class _VendorHomePageState extends State<VendorHomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Rating
-                  Row(
-                    children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 18),
-                      Text(
-                        rating.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-
                   const Spacer(),
-
                   Text(
                     title,
                     style: const TextStyle(
