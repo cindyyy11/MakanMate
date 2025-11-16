@@ -665,46 +665,126 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
 
   void _showBanDialog(BuildContext context) {
     final reasonController = TextEditingController();
+    String selectedDuration = '7 days';
+    DateTime? computeBanUntil() {
+      final now = DateTime.now();
+      switch (selectedDuration) {
+        case '24 hours':
+          return now.add(const Duration(hours: 24));
+        case '7 days':
+          return now.add(const Duration(days: 7));
+        case '30 days':
+          return now.add(const Duration(days: 30));
+        case 'Permanent':
+          return null;
+        default:
+          return now.add(const Duration(days: 7));
+      }
+    }
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Ban User'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Are you sure you want to ban this user?'),
-            const SizedBox(height: UIConstants.spacingMd),
-            TextField(
-              controller: reasonController,
-              decoration: const InputDecoration(
-                hintText: 'Reason (required)',
-                border: OutlineInputBorder(),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Ban User'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Are you sure you want to ban this user?'),
+              const SizedBox(height: UIConstants.spacingMd),
+              TextField(
+                controller: reasonController,
+                decoration: const InputDecoration(
+                  hintText: 'Reason (required)',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+                onChanged: (_) => setState(() {}),
               ),
-              maxLines: 3,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+              const SizedBox(height: UIConstants.spacingMd),
+              Row(
+                children: [
+                  const Text('Duration:'),
+                  const SizedBox(width: UIConstants.spacingSm),
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      value: selectedDuration,
+                      items: const [
+                        DropdownMenuItem(value: '24 hours', child: Text('24 hours')),
+                        DropdownMenuItem(value: '7 days', child: Text('7 days')),
+                        DropdownMenuItem(value: '30 days', child: Text('30 days')),
+                        DropdownMenuItem(value: 'Permanent', child: Text('Permanent')),
+                      ],
+                      onChanged: (val) {
+                        if (val != null) {
+                          setState(() => selectedDuration = val);
+                        }
+                      },
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: reasonController.text.isEmpty
-                ? null
-                : () {
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: reasonController.text.isEmpty
+                  ? null
+                  : () {
+                    final until = computeBanUntil();
                     Navigator.pop(context);
                     context.read<AdminUserManagementBloc>().add(
                       BanUser(
                         userId: _currentUser.id,
                         reason: reasonController.text,
+                        banUntil: until,
                       ),
                     );
-                  },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Ban'),
-          ),
-        ],
+                    // Provide immediate, informative feedback similar to vendor suspension
+                    final now = DateTime.now();
+                    String message;
+                    if (until == null) {
+                      message =
+                          'User banned indefinitely. Manual unban required.';
+                    } else {
+                      final duration = until.difference(now);
+                      final days = duration.inDays;
+                      final hours = duration.inHours % 24;
+                      final minutes = duration.inMinutes % 60;
+                      String durationText;
+                      if (days > 0) {
+                        durationText =
+                            '${days}d${hours > 0 ? ' ${hours}h' : ''}';
+                      } else if (hours > 0) {
+                        durationText =
+                            '${hours}h${minutes > 0 ? ' ${minutes}m' : ''}';
+                      } else {
+                        durationText = '${minutes}m';
+                      }
+                      final reactivationDate =
+                          '${until.day}/${until.month}/${until.year} ${until.hour}:${until.minute.toString().padLeft(2, '0')}';
+                      message =
+                          'User banned for $durationText.\nAuto-unban: $reactivationDate';
+                    }
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(message),
+                        backgroundColor: AppColors.error,
+                      ),
+                    );
+                    },
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+              child: const Text('Ban'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -713,44 +793,48 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
     final reasonController = TextEditingController();
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Warn User'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Send a warning to this user'),
-            const SizedBox(height: UIConstants.spacingMd),
-            TextField(
-              controller: reasonController,
-              decoration: const InputDecoration(
-                hintText: 'Warning reason (required)',
-                border: OutlineInputBorder(),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Warn User'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Send a warning to this user'),
+              const SizedBox(height: UIConstants.spacingMd),
+              TextField(
+                controller: reasonController,
+                decoration: const InputDecoration(
+                  hintText: 'Warning reason (required)',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+                onChanged: (_) => setState(() {}),
               ),
-              maxLines: 3,
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: reasonController.text.isEmpty
+                  ? null
+                  : () {
+                      Navigator.pop(context);
+                      context.read<AdminUserManagementBloc>().add(
+                        WarnUser(
+                          userId: _currentUser.id,
+                          reason: reasonController.text,
+                        ),
+                      );
+                    },
+              style:
+                  ElevatedButton.styleFrom(backgroundColor: AppColors.warning),
+              child: const Text('Warn'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: reasonController.text.isEmpty
-                ? null
-                : () {
-                    Navigator.pop(context);
-                    context.read<AdminUserManagementBloc>().add(
-                      WarnUser(
-                        userId: _currentUser.id,
-                        reason: reasonController.text,
-                      ),
-                    );
-                  },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.warning),
-            child: const Text('Warn'),
-          ),
-        ],
       ),
     );
   }
@@ -759,54 +843,57 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
     final reasonController = TextEditingController();
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.warning, color: AppColors.error),
-            SizedBox(width: UIConstants.spacingSm),
-            Text('Delete User Data'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'This action will permanently delete user data (PDPA compliance). This cannot be undone.',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: UIConstants.spacingMd),
-            TextField(
-              controller: reasonController,
-              decoration: const InputDecoration(
-                hintText: 'Deletion reason (required)',
-                border: OutlineInputBorder(),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.warning, color: AppColors.error),
+              SizedBox(width: UIConstants.spacingSm),
+              Text('Delete User Data'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'This action will permanently delete user data (PDPA compliance). This cannot be undone.',
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              maxLines: 3,
+              const SizedBox(height: UIConstants.spacingMd),
+              TextField(
+                controller: reasonController,
+                decoration: const InputDecoration(
+                  hintText: 'Deletion reason (required)',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+                onChanged: (_) => setState(() {}),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: reasonController.text.isEmpty
+                  ? null
+                  : () {
+                      Navigator.pop(context);
+                      context.read<AdminUserManagementBloc>().add(
+                        DeleteUserData(
+                          userId: _currentUser.id,
+                          reason: reasonController.text,
+                        ),
+                      );
+                    },
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+              child: const Text('Delete'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: reasonController.text.isEmpty
-                ? null
-                : () {
-                    Navigator.pop(context);
-                    context.read<AdminUserManagementBloc>().add(
-                      DeleteUserData(
-                        userId: _currentUser.id,
-                        reason: reasonController.text,
-                      ),
-                    );
-                  },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Delete'),
-          ),
-        ],
       ),
     );
   }

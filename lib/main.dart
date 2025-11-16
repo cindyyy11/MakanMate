@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
@@ -12,17 +11,6 @@ import 'package:makan_mate/core/di/injection_container.dart' as di;
 import 'package:makan_mate/core/utils/logger.dart';
 import 'package:makan_mate/firebase_options.dart';
 import 'package:makan_mate/services/metrics_service.dart';
-
-// Local imports
-import 'firebase_options.dart';
-import 'core/di/injection_container.dart' as di;
-import 'features/home/presentation/bloc/home_bloc.dart'; 
-
-// Vendor Feature imports
-import 'features/vendor/presentation/bloc/vendor_bloc.dart';
-import 'features/vendor/presentation/bloc/vendor_event.dart';
-import 'features/vendor/presentation/pages/pending_approval_page.dart';
-import 'features/vendor/presentation/pages/vendor_onboarding_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -81,11 +69,8 @@ Future<void> main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  // 8) Run the app in a guarded zone (extra safety net)
-  runZonedGuarded(() => runApp(const MakanMateApp()), (error, stack) {
-    log.e('runZonedGuarded error', error, stack);
-    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-  });
+  // 8) Run the app
+  runApp(const MakanMateApp());
 }
 
 /* 
@@ -119,4 +104,3 @@ class MyApp extends StatelessWidget {
     );
   }
 } */
-

@@ -35,6 +35,20 @@ UserModel _$UserModelFromJson(Map<String, dynamic> json) => UserModel(
       const {},
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: DateTime.parse(json['updatedAt'] as String),
+  isBanned: json['isBanned'] as bool? ?? false,
+  banReason: json['banReason'] as String?,
+  bannedAt: json['bannedAt'] == null
+      ? null
+      : DateTime.parse(json['bannedAt'] as String),
+  bannedUntil: json['bannedUntil'] == null
+      ? null
+      : DateTime.parse(json['bannedUntil'] as String),
+  bannedBy: json['bannedBy'] as String?,
+  warnings:
+      (json['warnings'] as List<dynamic>?)
+          ?.map((e) => e as Map<String, dynamic>)
+          .toList() ??
+      const [],
 );
 
 Map<String, dynamic> _$UserModelToJson(UserModel instance) => <String, dynamic>{
@@ -52,6 +66,12 @@ Map<String, dynamic> _$UserModelToJson(UserModel instance) => <String, dynamic>{
   'behaviorPatterns': instance.behaviorPatterns,
   'createdAt': instance.createdAt.toIso8601String(),
   'updatedAt': instance.updatedAt.toIso8601String(),
+  'isBanned': instance.isBanned,
+  'banReason': instance.banReason,
+  'bannedAt': instance.bannedAt?.toIso8601String(),
+  'bannedUntil': instance.bannedUntil?.toIso8601String(),
+  'bannedBy': instance.bannedBy,
+  'warnings': instance.warnings,
 };
 
 Location _$LocationFromJson(Map<String, dynamic> json) => Location(
