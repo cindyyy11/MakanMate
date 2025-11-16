@@ -8,50 +8,25 @@ class ReviewRepositoryImpl implements ReviewRepository {
   static const String reviewReportsCollection = 'review_reports';
 
   final FirebaseFirestore firestore;
+
   ReviewRepositoryImpl({FirebaseFirestore? firestore})
       : firestore = firestore ?? BaseService.firestore;
 
   @override
-  Stream<List<ReviewEntity>> watchRestaurantReviews(String restaurantId) async* {
-    // Query without orderBy to avoid index requirement, then sort manually
-    yield [];
-
-    // Try both restaurantId and vendorId fields
-    // Start with restaurantId query
-    yield* firestore
+  Stream<List<ReviewEntity>> watchRestaurantReviews(String vendorId) {
+    return firestore
         .collection(reviewsCollection)
-        .where('restaurantId', isEqualTo: restaurantId)
+        .where('vendorId', isEqualTo: vendorId)
         .snapshots()
-        .asyncMap((snapshot) async {
-          final allDocs = <String, DocumentSnapshot<Map<String, dynamic>>>{};
-          
-          // Add restaurantId results
-          for (var doc in snapshot.docs) {
-            allDocs[doc.id] = doc;
-          }
-          
-          // Also try vendorId query and merge results
-          try {
-            final vendorSnapshot = await firestore
-                .collection(reviewsCollection)
-                .where('vendorId', isEqualTo: restaurantId)
-                .get();
-            
-            for (var doc in vendorSnapshot.docs) {
-              allDocs[doc.id] = doc as DocumentSnapshot<Map<String, dynamic>>; // Will overwrite if duplicate
-            }
-          } catch (e) {
-            // If vendorId query fails, just use restaurantId results
-            print('Note: vendorId query failed, using restaurantId only: $e');
-          }
-          
-          print('Fetched ${allDocs.length} reviews for $restaurantId');
-          final reviews = allDocs.values
-              .map((doc) => _mapDocToEntity(doc))
-              .toList();
-          reviews.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-          return reviews;
-        });
+        .asyncMap((snap) async {
+      // Use fallback logic for every review
+      final reviews = await Future.wait(
+        snap.docs.map((d) => _mapDocToEntityWithFallback(d)),
+      );
+
+      reviews.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return reviews;
+    });
   }
 
   @override
@@ -60,11 +35,11 @@ class ReviewRepositoryImpl implements ReviewRepository {
     required String replyText,
   }) async {
     await firestore.collection(reviewsCollection).doc(reviewId).update({
-      'vendorReply': {
-        'text': replyText,
-        'createdAt': FieldValue.serverTimestamp(),
+      "vendorReply": {
+        "text": replyText,
+        "createdAt": FieldValue.serverTimestamp(),
       },
-      'updatedAt': FieldValue.serverTimestamp(),
+      "updatedAt": FieldValue.serverTimestamp(),
     });
   }
 
@@ -74,41 +49,107 @@ class ReviewRepositoryImpl implements ReviewRepository {
     required String reason,
   }) async {
     await firestore.collection(reviewReportsCollection).add({
-      'reviewId': reviewId,
-      'reason': reason,
-      'createdAt': FieldValue.serverTimestamp(),
+      "reviewId": reviewId,
+      "reason": reason,
+      "createdAt": FieldValue.serverTimestamp(),
     });
   }
 
-  ReviewEntity _mapDocToEntity(DocumentSnapshot<Map<String, dynamic>> doc) {
-    final data = doc.data()!;
-    final vendorReply = data['vendorReply'] as Map<String, dynamic>?;
+  @override
+  Future<ReviewEntity?> getLatestReview(String vendorId) async {
+    final snap = await firestore
+        .collection(reviewsCollection)
+        .where("vendorId", isEqualTo: vendorId)
+        .orderBy("createdAt", descending: true)
+        .limit(1)
+        .get();
+
+    if (snap.docs.isEmpty) return null;
+
+    // Also use fallback logic here
+    return _mapDocToEntityWithFallback(snap.docs.first);
+  }
+
+  Future<ReviewEntity> _mapDocToEntityWithFallback(
+      DocumentSnapshot<Map<String, dynamic>> doc) async {
+    final data = doc.data() ?? {};
+    final vendorReply = data['vendorReply'];
+
+    final userId = data['userId'] ?? '';
+
+    String userName = data['userName'] ??
+        data['userDisplayName'] ??
+        data['name'] ??
+        '';
+
+    if (userName.isEmpty && userId.isNotEmpty) {
+      final userSnapshot =
+          await firestore.collection('users').doc(userId).get();
+
+      if (userSnapshot.exists) {
+        final userData = userSnapshot.data()!;
+        userName = userData['name'] ??
+            userData['displayName'] ??
+            userData['username'] ??
+            'Customer';
+      } else {
+        userName = 'Customer';
+      }
+    } else if (userName.isEmpty) {
+      userName = 'Anonymous';
+    }
+
     return ReviewEntity(
       id: doc.id,
-      userId: (data['userId'] ?? '') as String,
-      itemId: (data['itemId'] ?? '') as String,
-      restaurantId: (data['restaurantId'] ?? '') as String,
+      userId: userId,
+      userName: userName,
+      itemId: data['itemId'] ?? '',
+      restaurantId: data['vendorId'] ?? '',
       rating: (data['rating'] ?? 0).toDouble(),
-      comment: (data['comment'] ?? '') as String,
-      imageUrls: List<String>.from(data['imageUrls'] ?? const []),
+      comment: data['comment'] ?? '',
+      imageUrls: List<String>.from(data['imageUrls'] ?? []),
       aspectRatings: Map<String, double>.from(
-          (data['aspectRatings'] ?? const <String, dynamic>{})
-              .map((k, v) => MapEntry(k.toString(), (v as num).toDouble()))),
-      tags: List<String>.from(data['tags'] ?? const []),
-      helpfulCount: (data['helpfulCount'] ?? 0) as int,
-      createdAt: _toDateTime(data['createdAt']),
-      updatedAt: _toDateTime(data['updatedAt']),
-      vendorReplyText: vendorReply?['text'] as String?,
-      vendorReplyAt:
-          vendorReply != null ? _toDateTime(vendorReply['createdAt']) : null,
+        (data['aspectRatings'] ?? {}).map(
+          (k, v) => MapEntry(k, (v as num).toDouble()),
+        ),
+      ),
+      tags: List<String>.from(data['tags'] ?? []),
+      helpfulCount: data['helpfulCount'] ?? 0,
+      createdAt: (data['createdAt'] as Timestamp).toDate(),
+      updatedAt: (data['updatedAt'] as Timestamp).toDate(),
+      vendorReplyText: vendorReply?['text'],
+      vendorReplyAt: vendorReply?['createdAt']?.toDate(),
     );
   }
 
-  DateTime _toDateTime(dynamic ts) {
-    if (ts is Timestamp) return ts.toDate();
-    if (ts is DateTime) return ts;
-    return DateTime.fromMillisecondsSinceEpoch(0);
+  ReviewEntity _mapDocToEntity(
+      DocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data() ?? {};
+    final vendorReply = data['vendorReply'];
+
+    return ReviewEntity(
+      id: doc.id,
+      userId: data['userId'] ?? '',
+      userName: data['userName'] ??
+          data['userDisplayName'] ??
+          data['name'] ??
+          'Anonymous',
+      itemId: data['itemId'] ?? '',
+      restaurantId: data['vendorId'] ?? '',
+      rating: (data['rating'] ?? 0).toDouble(),
+      comment: data['comment'] ?? '',
+      imageUrls: List<String>.from(data['imageUrls'] ?? []),
+      aspectRatings: Map<String, double>.from(
+        (data['aspectRatings'] ?? {}).map(
+          (k, v) => MapEntry(k, (v as num).toDouble()),
+        ),
+      ),
+      tags: List<String>.from(data['tags'] ?? []),
+      helpfulCount: data['helpfulCount'] ?? 0,
+      createdAt: (data['createdAt'] as Timestamp).toDate(),
+      updatedAt: (data['updatedAt'] as Timestamp).toDate(),
+      vendorReplyText: vendorReply?['text'],
+      vendorReplyAt: vendorReply?['createdAt']?.toDate(),
+    );
   }
 }
-
-

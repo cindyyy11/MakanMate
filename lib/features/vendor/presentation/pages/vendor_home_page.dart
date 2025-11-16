@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-// Pages
+import '../../../vendor/domain/entities/review_entity.dart' as vendor;
 import '../pages/menu_management_page.dart';
 import '../pages/vendor_reviews_page.dart';
 import '../pages/vendor_analytics_page.dart';
 import '../pages/promotion_management_page.dart';
-
-// Vendor Bloc
 import '../../../vendor/presentation/bloc/vendor_bloc.dart';
 import '../../../vendor/presentation/bloc/vendor_state.dart';
 import '../../../vendor/presentation/bloc/vendor_event.dart';
+import '../bloc/vendor_review_bloc.dart';
+import '../bloc/vendor_review_event.dart';
+import '../bloc/vendor_review_state.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class VendorHomePage extends StatefulWidget {
   const VendorHomePage({super.key});
@@ -26,7 +27,10 @@ class _VendorHomePageState extends State<VendorHomePage> {
   @override
   void initState() {
     super.initState();
+
     context.read<VendorBloc>().add(LoadMenuEvent());
+    final vendorId = FirebaseAuth.instance.currentUser!.uid;
+    context.read<VendorReviewBloc>().add(LoadVendorReviews(vendorId));
   }
 
   @override
@@ -51,7 +55,6 @@ class _VendorHomePageState extends State<VendorHomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             // Welcome Back Section
             Container(
               padding: const EdgeInsets.all(20),
@@ -76,13 +79,16 @@ class _VendorHomePageState extends State<VendorHomePage> {
                       children: const [
                         Text(
                           "Welcome Back!",
-                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         SizedBox(height: 4),
                         Text(
                           "Manage your restaurant menu and promotions",
                           style: TextStyle(fontSize: 14, color: Colors.black54),
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -98,8 +104,7 @@ class _VendorHomePageState extends State<VendorHomePage> {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-
-            _buildLatestReviewCard(),
+            _buildLatestReviewSection(),
 
             const SizedBox(height: 30),
 
@@ -196,7 +201,9 @@ class _VendorHomePageState extends State<VendorHomePage> {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const MenuManagementPage()),
+                        MaterialPageRoute(
+                          builder: (_) => const MenuManagementPage(),
+                        ),
                       );
                     },
                   ),
@@ -211,7 +218,9 @@ class _VendorHomePageState extends State<VendorHomePage> {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const VendorAnalyticsPage()),
+                        MaterialPageRoute(
+                          builder: (_) => const VendorAnalyticsPage(),
+                        ),
                       );
                     },
                   ),
@@ -232,7 +241,9 @@ class _VendorHomePageState extends State<VendorHomePage> {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const VendorReviewsPage()),
+                        MaterialPageRoute(
+                          builder: (_) => const VendorReviewsPage(),
+                        ),
                       );
                     },
                   ),
@@ -247,7 +258,9 @@ class _VendorHomePageState extends State<VendorHomePage> {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const PromotionManagementPage()),
+                        MaterialPageRoute(
+                          builder: (_) => const PromotionManagementPage(),
+                        ),
                       );
                     },
                   ),
@@ -262,47 +275,119 @@ class _VendorHomePageState extends State<VendorHomePage> {
     );
   }
 
-  // ----------------------------------------------------------------------
   // Latest Review Card
-  // ----------------------------------------------------------------------
-  Widget _buildLatestReviewCard() {
+  Widget _buildLatestReviewSection() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const VendorReviewsPage()),
+        );
+      },
+      child: BlocBuilder<VendorReviewBloc, VendorReviewState>(
+        builder: (context, state) {
+          if (state is VendorReviewLoading || state is VendorReviewInitial) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (state is VendorReviewError) {
+            return const Text('Error loading review.');
+          }
+
+          final reviews = state is VendorReviewLoaded
+              ? state.reviews
+              : state is VendorReviewActionInProgress
+              ? state.current
+              : const <vendor.ReviewEntity>[];
+
+          if (reviews.isEmpty) {
+            return const Text('No reviews yet.');
+          }
+
+          final latest = reviews.first;
+          return _buildReviewCard(latest);
+        },
+      ),
+    );
+  }
+
+  Widget _buildReviewCard(vendor.ReviewEntity r) {
+    final isReplied = r.vendorReplyText != null;
+
     return Card(
-      elevation: 2,
+      elevation: 3,
+      color: isReplied ? Colors.white : Colors.orange.shade50,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Icon(Icons.person, size: 40, color: Colors.orange),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   Text(
-                    "Customer123",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    r.userName.isNotEmpty ? r.userName : "Customer",
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
-                  SizedBox(height: 4),
+
+                  const SizedBox(height: 4),
+                  Text(r.comment, maxLines: 2, overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 4),
                   Text(
-                    "“The food was delicious and portion was big!”",
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                    "Posted: ${r.createdAt}",
+                    style: const TextStyle(color: Colors.grey, fontSize: 12),
                   ),
+
+                  const SizedBox(height: 6),
+                  if (!isReplied)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.orange,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        "Pending Reply",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
-            const Icon(Icons.star, color: Colors.amber),
-            const Text(" 4.5"),
+
+            const SizedBox(width: 12),
+
+            // Rating
+            Column(
+              children: [
+                const Icon(Icons.star, color: Colors.amber),
+                Text(
+                  r.rating.toStringAsFixed(1),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
           ],
         ),
       ),
     );
   }
 
-  // ----------------------------------------------------------------------
-  // Carousel Menu Card (Image + Overlay + Title + Price)
-  // ----------------------------------------------------------------------
+  // Carousel Menu Card
   Widget _buildCarouselMenuCard({
     required String image,
     required String title,
@@ -316,11 +401,38 @@ class _VendorHomePageState extends State<VendorHomePage> {
         borderRadius: BorderRadius.circular(16),
         child: Stack(
           children: [
-            Image.network(
-              image,
+            SizedBox(
               height: double.infinity,
               width: double.infinity,
-              fit: BoxFit.cover,
+              child: image.isEmpty
+                  ? Container(
+                      color: Colors.grey.shade300,
+                      child: const Center(
+                        child: Icon(
+                          Icons.restaurant,
+                          size: 60,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    )
+                  : Image.network(
+                      image,
+                      height: double.infinity,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey.shade300,
+                          child: const Center(
+                            child: Icon(
+                              Icons.broken_image,
+                              size: 60,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
             ),
 
             // Overlay
@@ -354,7 +466,7 @@ class _VendorHomePageState extends State<VendorHomePage> {
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
-                      )
+                      ),
                     ],
                   ),
 
@@ -371,10 +483,7 @@ class _VendorHomePageState extends State<VendorHomePage> {
 
                   Text(
                     "RM ${price.toStringAsFixed(2)}",
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.white70,
-                    ),
+                    style: const TextStyle(fontSize: 16, color: Colors.white70),
                   ),
 
                   const SizedBox(height: 6),
@@ -383,14 +492,11 @@ class _VendorHomePageState extends State<VendorHomePage> {
                     description,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.white70,
-                    ),
+                    style: const TextStyle(fontSize: 12, color: Colors.white70),
                   ),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),

@@ -3,6 +3,7 @@ import '../../../vendor/domain/entities/menu_item_entity.dart';
 
 abstract class VendorEvent {}
 
+// Menu Events
 class LoadMenuEvent extends VendorEvent {}
 
 class SearchMenuEvent extends VendorEvent {
@@ -11,7 +12,7 @@ class SearchMenuEvent extends VendorEvent {
 }
 
 class FilterByCategoryEvent extends VendorEvent {
-  final String? category; // null means "All"
+  final String? category;
   FilterByCategoryEvent(this.category);
 }
 
@@ -22,13 +23,13 @@ class UploadImageEvent extends VendorEvent {
 
 class AddMenuEvent extends VendorEvent {
   final MenuItemEntity item;
-  final File? imageFile; // Optional image file to upload
+  final File? imageFile;
   AddMenuEvent(this.item, {this.imageFile});
 }
 
 class UpdateMenuEvent extends VendorEvent {
   final MenuItemEntity item;
-  final File? imageFile; // Optional image file to upload
+  final File? imageFile;
   UpdateMenuEvent(this.item, {this.imageFile});
 }
 
