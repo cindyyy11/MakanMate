@@ -11,6 +11,7 @@ import 'package:makan_mate/features/home/presentation/pages/restaurant_detail_pa
 import 'package:makan_mate/features/map/presentation/bloc/map_bloc.dart';
 import 'package:makan_mate/features/map/presentation/pages/map_page.dart';
 import 'package:makan_mate/features/map/presentation/bloc/map_event.dart' as map;
+import 'package:makan_mate/features/search/presentation/pages/search_page.dart';
 
 
 class HomeScreen extends StatefulWidget {
@@ -189,39 +190,30 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSearchBar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: TextField(
-        controller: _searchController,
-        decoration: InputDecoration(
-          hintText: 'Search for food, restaurants...',
-          prefixIcon: const Icon(Icons.search, color: Colors.grey),
-          suffixIcon: IconButton(
-            icon: const Icon(Icons.mic, color: Colors.orange),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Voice search coming soon!')),
-              );
-            },
-          ),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(context, '/search');
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        onSubmitted: (value) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Search for: $value')),
-          );
-        },
+        child: Row(
+          children: const [
+            Icon(Icons.search, color: Colors.grey),
+            SizedBox(width: 12),
+            Text("Search for food, restaurants...", style: TextStyle(color: Colors.grey)),
+          ],
+        ),
       ),
     );
   }

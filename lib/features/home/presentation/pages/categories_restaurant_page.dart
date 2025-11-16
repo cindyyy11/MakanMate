@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:makan_mate/features/home/domain/entities/restaurant_entity.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_bloc.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_state.dart';
+import 'package:makan_mate/features/home/presentation/pages/restaurant_detail_page.dart';
 
 class CategoryRestaurantPage extends StatelessWidget {
   final String categoryName;
@@ -77,7 +78,12 @@ class CategoryRestaurantPage extends StatelessWidget {
       ),
       child: InkWell(
         onTap: () {
-          Navigator.pushNamed(context, '/restaurantDetail', arguments: r);
+          Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => RestaurantDetailPage(restaurant: r),
+          ),
+        );
         },
         child: Padding(
           padding: const EdgeInsets.all(12),
