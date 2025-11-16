@@ -62,36 +62,6 @@ class MenuCard extends StatelessWidget {
                         ),
                 ),
 
-                // ⭐ Rating badge (top left)
-                Positioned(
-                  top: 12,
-                  left: 12,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.6),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Icon(Icons.star, color: Colors.amber, size: 16),
-                        SizedBox(width: 4),
-                        Text(
-                          '4.5',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // ⭐ More menu icon (top right)
                 Positioned(
                   top: 12,
                   right: 12,
@@ -131,7 +101,7 @@ class MenuCard extends StatelessWidget {
                   ),
                 ),
 
-                // ⭐ UNAVAILABLE overlay (only when available == false)
+                // UNAVAILABLE overlay 
                 if (!item.available)
                   Positioned.fill(
                     child: Container(
