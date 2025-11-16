@@ -65,6 +65,7 @@ class CertificationsSection extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
+
             if (certifications.isEmpty)
               Center(
                 child: Padding(
@@ -77,17 +78,30 @@ class CertificationsSection extends StatelessWidget {
                         color: Colors.grey[400],
                       ),
                       const SizedBox(height: 8),
+
                       Text(
                         'No certifications added yet',
                         style: TextStyle(color: Colors.grey[600]),
                       ),
+
+                      // Show warning only when NOT editing
+                      if (!isEditing) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          'Your certifications were verified and can no longer be edited.',
+                          style: TextStyle(color: Colors.grey, fontSize: 13),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                     ],
                   ),
                 ),
               )
             else
-              ...certifications.map(
-                (cert) => _buildCertificationCard(context, cert),
+              Column(
+                children: certifications
+                    .map((cert) => _buildCertificationCard(context, cert))
+                    .toList(),
               ),
           ],
         ),
@@ -163,38 +177,38 @@ class CertificationsSection extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (isEditing)
-                  PopupMenuButton(
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'edit',
-                        child: Row(
-                          children: [
-                            Icon(Icons.edit, size: 20),
-                            SizedBox(width: 8),
-                            Text('Edit'),
-                          ],
-                        ),
+                PopupMenuButton(
+                  enabled: isEditing,
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit, size: 20),
+                          SizedBox(width: 8),
+                          Text('Edit'),
+                        ],
                       ),
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete, color: Colors.red, size: 20),
-                            SizedBox(width: 8),
-                            Text('Delete', style: TextStyle(color: Colors.red)),
-                          ],
-                        ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete, color: Colors.red, size: 20),
+                          SizedBox(width: 8),
+                          Text('Delete', style: TextStyle(color: Colors.red)),
+                        ],
                       ),
-                    ],
-                    onSelected: (value) {
-                      if (value == 'edit') {
-                        _showEditCertificationDialog(context, certification);
-                      } else if (value == 'delete') {
-                        _showDeleteConfirmation(context, certification);
-                      }
-                    },
-                  ),
+                    ),
+                  ],
+                  onSelected: (value) {
+                    if (value == 'edit') {
+                      _showEditCertificationDialog(context, certification);
+                    } else if (value == 'delete') {
+                      _showDeleteConfirmation(context, certification);
+                    }
+                  },
+                ),
                 if (isAdmin &&
                     certification.status == CertificationStatus.pending)
                   Row(

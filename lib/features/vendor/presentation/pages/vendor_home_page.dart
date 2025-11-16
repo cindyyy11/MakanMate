@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../vendor/domain/entities/review_entity.dart' as vendor;
 import '../pages/menu_management_page.dart';
 import '../pages/vendor_reviews_page.dart';
@@ -24,15 +25,40 @@ class _VendorHomePageState extends State<VendorHomePage> {
   final PageController _pageController = PageController(viewportFraction: 0.9);
   int _currentPage = 0;
 
+  String? businessName;
+
   @override
   void initState() {
     super.initState();
+    _loadVendorName();
 
     context.read<VendorBloc>().add(LoadMenuEvent());
     final vendorId = FirebaseAuth.instance.currentUser!.uid;
     context.read<VendorReviewBloc>().add(LoadVendorReviews(vendorId));
   }
 
+  Future<void> _loadVendorName() async {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+
+    final doc = await FirebaseFirestore.instance
+        .collection("vendors")
+        .doc(uid)
+        .get();
+
+    if (doc.exists) {
+      setState(() {
+        businessName = doc.data()?["businessName"] ?? "Vendor";
+      });
+    }
+  }
+
+  String getGreeting() {
+    int hour = DateTime.now().hour;
+    if (hour < 12) return "Good Morning";
+    if (hour < 17) return "Good Afternoon";
+    return "Good Evening";
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -55,7 +81,6 @@ class _VendorHomePageState extends State<VendorHomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Welcome Back Section
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -73,19 +98,44 @@ class _VendorHomePageState extends State<VendorHomePage> {
                     child: const Icon(Icons.restaurant, color: Colors.orange),
                   ),
                   const SizedBox(width: 16),
+
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text(
-                          "Welcome Back!",
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
+                      children: [
+                        Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(
+                                text: "${getGreeting()}, ",
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              TextSpan(
+                                text: businessName ?? "...",
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color.fromARGB(255, 173, 107, 8),
+                                ),
+                              ),
+                              const TextSpan(
+                                text: "!",
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        SizedBox(height: 4),
-                        Text(
+
+                        const SizedBox(height: 4),
+                        const Text(
                           "Manage your restaurant menu and promotions",
                           style: TextStyle(fontSize: 14, color: Colors.black54),
                         ),
@@ -98,7 +148,7 @@ class _VendorHomePageState extends State<VendorHomePage> {
 
             const SizedBox(height: 30),
 
-            // Latest Review Section (Static Example)
+            // Latest Review
             const Text(
               "Latest Review",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -108,7 +158,7 @@ class _VendorHomePageState extends State<VendorHomePage> {
 
             const SizedBox(height: 30),
 
-            // Popular Menu Carousel (Dynamic Firebase Menu)
+            // Menu Overview Carousel
             const Text(
               "Menu Overview",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -135,18 +185,17 @@ class _VendorHomePageState extends State<VendorHomePage> {
                         child: PageView.builder(
                           controller: _pageController,
                           itemCount: menuItems.length,
-                          onPageChanged: (index) {
-                            setState(() => _currentPage = index);
+                          onPageChanged: (i) {
+                            setState(() => _currentPage = i);
                           },
                           itemBuilder: (context, index) {
-                            final menu = menuItems[index];
+                            final m = menuItems[index];
 
                             return _buildCarouselMenuCard(
-                              image: menu.imageUrl,
-                              title: menu.name,
-                              description: menu.description,
-                              price: menu.price,
-                              rating: 4.5,
+                              image: m.imageUrl,
+                              title: m.name,
+                              description: m.description,
+                              price: m.price,
                             );
                           },
                         ),
@@ -154,7 +203,6 @@ class _VendorHomePageState extends State<VendorHomePage> {
 
                       const SizedBox(height: 10),
 
-                      // Pagination Dots
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: List.generate(
@@ -183,7 +231,7 @@ class _VendorHomePageState extends State<VendorHomePage> {
 
             const SizedBox(height: 32),
 
-            // Quick Actions Section
+            // Quick Actions
             const Text(
               'Quick Actions',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -275,7 +323,7 @@ class _VendorHomePageState extends State<VendorHomePage> {
     );
   }
 
-  // Latest Review Card
+  // Latest Review Card (rating removed)
   Widget _buildLatestReviewSection() {
     return GestureDetector(
       onTap: () {
@@ -286,7 +334,8 @@ class _VendorHomePageState extends State<VendorHomePage> {
       },
       child: BlocBuilder<VendorReviewBloc, VendorReviewState>(
         builder: (context, state) {
-          if (state is VendorReviewLoading || state is VendorReviewInitial) {
+          if (state is VendorReviewLoading ||
+              state is VendorReviewInitial) {
             return const Center(child: CircularProgressIndicator());
           }
 
@@ -296,16 +345,13 @@ class _VendorHomePageState extends State<VendorHomePage> {
 
           final reviews = state is VendorReviewLoaded
               ? state.reviews
-              : state is VendorReviewActionInProgress
-              ? state.current
               : const <vendor.ReviewEntity>[];
 
           if (reviews.isEmpty) {
             return const Text('No reviews yet.');
           }
 
-          final latest = reviews.first;
-          return _buildReviewCard(latest);
+          return _buildReviewCard(reviews.first);
         },
       ),
     );
@@ -325,6 +371,7 @@ class _VendorHomePageState extends State<VendorHomePage> {
           children: [
             const Icon(Icons.person, size: 40, color: Colors.orange),
             const SizedBox(width: 12),
+
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -336,9 +383,9 @@ class _VendorHomePageState extends State<VendorHomePage> {
                       fontSize: 16,
                     ),
                   ),
-
                   const SizedBox(height: 4),
-                  Text(r.comment, maxLines: 2, overflow: TextOverflow.ellipsis),
+                  Text(r.comment,
+                      maxLines: 2, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 4),
                   Text(
                     "Posted: ${r.createdAt}",
@@ -348,10 +395,8 @@ class _VendorHomePageState extends State<VendorHomePage> {
                   const SizedBox(height: 6),
                   if (!isReplied)
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.orange,
                         borderRadius: BorderRadius.circular(8),
@@ -368,19 +413,6 @@ class _VendorHomePageState extends State<VendorHomePage> {
                 ],
               ),
             ),
-
-            const SizedBox(width: 12),
-
-            // Rating
-            Column(
-              children: [
-                const Icon(Icons.star, color: Colors.amber),
-                Text(
-                  r.rating.toStringAsFixed(1),
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
           ],
         ),
       ),
@@ -393,7 +425,6 @@ class _VendorHomePageState extends State<VendorHomePage> {
     required String title,
     required String description,
     required double price,
-    required double rating,
   }) {
     return Container(
       margin: const EdgeInsets.only(right: 12),
@@ -408,34 +439,17 @@ class _VendorHomePageState extends State<VendorHomePage> {
                   ? Container(
                       color: Colors.grey.shade300,
                       child: const Center(
-                        child: Icon(
-                          Icons.restaurant,
-                          size: 60,
-                          color: Colors.white70,
-                        ),
+                        child: Icon(Icons.restaurant,
+                            size: 60, color: Colors.white70),
                       ),
                     )
                   : Image.network(
                       image,
-                      height: double.infinity,
-                      width: double.infinity,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: Colors.grey.shade300,
-                          child: const Center(
-                            child: Icon(
-                              Icons.broken_image,
-                              size: 60,
-                              color: Colors.white70,
-                            ),
-                          ),
-                        );
-                      },
                     ),
             ),
 
-            // Overlay
+            // Gradient overlay
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -465,19 +479,18 @@ class _VendorHomePageState extends State<VendorHomePage> {
                       color: Colors.white,
                     ),
                   ),
-
                   Text(
                     "RM ${price.toStringAsFixed(2)}",
-                    style: const TextStyle(fontSize: 16, color: Colors.white70),
+                    style:
+                        const TextStyle(fontSize: 16, color: Colors.white70),
                   ),
-
                   const SizedBox(height: 6),
-
                   Text(
                     description,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12, color: Colors.white70),
+                    style:
+                        const TextStyle(fontSize: 12, color: Colors.white70),
                   ),
                 ],
               ),

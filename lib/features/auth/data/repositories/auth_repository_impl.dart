@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dartz/dartz.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:makan_mate/core/errors/exceptions.dart';
 import 'package:makan_mate/core/errors/failures.dart';
 import 'package:makan_mate/core/network/network_info.dart';
@@ -194,4 +196,10 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Stream<UserEntity?> get authStateChanges => remoteDataSource.authStateChanges
       .map((userModel) => userModel != null ? _toUserEntity(userModel) : null);
+
+  @override
+  Future<void> deleteAccount(String uid) async {
+    await FirebaseFirestore.instance.collection("vendors").doc(uid).delete();
+    await FirebaseAuth.instance.currentUser?.delete();
+  }
 }

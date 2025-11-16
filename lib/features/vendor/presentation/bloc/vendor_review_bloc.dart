@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:makan_mate/features/vendor/domain/entities/review_entity.dart';
 import 'package:makan_mate/features/vendor/domain/usecases/reply_to_review_usecase.dart';
@@ -26,7 +25,6 @@ class VendorReviewBloc extends Bloc<VendorReviewEvent, VendorReviewState> {
     on<_ReviewsUpdated>(_onReviewsUpdated);
   }
 
-  // Internal event to update reviews
   void _onReviewsUpdated(
     _ReviewsUpdated event,
     Emitter<VendorReviewState> emit,
@@ -39,23 +37,20 @@ class VendorReviewBloc extends Bloc<VendorReviewEvent, VendorReviewState> {
     Emitter<VendorReviewState> emit,
   ) async {
     emit(VendorReviewLoading());
-    
-    // Cancel previous subscription
+
     await _subscription?.cancel();
 
     try {
-      // Subscribe to the stream and emit updates via internal event
       _subscription = watchReviews(event.vendorId).listen(
         (reviews) {
-          // Use add() to trigger internal event instead of emit()
           add(_ReviewsUpdated(reviews));
         },
-        onError: (error, stackTrace) {
-          add(_ReviewsUpdated(const [])); // Emit empty list on error
+        onError: (error) {
+          emit(VendorReviewError("Failed to load reviews: $error"));
         },
       );
-    } catch (e, stackTrace) {
-      emit(VendorReviewError(e.toString()));
+    } catch (e) {
+      emit(VendorReviewError("Error loading reviews: $e"));
     }
   }
 
@@ -63,14 +58,20 @@ class VendorReviewBloc extends Bloc<VendorReviewEvent, VendorReviewState> {
     ReplyToVendorReview event,
     Emitter<VendorReviewState> emit,
   ) async {
-    final current =
-        state is VendorReviewLoaded ? (state as VendorReviewLoaded).reviews : <ReviewEntity>[];
+    final current = state is VendorReviewLoaded
+        ? (state as VendorReviewLoaded).reviews
+        : <ReviewEntity>[];
+
     emit(VendorReviewActionInProgress(current));
+
     try {
-      await replyToReview(reviewId: event.reviewId, replyText: event.replyText);
-      // The stream will automatically update with the new reply
+      await replyToReview.call(
+        reviewId: event.reviewId,
+        replyText: event.replyText,
+      );
+      // Stream will auto-update
     } catch (e) {
-      emit(VendorReviewError(e.toString()));
+      emit(VendorReviewError("Failed to send reply: $e"));
     }
   }
 
@@ -78,16 +79,21 @@ class VendorReviewBloc extends Bloc<VendorReviewEvent, VendorReviewState> {
     ReportVendorReview event,
     Emitter<VendorReviewState> emit,
   ) async {
-    final current =
-        state is VendorReviewLoaded ? (state as VendorReviewLoaded).reviews : <ReviewEntity>[];
+    final current = state is VendorReviewLoaded
+        ? (state as VendorReviewLoaded).reviews
+        : <ReviewEntity>[];
+
     emit(VendorReviewActionInProgress(current));
+
     try {
-      await reportReview(reviewId: event.reviewId, reason: event.reason);
-      if (current.isNotEmpty) {
-        emit(VendorReviewLoaded(current));
-      }
+      await reportReview.call(
+        reviewId: event.reviewId,
+        reason: event.reason,
+      );
+
+      emit(VendorReviewLoaded(current)); // Keep current UI
     } catch (e) {
-      emit(VendorReviewError(e.toString()));
+      emit(VendorReviewError("Failed to report review: $e"));
     }
   }
 
@@ -98,7 +104,6 @@ class VendorReviewBloc extends Bloc<VendorReviewEvent, VendorReviewState> {
   }
 }
 
-// Internal event for stream updates
 class _ReviewsUpdated extends VendorReviewEvent {
   final List<ReviewEntity> reviews;
 

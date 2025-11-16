@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:makan_mate/features/auth/domain/usecases/delete_account_usecase.dart';
 import 'package:makan_mate/features/auth/domain/usecases/forgot_password_usecase.dart';
 import 'package:makan_mate/features/auth/domain/usecases/google_sign_in_usecase.dart';
 import 'package:makan_mate/features/auth/domain/usecases/sign_in_usecase.dart';
@@ -13,6 +14,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final SignOutUseCase signOut;
   final GoogleSignInUseCase googleSignIn;
   final ForgotPasswordUseCase forgotPassword;
+  final DeleteAccountUseCase deleteAccount;
 
   AuthBloc({
     required this.signIn,
@@ -20,6 +22,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.signOut,
     required this.googleSignIn,
     required this.forgotPassword,
+    required this.deleteAccount,
   }) : super(AuthInitial()) {
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<SignInRequested>(_onSignInRequested);
@@ -27,6 +30,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<GoogleSignInRequested>(_onGoogleSignInRequested);
     on<SignOutRequested>(_onSignOutRequested);
     on<ForgotPasswordRequested>(_onForgotPasswordRequested);
+    on<DeleteAccountRequested>(_onDeleteAccountRequested);    
   }
 
   Future<void> _onAuthCheckRequested(
@@ -118,6 +122,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           'Password reset email sent! Please check your inbox.',
         ),
       ),
+    );
+  }
+
+  Future<void> _onDeleteAccountRequested(
+    DeleteAccountRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+
+    final result = await deleteAccount();
+
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (_) => emit(Unauthenticated()),
     );
   }
 }
