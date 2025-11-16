@@ -1,337 +1,293 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:makan_mate/features/favorite/presentation/pages/favorite_page.dart';
+import 'package:makan_mate/features/home/presentation/pages/dietary_settings_page.dart';
+import 'package:makan_mate/features/home/presentation/pages/nearby_notifications_page.dart';
+import 'edit_profile_page.dart';
 
-class ProfilePage extends StatefulWidget {
+class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
   @override
-  State<ProfilePage> createState() => _ProfilePageState();
-}
-
-class _ProfilePageState extends State<ProfilePage> {
-  int selectedTab = 0;
-
-  @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
+    final currentUser = FirebaseAuth.instance.currentUser;
 
-    if (user == null) {
+    if (currentUser == null) {
       return const Scaffold(
         body: Center(child: Text("Please log in to view profile.")),
       );
     }
 
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          const SizedBox(height: 25),
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection("users")
+          .doc(currentUser.uid)
+          .snapshots(),
+      builder: (context, snapshot) {
+        FirebaseAuth.instance.currentUser?.reload();
+        final user = FirebaseAuth.instance.currentUser;
 
-          Center(
-            child: Text(
-              "My profile",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
-            ),
+        if (user == null) {
+          return const Scaffold(
+              body: Center(child: Text("User session expired.")));
+        }
+
+        if (!snapshot.hasData) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final data = snapshot.data!.data() as Map<String, dynamic>?;
+
+        final displayName = data?["name"] ?? user.displayName ?? "Unnamed User";
+        final photoURL = data?["photoURL"] ?? user.photoURL;
+
+        return _buildProfileUI(context, user, displayName, photoURL);
+      },
+    );
+  }
+
+  void _confirmDeleteAccount(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Delete Account?"),
+        content: const Text(
+          "This action is permanent. All your data and reviews will be removed."
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
           ),
-
-          const SizedBox(height: 25),
-
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              CircleAvatar(
-                radius: 45,
-                backgroundImage: user.photoURL != null
-                    ? NetworkImage(user.photoURL!)
-                    : null,
-                backgroundColor: Colors.grey[300],
-                child: user.photoURL == null
-                    ? const Text(
-                        "Profile Photo",
-                        style: TextStyle(color: Colors.grey),
-                      )
-                    : null,
-              ),
-              OutlinedButton(
-                onPressed: () => Navigator.pushNamed(context, '/edit-profile'),
-                child: const Text("Edit profile"),
-              ),
-            ],
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                await FirebaseAuth.instance.currentUser?.delete();
+                Navigator.pushNamedAndRemoveUntil(
+                  context, '/login', (route) => false);
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Error: $e")),
+                );
+              }
+            },
+            child: const Text("Delete", style: TextStyle(color: Colors.red)),
           ),
-
-          const SizedBox(height: 10),
-          Text(
-            user.email ?? "-",
-            style: TextStyle(color: Colors.grey[600]),
-          ),
-
-          const SizedBox(height: 20),
-
-          Text(
-            user.displayName ?? "Name",
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-          ),
-
-          const SizedBox(height: 25),
-
-          Row(
-            children: [
-              _tabButton("Favorites", 0),
-              _tabButton("Reviews", 1),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          if (selectedTab == 0)
-            _favoritesGrid(user.uid)
-          else
-            _reviewsPlaceholder(),
         ],
       ),
     );
   }
 
-  Widget _tabButton(String label, int index) {
-    bool active = index == selectedTab;
-
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => selectedTab = index),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: active ? Colors.grey[400] : Colors.grey[300],
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: active ? Colors.black : Colors.grey[700],
-              ),
-            ),
+  Widget _buildProfileUI(
+      BuildContext context, User user, String name, String? photoURL) {
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.orange[300],
+        centerTitle: true,
+        title: const Text(
+          "My Profile",
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),
-    );
-  }
 
-  Widget _favoritesGrid(String userId) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('favorites')
-          .doc(userId)
-          .collection('items')
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        final docs = snapshot.data!.docs;
-
-        if (docs.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.all(20),
-            child: Center(
-              child: Text("No favorites yet."),
-            ),
-          );
-        }
-
-        return GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: 0.85,
-          children: docs.map((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            return _favoriteCardFromFavorites(data);
-          }).toList(),
-        );
-      },
-    );
-  }
-
-  Widget _favoriteCardFromFavorites(Map<String, dynamic> data) {
-    final vendorId = data['id'] ?? "";
-    final name = data['name'] ?? "Unknown";
-    final image = data['image'] ?? "";
-    final priceRange = data['priceRange'] ?? "";
-    final cuisineType = data['cuisineType'] ?? "";
-    final ratingValue = (data['rating'] as num?)?.toDouble();
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: () {
-          Navigator.pushNamed(
-            context,
-            '/restaurantDetail',
-            arguments: {
-              'vendorId': vendorId,
-              'name': name,
-              'image': image,
-              'priceRange': priceRange,
-              'cuisineType': cuisineType,
-              'rating': ratingValue,
-            },
-          );
-        },
-        child: Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFFF6EDE6),
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(18),
-            child: Stack(
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          const SizedBox(height: 25),
+          Center(
+            child: Column(
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AspectRatio(
-                      aspectRatio: 1.2,
-                      child: Image.network(
-                        image,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
-                            Container(color: Colors.grey[300]),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.location_on_outlined,
-                            size: 14,
-                            color: Colors.orange,
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                  ],
+                CircleAvatar(
+                  radius: 45,
+                  backgroundImage:
+                      photoURL != null ? NetworkImage(photoURL) : null,
+                  backgroundColor: Colors.grey[300],
+                  child: photoURL == null
+                      ? const Icon(Icons.person,
+                          size: 50, color: Colors.white70)
+                      : null,
                 ),
+                const SizedBox(height: 12),
 
-                Positioned(
-                  top: 8,
-                  left: 8,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.restaurant_menu,
-                          size: 14,
-                          color: Colors.brown,
-                        ),
-                        if (cuisineType.toString().isNotEmpty) ...[
-                          const SizedBox(width: 4),
-                          Text(
-                            cuisineType,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: Colors.brown,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
 
-                Positioned(
-                  top: 8,
-                  left: 0,
-                  right: 0,
-                  child: Center(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.95),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            ratingValue != null
-                                ? ratingValue.toStringAsFixed(1)
-                                : "-",
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          const Icon(
-                            Icons.star,
-                            size: 13,
-                            color: Colors.amber,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                const SizedBox(height: 4),
+                Text(
+                  user.email ?? "",
+                  style: TextStyle(color: Colors.grey[600]),
                 ),
 
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.favorite,
-                      size: 16,
-                      color: Colors.red,
-                    ),
-                  ),
+                const SizedBox(height: 16),
+
+                OutlinedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const EditProfilePage(),
+                      ),
+                    );
+                  },
+                  child: const Text("Edit Profile"),
                 ),
               ],
             ),
           ),
+
+          const SizedBox(height: 30),
+          _sectionTitle("General"),
+          _settingsTile(
+            icon: Icons.favorite_border,
+            title: "Favorite Restaurants",
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const FavoritePage()),
+              );
+            },
+          ),
+
+          _settingsTile(
+            icon: Icons.lock_outline,
+            title: "Change Password",
+            onTap: () {
+              Navigator.pushNamed(context, '/change-password');
+            },
+          ),
+
+          const SizedBox(height: 20),
+          _sectionTitle("Preferences"),
+          _settingsTile(
+            icon: Icons.notifications_none,
+            title: "Notifications",
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const NearbyNotificationsPage()),
+              );
+            },
+          ),
+
+          _settingsTile(
+            icon: Icons.dark_mode_outlined,
+            title: "Dark Mode",
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                    content: Text("Dark mode toggle coming soon!")),
+              );
+            },
+          ),
+
+        _settingsTile(
+          icon: Icons.language_outlined,
+          title: "Language",
+          // onTap: () {
+          //   Navigator.push(
+          //     context,
+          //     MaterialPageRoute(builder: (_) => const LanguageSettingsPage()),
+          //   );
+          // },
+        ),
+
+        _settingsTile(
+          icon: Icons.restaurant_menu_outlined,
+          title: "Dietary Rules",
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const DietarySettingsPage()),
+            );
+          },
+        ),
+
+          const SizedBox(height: 20),
+
+          _sectionTitle("Delete"),
+          _settingsTile(
+            icon: Icons.delete_forever_outlined,
+            title: "Delete Account",
+            onTap: () => _confirmDeleteAccount(context),
+          ),
+
+          const SizedBox(height: 30),
+
+          TextButton(
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+              Navigator.pushNamedAndRemoveUntil(
+                  context, '/login', (route) => false);
+            },
+            child: const Text(
+              "Log Out",
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 16,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  Widget _sectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 17,
+          fontWeight: FontWeight.bold,
+          color: Colors.black87,
         ),
       ),
     );
   }
 
-  Widget _reviewsPlaceholder() {
-    return const Padding(
-      padding: EdgeInsets.all(20),
-      child: Center(
-        child: Text("Reviews tab coming soon."),
+  Widget _settingsTile({
+    required IconData icon,
+    required String title,
+    VoidCallback? onTap,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.08),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ListTile(
+        leading: Icon(icon, color: Colors.orange),
+        title: Text(
+          title,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        ),
+        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        onTap: onTap,
       ),
     );
   }

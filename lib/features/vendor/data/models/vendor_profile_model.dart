@@ -25,6 +25,8 @@ class VendorProfileModel {
   final DateTime? rejectedAt;
   final String? rejectedBy; // Admin user ID
   final String? rejectionReason;
+  final double? latitude;
+  final double? longitude;
 
   // Suspension fields
   final DateTime? suspendedAt;
@@ -67,6 +69,8 @@ class VendorProfileModel {
     this.deactivatedAt,
     this.deactivatedBy,
     this.deactivationReason,
+    this.latitude,
+    this.longitude,
   });
 
   Map<String, dynamic> toMap() {
@@ -95,6 +99,8 @@ class VendorProfileModel {
       if (rejectedAt != null) 'rejectedAt': rejectedAt,
       if (rejectedBy != null) 'rejectedBy': rejectedBy,
       if (rejectionReason != null) 'rejectionReason': rejectionReason,
+      if (latitude != null) 'latitude': latitude,
+      if (longitude != null) 'longitude': longitude,
       'outlets': outlets.map((outlet) {
         return {
           'id': outlet.id,
@@ -208,6 +214,8 @@ class VendorProfileModel {
       deactivatedAt: entity.deactivatedAt,
       deactivatedBy: entity.deactivatedBy,
       deactivationReason: entity.deactivationReason,
+      latitude: entity.latitude,
+      longitude: entity.longitude,
     );
   }
 
@@ -259,6 +267,8 @@ class VendorProfileModel {
       deactivatedAt: _parseTimestampNullable(data['deactivatedAt']),
       deactivatedBy: data['deactivatedBy'] as String?,
       deactivationReason: data['deactivationReason'] as String?,
+      latitude: (data['latitude'] as num?)?.toDouble(),
+      longitude: (data['longitude'] as num?)?.toDouble()
     );
   }
 
@@ -293,6 +303,8 @@ class VendorProfileModel {
       deactivatedAt: deactivatedAt,
       deactivatedBy: deactivatedBy,
       deactivationReason: deactivationReason,
+      latitude: latitude,
+      longitude: longitude,
     );
   }
 

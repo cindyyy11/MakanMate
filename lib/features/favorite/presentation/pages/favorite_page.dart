@@ -75,7 +75,7 @@ class FavoritePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Favorites'),
-        backgroundColor: Colors.orange,
+        backgroundColor: Colors.orange[300],
       ),
 
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -142,7 +142,6 @@ class FavoritePage extends StatelessWidget {
                   );
                 },
 
-                // Favorite card UI
                 child: Container(
                   margin: const EdgeInsets.only(bottom: 16),
                   padding: const EdgeInsets.all(12),

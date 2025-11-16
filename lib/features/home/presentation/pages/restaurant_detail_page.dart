@@ -11,7 +11,10 @@ import 'package:makan_mate/features/reviews/presentation/bloc/review_bloc.dart';
 import 'package:makan_mate/features/reviews/presentation/pages/submit_review_page.dart';
 import 'package:makan_mate/features/vendor/domain/entities/menu_item_entity.dart';
 import 'package:makan_mate/features/vendor/domain/entities/vendor_profile_entity.dart';
+import 'package:makan_mate/features/vendor/presentation/pages/all_menu_items_page.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:makan_mate/features/reviews/presentation/pages/all_reviews_page.dart';
 
 class RestaurantDetailPage extends StatefulWidget {
   final RestaurantEntity restaurant;
@@ -202,9 +205,9 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
   }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> _watchReviews(
-    String vendorId,
-    String sortBy,
-  ) {
+      String vendorId,
+      String sortBy,
+      ) {
     Query<Map<String, dynamic>> query = FirebaseFirestore.instance
         .collection('reviews')
         .where('vendorId', isEqualTo: vendorId);
@@ -236,7 +239,6 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
       print("Review query error: $e");
     });
   }
-
 
   Future<void> _markHelpful(String reviewId) async {
     await FirebaseFirestore.instance
@@ -271,6 +273,13 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
         elevation: 0.5,
         foregroundColor: Colors.black,
         title: Text(vendor!.businessName),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.share),
+              onPressed: _shareRestaurant,
+              tooltip: "Share",
+            ),
+          ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -295,6 +304,19 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
         ],
       ),
     );
+  }
+
+  void _shareRestaurant() {
+    final vendorName = vendor!.businessName;
+    final vendorId = vendor!.id;
+
+    final String shareUrl =
+        "https://makanmate.com/restaurant?vendorId=$vendorId";
+
+    final message = 
+        "Check out this restaurant on MakanMate:\n$vendorName\n\n$shareUrl";
+
+    Share.share(message);
   }
 
   Widget _banner() {
@@ -515,68 +537,101 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
   }
 
   Widget _menuSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          "Menu",
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 12),
-        if (menuItems.isEmpty) const Text("No items available."),
-        if (menuItems.isNotEmpty)
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
+  final limitedMenu = menuItems.take(4).toList();
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text(
+            "Menu",
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+
+          if (menuItems.length > 4)
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => AllMenuItemsPage(
+                      vendorName: vendor!.businessName,
+                      items: menuItems,
+                    ),
+                  ),
+                );
+              },
+              child: const Text("See All"),
+            ),
+        ],
+      ),
+      const SizedBox(height: 12),
+
+      if (menuItems.isEmpty)
+        const Text("No items available."),
+
+      if (menuItems.isNotEmpty)
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: limitedMenu.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
             childAspectRatio: 0.9,
-            children: menuItems.map((m) {
-              return Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      blurRadius: 6,
-                    )
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    ClipRRect(
-                      borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(12)),
-                      child: Image.network(
-                        m.imageUrl,
-                        height: 100,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
-                            Container(height: 100, color: Colors.grey[300]),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Text(
-                        m.name,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Text(
-                      "RM ${m.price.toStringAsFixed(2)}",
-                      style: const TextStyle(color: Colors.grey),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
           ),
-      ],
+          itemBuilder: (context, index) {
+            final m = limitedMenu[index];
+            return _menuCard(m);
+          },
+        ),
+    ],
+  );
+}
+
+  Widget _menuCard(MenuItemEntity m) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 6,
+          )
+        ],
+      ),
+      child: Column(
+        children: [
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            child: Image.network(
+              m.imageUrl,
+              height: 100,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) =>
+                  Container(height: 100, color: Colors.grey[300]),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Text(
+              m.name,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Text(
+            "RM ${m.price.toStringAsFixed(2)}",
+            style: const TextStyle(color: Colors.grey),
+          ),
+        ],
+      ),
     );
   }
 
@@ -595,7 +650,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
 
     final sortedEntries = hours.entries.toList()
       ..sort(
-        (a, b) =>
+            (a, b) =>
             weekdayOrder.indexOf(a.key).compareTo(weekdayOrder.indexOf(b.key)),
       );
 
@@ -701,9 +756,29 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "Reviews",
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              "Reviews",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => AllReviewsPage(
+                      vendorId: vendor!.id,
+                      vendorName: vendor!.businessName,
+                    ),
+                  ),
+                );
+              },
+              child: const Text("See All"),
+            ),
+          ],
         ),
         const SizedBox(height: 8),
         _sortingBar(),
@@ -715,7 +790,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
 
   Widget _sortingBar() {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.start, 
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
         DropdownButton<String>(
           value: selectedSort,
@@ -773,8 +848,10 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
           );
         }
 
+        final limitedDocs = docs.take(4).toList();
+
         return Column(
-          children: docs.map((doc) {
+          children: limitedDocs.map((doc) {
             final r = doc.data();
             final double rating = (r['rating'] as num?)?.toDouble() ?? 0.0;
             final String comment = r['comment']?.toString() ?? '';

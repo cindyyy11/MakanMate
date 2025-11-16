@@ -24,6 +24,8 @@ class VendorProfileEntity extends Equatable {
   final DateTime? rejectedAt;
   final String? rejectedBy; // Admin user ID
   final String? rejectionReason;
+  final double? latitude;
+  final double? longitude;
 
   // Suspension fields
   final DateTime? suspendedAt;
@@ -66,6 +68,8 @@ class VendorProfileEntity extends Equatable {
     this.deactivatedAt,
     this.deactivatedBy,
     this.deactivationReason,
+    this.longitude,
+    this.latitude,
   });
 
   VendorProfileEntity copyWith({
@@ -98,6 +102,8 @@ class VendorProfileEntity extends Equatable {
     DateTime? deactivatedAt,
     String? deactivatedBy,
     String? deactivationReason,
+    double? latitude,
+    double? longitude,
   }) {
     return VendorProfileEntity(
       id: id ?? this.id,
@@ -129,6 +135,8 @@ class VendorProfileEntity extends Equatable {
       deactivatedAt: deactivatedAt ?? this.deactivatedAt,
       deactivatedBy: deactivatedBy ?? this.deactivatedBy,
       deactivationReason: deactivationReason ?? this.deactivationReason,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
     );
   }
 
@@ -163,6 +171,8 @@ class VendorProfileEntity extends Equatable {
     deactivatedAt,
     deactivatedBy,
     deactivationReason,
+    latitude,
+    longitude,
   ];
 }
 
