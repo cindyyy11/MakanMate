@@ -18,4 +18,26 @@ class MenuItemEntity {
     required this.available,
     required this.calories,
   });
+
+  MenuItemEntity copyWith({
+    String? id,
+    String? name,
+    String? description,
+    String? category,
+    double? price,
+    int? calories,
+    String? imageUrl,
+    bool? available,
+  }) {
+    return MenuItemEntity(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      category: category ?? this.category,
+      price: price ?? this.price,
+      calories: calories ?? this.calories,
+      imageUrl: imageUrl ?? this.imageUrl,
+      available: available ?? this.available,
+    );
+  }
 }

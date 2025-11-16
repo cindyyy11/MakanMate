@@ -5,8 +5,8 @@ import '../../../vendor/domain/usecases/get_menu_items_usecase.dart';
 import '../../../vendor/domain/usecases/add_menu_item_usecase.dart';
 import '../../../vendor/domain/usecases/update_menu_item_usecase.dart';
 import '../../../vendor/domain/usecases/delete_menu_item_usecase.dart';
-import '../../../vendor/data/services/storage_service.dart';
 import '../../../vendor/domain/entities/menu_item_entity.dart';
+import '../../../vendor/data/services/storage_service.dart';
 
 class VendorBloc extends Bloc<VendorEvent, VendorState> {
   final GetMenuItemsUseCase getMenuItems;
@@ -36,93 +36,58 @@ class VendorBloc extends Bloc<VendorEvent, VendorState> {
     try {
       final items = await getMenuItems();
 
-      // Extract unique categories
-      final Set<String> categorySet = {};
-      for (var item in items) {
-        if (item.category.isNotEmpty) {
-          categorySet.add(item.category);
-        }
-      }
+      final categories = ["All", ...items.map((i) => i.category).toSet()];
 
-      final categories = ["All", ...categorySet];
-
-      emit(VendorLoaded(
-        items,
-        filteredMenu: items,
-        selectedCategory: null,
-        searchQuery: '',
-        categories: categories,
-      ));
+      emit(VendorLoaded(items, filteredMenu: items, categories: categories));
     } catch (e) {
       emit(VendorError(e.toString()));
     }
   }
 
-
   void _onSearchMenu(SearchMenuEvent event, Emitter emit) {
     if (state is! VendorLoaded) return;
 
-    final currentState = state as VendorLoaded;
-    final query = event.query.toLowerCase().trim();
+    final s = state as VendorLoaded;
+    final query = event.query.toLowerCase();
 
-    List<MenuItemEntity> filtered = currentState.menu;
+    var filtered = s.menu.where((item) {
+      return item.name.toLowerCase().contains(query) ||
+          item.description.toLowerCase().contains(query);
+    }).toList();
 
-    // Apply category filter if exists
-    if (currentState.selectedCategory != null) {
-      filtered = filtered.where((item) =>
-          item.category.toLowerCase() ==
-          currentState.selectedCategory!.toLowerCase()).toList();
-    }
-
-    // Apply search query
-    if (query.isNotEmpty) {
-      filtered = filtered.where((item) =>
-          item.name.toLowerCase().contains(query) ||
-          item.description.toLowerCase().contains(query) ||
-          item.category.toLowerCase().contains(query)).toList();
-    }
-
-    emit(VendorLoaded(
-      currentState.menu,
-      filteredMenu: filtered,
-      selectedCategory: currentState.selectedCategory,
-      searchQuery: query,
-      categories: currentState.categories,
-    ));
+    emit(
+      VendorLoaded(
+        s.menu,
+        filteredMenu: filtered,
+        categories: s.categories,
+        selectedCategory: s.selectedCategory,
+        searchQuery: query,
+      ),
+    );
   }
 
   void _onFilterByCategory(FilterByCategoryEvent event, Emitter emit) {
     if (state is! VendorLoaded) return;
 
-    final currentState = state as VendorLoaded;
+    final s = state as VendorLoaded;
     final category = event.category;
 
-    List<MenuItemEntity> filtered = currentState.menu;
+    List<MenuItemEntity> filtered = s.menu;
 
-    // Apply category filter
-    if (category != null) {
-      filtered = filtered.where((item) =>
-          item.category.toLowerCase() == category.toLowerCase()).toList();
+    if (category != null && category != "All") {
+      filtered = filtered.where((item) => item.category == category).toList();
     }
 
-    // Apply search query
-    if (currentState.searchQuery.isNotEmpty) {
-      final query = currentState.searchQuery.toLowerCase();
-      filtered = filtered.where((item) =>
-          item.name.toLowerCase().contains(query) ||
-          item.description.toLowerCase().contains(query) ||
-          item.category.toLowerCase().contains(query)).toList();
-    }
-
-    emit(VendorLoaded(
-      currentState.menu,
-      filteredMenu: filtered,
-      selectedCategory: category,
-      searchQuery: currentState.searchQuery,
-      categories: currentState.categories,
-    ));
+    emit(
+      VendorLoaded(
+        s.menu,
+        filteredMenu: filtered,
+        categories: s.categories,
+        selectedCategory: category,
+        searchQuery: s.searchQuery,
+      ),
+    );
   }
-
 
   Future<void> _onUploadImage(UploadImageEvent event, Emitter emit) async {
     try {
@@ -132,7 +97,7 @@ class VendorBloc extends Bloc<VendorEvent, VendorState> {
       );
       emit(ImageUploaded(imageUrl));
     } catch (e) {
-      emit(ImageUploadError('Failed to upload image: ${e.toString()}'));
+      emit(ImageUploadError(e.toString()));
     }
   }
 
@@ -140,33 +105,17 @@ class VendorBloc extends Bloc<VendorEvent, VendorState> {
     try {
       String imageUrl = event.item.imageUrl;
 
-      // Upload image if provided
       if (event.imageFile != null) {
         emit(ImageUploading());
-        try {
-          imageUrl = await storageService.uploadMenuItemImage(event.imageFile!);
-        } catch (e) {
-          emit(VendorError('Failed to upload image: ${e.toString()}'));
-          return;
-        }
+        imageUrl = await storageService.uploadMenuItemImage(event.imageFile!);
       }
 
-      // Create menu item with uploaded image URL
-      final menuItem = MenuItemEntity(
-        id: event.item.id,
-        name: event.item.name,
-        description: event.item.description,
-        category: event.item.category,
-        price: event.item.price,
-        calories: event.item.calories,
-        imageUrl: imageUrl,
-        available: event.item.available,
-      );
+      final item = event.item.copyWith(imageUrl: imageUrl);
+      await addMenuItem(item);
 
-      await addMenuItem(menuItem);
       add(LoadMenuEvent());
     } catch (e) {
-      emit(VendorError('Failed to add menu item: ${e.toString()}'));
+      emit(VendorError(e.toString()));
     }
   }
 
@@ -174,33 +123,17 @@ class VendorBloc extends Bloc<VendorEvent, VendorState> {
     try {
       String imageUrl = event.item.imageUrl;
 
-      // Upload new image if provided
       if (event.imageFile != null) {
         emit(ImageUploading());
-        try {
-          imageUrl = await storageService.uploadMenuItemImage(event.imageFile!);
-        } catch (e) {
-          emit(VendorError('Failed to upload image: ${e.toString()}'));
-          return;
-        }
+        imageUrl = await storageService.uploadMenuItemImage(event.imageFile!);
       }
 
-      // Update menu item with new image URL
-      final menuItem = MenuItemEntity(
-        id: event.item.id,
-        name: event.item.name,
-        description: event.item.description,
-        category: event.item.category,
-        price: event.item.price,
-        calories: event.item.calories,
-        imageUrl: imageUrl,
-        available: event.item.available,
-      );
+      final item = event.item.copyWith(imageUrl: imageUrl);
+      await updateMenuItem(item);
 
-      await updateMenuItem(menuItem);
       add(LoadMenuEvent());
     } catch (e) {
-      emit(VendorError('Failed to update menu: ${e.toString()}'));
+      emit(VendorError(e.toString()));
     }
   }
 
@@ -209,7 +142,7 @@ class VendorBloc extends Bloc<VendorEvent, VendorState> {
       await deleteMenuItem(event.id);
       add(LoadMenuEvent());
     } catch (e) {
-      emit(VendorError('Failed to delete menu item.'));
+      emit(VendorError(e.toString()));
     }
   }
 }

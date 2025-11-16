@@ -23,35 +23,41 @@ class VendorReviewBloc extends Bloc<VendorReviewEvent, VendorReviewState> {
     on<LoadVendorReviews>(_onLoadReviews);
     on<ReplyToVendorReview>(_onReply);
     on<ReportVendorReview>(_onReport);
+    on<_ReviewsUpdated>(_onReviewsUpdated);
   }
 
-  void _onLoadReviews(
-    LoadVendorReviews event,
+  // Internal event to update reviews
+  void _onReviewsUpdated(
+    _ReviewsUpdated event,
     Emitter<VendorReviewState> emit,
   ) {
+    emit(VendorReviewLoaded(event.reviews));
+  }
+
+  Future<void> _onLoadReviews(
+    LoadVendorReviews event,
+    Emitter<VendorReviewState> emit,
+  ) async {
     emit(VendorReviewLoading());
-    _subscription?.cancel();
+    
+    // Cancel previous subscription
+    await _subscription?.cancel();
 
     try {
-    _subscription = watchReviews(event.restaurantId).listen(
-      (reviews) {
-        // ✅ Always emit something — even empty list
-        emit(VendorReviewLoaded(reviews));
-      },
-      onError: (e) {
-        emit(VendorReviewError(e.toString()));
-      },
-      onDone: () {
-        // Optional: handle stream closed
-        if (state is! VendorReviewLoaded) {
-          emit(const VendorReviewLoaded([]));
-        }
-      },
-    );
-  } catch (e) {
-    emit(VendorReviewError(e.toString()));
+      // Subscribe to the stream and emit updates via internal event
+      _subscription = watchReviews(event.vendorId).listen(
+        (reviews) {
+          // Use add() to trigger internal event instead of emit()
+          add(_ReviewsUpdated(reviews));
+        },
+        onError: (error, stackTrace) {
+          add(_ReviewsUpdated(const [])); // Emit empty list on error
+        },
+      );
+    } catch (e, stackTrace) {
+      emit(VendorReviewError(e.toString()));
+    }
   }
-}
 
   Future<void> _onReply(
     ReplyToVendorReview event,
@@ -62,8 +68,7 @@ class VendorReviewBloc extends Bloc<VendorReviewEvent, VendorReviewState> {
     emit(VendorReviewActionInProgress(current));
     try {
       await replyToReview(reviewId: event.reviewId, replyText: event.replyText);
-      // Stream will automatically update, so we don't need to manually emit
-      // The state will be updated by the stream listener
+      // The stream will automatically update with the new reply
     } catch (e) {
       emit(VendorReviewError(e.toString()));
     }
@@ -78,7 +83,6 @@ class VendorReviewBloc extends Bloc<VendorReviewEvent, VendorReviewState> {
     emit(VendorReviewActionInProgress(current));
     try {
       await reportReview(reviewId: event.reviewId, reason: event.reason);
-      // Report doesn't change the review, so we can go back to loaded state
       if (current.isNotEmpty) {
         emit(VendorReviewLoaded(current));
       }
@@ -94,4 +98,12 @@ class VendorReviewBloc extends Bloc<VendorReviewEvent, VendorReviewState> {
   }
 }
 
+// Internal event for stream updates
+class _ReviewsUpdated extends VendorReviewEvent {
+  final List<ReviewEntity> reviews;
 
+  const _ReviewsUpdated(this.reviews);
+
+  @override
+  List<Object?> get props => [reviews];
+}

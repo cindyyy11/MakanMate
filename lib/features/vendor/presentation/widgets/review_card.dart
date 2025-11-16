@@ -1,11 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:makan_mate/core/di/injection_container.dart';
-import 'package:makan_mate/features/auth/data/models/user_models.dart';
-import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:makan_mate/features/auth/presentation/bloc/auth_state.dart';
 import '../../domain/entities/review_entity.dart';
 
 class ReviewCard extends StatefulWidget {
@@ -25,43 +21,58 @@ class ReviewCard extends StatefulWidget {
 }
 
 class _ReviewCardState extends State<ReviewCard> {
-  UserModel? _user;
-  bool _isLoadingUser = true;
+  String? _userName;
+  String? _userPhotoUrl;
 
   @override
   void initState() {
     super.initState();
-    // _loadUser();
+    _userName = widget.review.userName.isNotEmpty
+        ? widget.review.userName
+        : 'Anonymous User';
+    _loadCustomerInfo();
   }
 
-  // Future<void> _loadUser() async {
-  //   try {
-  //     final user = await UserService().getUser(widget.review.userId);
-  //     if (mounted) {
-  //       setState(() {
-  //         _user = user;
-  //         _isLoadingUser = false;
-  //       });
-  //     }
-  //   } catch (e) {
-  //     if (mounted) {
-  //       setState(() {
-  //         _isLoadingUser = false;
-  //       });
-  //     }
-  //   }
-  // }
+  Future<void> _loadCustomerInfo() async {
+    try {
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.review.userId)
+          .get();
+
+      if (userDoc.exists && mounted) {
+        final data = userDoc.data();
+        setState(() {
+          _userName = data?['displayName'] ??
+              data?['name'] ??
+              data?['username'] ??
+              data?['email']?.split('@')[0] ??
+              _userName;
+          _userPhotoUrl = data?['photoUrl'] ?? data?['photoURL'];
+        });
+      } else if (mounted) {
+        setState(() {});
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {});
+      }
+    }
+  }
 
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
 
     if (difference.inDays == 0) {
-      return 'Today, ${DateFormat('HH:mm').format(date)}';
+      if (difference.inHours == 0) {
+        return '${difference.inMinutes}m ago';
+      }
+      return '${difference.inHours}h ago';
     } else if (difference.inDays == 1) {
-      return 'Yesterday, ${DateFormat('HH:mm').format(date)}';
+      return 'Yesterday';
     } else if (difference.inDays < 7) {
-      return DateFormat('EEEE, HH:mm').format(date);
+      return '${difference.inDays}d ago';
     } else {
       return DateFormat('MMM dd, yyyy').format(date);
     }
@@ -69,14 +80,9 @@ class _ReviewCardState extends State<ReviewCard> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = context.watch<AuthBloc>().state;
-    String userName = 'Anonymous';
-    String? userImageUrl;
-
-    if (authState is Authenticated) {
-      userName = authState.user.displayName ?? authState.user.email;
-      userImageUrl = authState.user.photoUrl;
-    }
+    final displayName = _userName?.isNotEmpty == true
+        ? _userName!
+        : 'Anonymous User';
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -94,17 +100,17 @@ class _ReviewCardState extends State<ReviewCard> {
                 // Profile Picture
                 CircleAvatar(
                   radius: 24,
-                  backgroundColor: Colors.grey[300],
-                  backgroundImage: userImageUrl != null
-                      ? CachedNetworkImageProvider(userImageUrl)
+                  backgroundColor: Colors.orange[100],
+                  backgroundImage: _userPhotoUrl != null
+                      ? CachedNetworkImageProvider(_userPhotoUrl!)
                       : null,
-                  child: userImageUrl == null
+                  child: _userPhotoUrl == null
                       ? Text(
-                          userName.isNotEmpty ? userName[0].toUpperCase() : '?',
-                          style: const TextStyle(
+                          displayName[0].toUpperCase(),
+                          style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: Colors.grey,
+                            color: Colors.orange[800],
                           ),
                         )
                       : null,
@@ -119,7 +125,7 @@ class _ReviewCardState extends State<ReviewCard> {
                         children: [
                           Expanded(
                             child: Text(
-                              userName,
+                              displayName,
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -153,8 +159,8 @@ class _ReviewCardState extends State<ReviewCard> {
                             index < widget.review.rating.floor()
                                 ? Icons.star
                                 : index < widget.review.rating
-                                ? Icons.star_half
-                                : Icons.star_border,
+                                    ? Icons.star_half
+                                    : Icons.star_border,
                             color: Colors.amber,
                             size: 18,
                           );
@@ -172,6 +178,34 @@ class _ReviewCardState extends State<ReviewCard> {
                 widget.review.comment,
                 style: const TextStyle(fontSize: 14, height: 1.5),
               ),
+
+            // Tags (if any)
+            if (widget.review.tags.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: widget.review.tags.map((tag) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.orange[50],
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.orange[200]!),
+                    ),
+                    child: Text(
+                      tag,
+                      style: TextStyle(
+                        color: Colors.orange[800],
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+
             // Attached Images
             if (widget.review.imageUrls.isNotEmpty) ...[
               const SizedBox(height: 12),
@@ -179,11 +213,11 @@ class _ReviewCardState extends State<ReviewCard> {
                 height: 80,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: widget.review.imageUrls.length,
+                  itemCount: widget.review.imageUrls.length > 3 
+                      ? 3 
+                      : widget.review.imageUrls.length,
                   itemBuilder: (context, index) {
-                    final isLast = index == widget.review.imageUrls.length - 1;
-                    final hasMore =
-                        widget.review.imageUrls.length > 3 && index == 2;
+                    final hasMore = widget.review.imageUrls.length > 3 && index == 2;
                     return Stack(
                       children: [
                         Container(
@@ -212,9 +246,10 @@ class _ReviewCardState extends State<ReviewCard> {
                             ),
                           ),
                         ),
-                        if (hasMore && !isLast)
+                        if (hasMore)
                           Positioned.fill(
                             child: Container(
+                              margin: const EdgeInsets.only(right: 8),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(8),
                                 color: Colors.black54,
@@ -225,6 +260,7 @@ class _ReviewCardState extends State<ReviewCard> {
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
+                                    fontSize: 16,
                                   ),
                                 ),
                               ),
@@ -236,66 +272,111 @@ class _ReviewCardState extends State<ReviewCard> {
                 ),
               ),
             ],
+
+            // Aspect Ratings (if any)
+            if (widget.review.aspectRatings.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              const Divider(),
+              const SizedBox(height: 8),
+              ...widget.review.aspectRatings.entries.map((entry) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _formatAspectName(entry.key),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: List.generate(5, (index) {
+                          return Icon(
+                            index < entry.value.floor()
+                                ? Icons.star
+                                : index < entry.value
+                                    ? Icons.star_half
+                                    : Icons.star_border,
+                            color: Colors.orange[400],
+                            size: 14,
+                          );
+                        }),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ],
+
             // Likes Count
             if (widget.review.helpfulCount > 0) ...[
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Icon(Icons.favorite, color: Colors.red[300], size: 16),
+                  Icon(Icons.thumb_up, color: Colors.blue[300], size: 16),
                   const SizedBox(width: 4),
                   Text(
-                    '${widget.review.helpfulCount} likes',
+                    '${widget.review.helpfulCount} helpful',
                     style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                 ],
               ),
             ],
+
             // Vendor Reply Section
             if (widget.review.vendorReplyText != null) ...[
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: Colors.green[50],
                   borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.green[200]!),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        const Icon(
-                          Icons.business,
+                        Icon(
+                          Icons.store,
                           size: 16,
-                          color: Colors.orange,
+                          color: Colors.green[700],
                         ),
-                        const SizedBox(width: 4),
-                        const Text(
+                        const SizedBox(width: 6),
+                        Text(
                           "Vendor's Reply",
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 13,
                             fontWeight: FontWeight.bold,
-                            color: Colors.orange,
+                            color: Colors.green[900],
                           ),
                         ),
+                        const Spacer(),
+                        if (widget.review.vendorReplyAt != null)
+                          Text(
+                            _formatDate(widget.review.vendorReplyAt!),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.green[700],
+                            ),
+                          ),
                       ],
                     ),
                     const SizedBox(height: 8),
                     Text(
                       widget.review.vendorReplyText!,
-                      style: const TextStyle(fontSize: 14, height: 1.5),
+                      style: const TextStyle(fontSize: 13, height: 1.5),
                     ),
-                    if (widget.review.vendorReplyAt != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        _formatDate(widget.review.vendorReplyAt!),
-                        style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                      ),
-                    ],
                   ],
                 ),
               ),
             ],
+
             // Action Buttons (Reply and Report)
             if (widget.review.vendorReplyText == null &&
                 (widget.onReply != null || widget.onReport != null)) ...[
@@ -319,20 +400,6 @@ class _ReviewCardState extends State<ReviewCard> {
                     ),
                   if (widget.onReply != null && widget.onReport != null)
                     const SizedBox(width: 8),
-                  if (widget.onReport != null)
-                    ElevatedButton.icon(
-                      onPressed: widget.onReport,
-                      icon: const Icon(Icons.flag, size: 18),
-                      label: const Text('Report'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                      ),
-                    ),
                 ],
               ),
             ],
@@ -340,5 +407,19 @@ class _ReviewCardState extends State<ReviewCard> {
         ),
       ),
     );
+  }
+
+  String _formatAspectName(String key) {
+    // Convert camelCase or snake_case to readable format
+    return key
+        .replaceAllMapped(
+          RegExp(r'([A-Z])'),
+          (match) => ' ${match.group(0)}',
+        )
+        .replaceAll('_', ' ')
+        .trim()
+        .split(' ')
+        .map((word) => word[0].toUpperCase() + word.substring(1))
+        .join(' ');
   }
 }

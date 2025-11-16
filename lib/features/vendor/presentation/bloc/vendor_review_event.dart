@@ -7,10 +7,10 @@ abstract class VendorReviewEvent extends Equatable {
 }
 
 class LoadVendorReviews extends VendorReviewEvent {
-  final String restaurantId;
-  const LoadVendorReviews(this.restaurantId);
+  final String vendorId;
+  const LoadVendorReviews(this.vendorId);
   @override
-  List<Object?> get props => [restaurantId];
+  List<Object?> get props => [vendorId];
 }
 
 class ReplyToVendorReview extends VendorReviewEvent {

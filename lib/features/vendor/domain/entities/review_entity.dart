@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 class ReviewEntity extends Equatable {
   final String id;
   final String userId;
+  final String userName;
   final String itemId;
   final String restaurantId;
   final double rating;
@@ -19,6 +20,7 @@ class ReviewEntity extends Equatable {
   const ReviewEntity({
     required this.id,
     required this.userId,
+    required this.userName,
     required this.itemId,
     required this.restaurantId,
     required this.rating,
@@ -37,6 +39,7 @@ class ReviewEntity extends Equatable {
   List<Object?> get props => [
         id,
         userId,
+        userName,
         itemId,
         restaurantId,
         rating,

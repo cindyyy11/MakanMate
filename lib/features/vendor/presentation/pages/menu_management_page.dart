@@ -85,7 +85,7 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
           ),
         ),
         backgroundColor: Colors.orange,
-        centerTitle: true, // optional: center the title
+        centerTitle: true, 
       ),
       body: BlocListener<VendorBloc, VendorState>(
         listener: (context, state) {
@@ -139,26 +139,24 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
                               )
                             : null,
                         
-                        // Normal border
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                            color: Colors.orange,    // <- Visible border color
+                            color: Colors.orange,
                             width: 1.5,
                           ),
                         ),
 
-                        // Border when clicked (focused)
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                            color: Colors.deepOrange, // <- Stronger focus color
+                            color: Colors.deepOrange,
                             width: 2.0,
                           ),
                         ),
 
                         filled: true,
-                        fillColor: Colors.white, // Cleaner white background
+                        fillColor: Colors.white, 
                         contentPadding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                       onChanged: (value) {
