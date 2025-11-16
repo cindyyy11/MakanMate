@@ -15,11 +15,9 @@ class AnalyticsRemoteDataSourceImpl implements AnalyticsRemoteDataSource {
 
   /// Helper method to get all reviews for a restaurant and calculate overall stats
   Future<Map<String, dynamic>> _getAllReviewStats(String vendorId) async {
-    // Get ALL reviews for this restaurant (not time-filtered)
-    // Note: vendorId == restaurantId in this app
     final allReviewsSnapshot = await firestore
         .collection('reviews')
-        .where('restaurantId', isEqualTo: vendorId)
+        .where('vendorId', isEqualTo: vendorId)
         .get();
 
     int totalReviews = 0;
@@ -77,17 +75,15 @@ class AnalyticsRemoteDataSourceImpl implements AnalyticsRemoteDataSource {
       final allStats = await _getAllReviewStats(vendorId);
 
       // Query reviews from the last 7 days for time-series data
-      // Try restaurantId first, then vendorId
       QuerySnapshot reviewsSnapshot;
       try {
         reviewsSnapshot = await firestore
             .collection('reviews')
-            .where('restaurantId', isEqualTo: vendorId)
+            .where('vendorId', isEqualTo: vendorId)
             .where('createdAt', isGreaterThan: Timestamp.fromDate(sevenDaysAgo))
             .orderBy('createdAt', descending: false)
             .get();
       } catch (e) {
-        // If restaurantId query fails, try vendorId
         reviewsSnapshot = await firestore
             .collection('reviews')
             .where('vendorId', isEqualTo: vendorId)
@@ -169,17 +165,15 @@ class AnalyticsRemoteDataSourceImpl implements AnalyticsRemoteDataSource {
       final allStats = await _getAllReviewStats(vendorId);
 
       // Query reviews from the last 5 weeks for time-series data
-      // Try restaurantId first, then vendorId
       QuerySnapshot reviewsSnapshot;
       try {
         reviewsSnapshot = await firestore
             .collection('reviews')
-            .where('restaurantId', isEqualTo: vendorId)
+            .where('vendorId', isEqualTo: vendorId)
             .where('createdAt', isGreaterThan: Timestamp.fromDate(fiveWeeksAgo))
             .orderBy('createdAt', descending: false)
             .get();
       } catch (e) {
-        // If restaurantId query fails, try vendorId
         reviewsSnapshot = await firestore
             .collection('reviews')
             .where('vendorId', isEqualTo: vendorId)
@@ -280,7 +274,6 @@ class AnalyticsRemoteDataSourceImpl implements AnalyticsRemoteDataSource {
   @override
   Future<PromotionAnalyticsModel> getPromotionAnalytics(String vendorId) async {
     try {
-      // Get all promotions for this vendor from vendors/{vendorId}/promotions
       final promotionsSnapshot = await firestore
           .collection('vendors')
           .doc(vendorId)
@@ -288,37 +281,29 @@ class AnalyticsRemoteDataSourceImpl implements AnalyticsRemoteDataSource {
           .get();
 
       final promotionEngagements = <PromotionEngagementModel>[];
-      int totalViews = 0;
       int totalClicks = 0;
       int totalRedeemed = 0;
 
       for (var promoDoc in promotionsSnapshot.docs) {
-        final promoData = promoDoc.data();
-        final promoTitle =
-            promoData['title'] as String? ?? 'Untitled Promotion';
+        final data = promoDoc.data();
 
-        // Get analytics for this promotion
-        final analyticsDoc = await firestore
-            .collection('analytics_promotions')
-            .doc(vendorId)
-            .collection('promotions')
-            .doc(promoDoc.id)
-            .get();
-
-        final engagement = PromotionEngagementModel.fromFirestore(
-          analyticsDoc.exists ? analyticsDoc : promoDoc,
-          promoTitle,
+        final engagement = PromotionEngagementModel(
+          promotionId: promoDoc.id,
+          promotionTitle: data['title'] ?? 'Untitled Promotion',
+          views: data['clickCount'] ?? 0,
+          clicks: data['clickCount'] ?? 0,
+          redeemed: data['redeemedCount'] ?? 0,
         );
 
         promotionEngagements.add(engagement);
-        totalViews += engagement.views;
+
         totalClicks += engagement.clicks;
         totalRedeemed += engagement.redeemed;
       }
 
       return PromotionAnalyticsModel(
         promotions: promotionEngagements,
-        totalViews: totalViews,
+        totalViews: totalClicks,
         totalClicks: totalClicks,
         totalRedeemed: totalRedeemed,
       );
@@ -326,6 +311,8 @@ class AnalyticsRemoteDataSourceImpl implements AnalyticsRemoteDataSource {
       throw Exception('Failed to get promotion analytics: $e');
     }
   }
+
+
 
   String _getDayKey(DateTime date) {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';

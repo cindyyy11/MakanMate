@@ -32,3 +32,13 @@ class DeactivatePromotionEvent extends PromotionEvent {
   DeactivatePromotionEvent(this.id);
 }
 
+class IncrementPromotionClickEvent extends PromotionEvent {
+  final String promotionId;
+  IncrementPromotionClickEvent(this.promotionId);
+}
+
+class IncrementPromotionRedeemedEvent extends PromotionEvent {
+  final String promotionId;
+  IncrementPromotionRedeemedEvent(this.promotionId);
+}
+

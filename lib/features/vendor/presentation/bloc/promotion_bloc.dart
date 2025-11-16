@@ -7,6 +7,8 @@ import '../../../vendor/domain/usecases/add_promotion_usecase.dart';
 import '../../../vendor/domain/usecases/update_promotion_usecase.dart';
 import '../../../vendor/domain/usecases/delete_promotion_usecase.dart';
 import '../../../vendor/domain/usecases/deactivate_promotion_usecase.dart';
+import '../../../vendor/domain/usecases/increment_promotion_click_usecase.dart';
+import '../../../vendor/domain/usecases/increment_promotion_redeemed_usecase.dart';
 import '../../../vendor/data/services/storage_service.dart';
 import '../../../vendor/domain/entities/promotion_entity.dart';
 
@@ -17,6 +19,8 @@ class PromotionBloc extends Bloc<PromotionEvent, PromotionState> {
   final UpdatePromotionUseCase updatePromotion;
   final DeletePromotionUseCase deletePromotion;
   final DeactivatePromotionUseCase deactivatePromotion;
+  final IncrementPromotionClickUseCase incrementPromotionClick;
+  final IncrementPromotionRedeemedUseCase incrementPromotionRedeemed;
   final StorageService storageService;
 
   PromotionBloc({
@@ -26,6 +30,8 @@ class PromotionBloc extends Bloc<PromotionEvent, PromotionState> {
     required this.updatePromotion,
     required this.deletePromotion,
     required this.deactivatePromotion,
+    required this.incrementPromotionClick,
+    required this.incrementPromotionRedeemed,
     required this.storageService,
   }) : super(PromotionInitial()) {
     on<LoadPromotionsEvent>(_onLoadPromotions);
@@ -34,6 +40,8 @@ class PromotionBloc extends Bloc<PromotionEvent, PromotionState> {
     on<UpdatePromotionEvent>(_onUpdatePromotion);
     on<DeletePromotionEvent>(_onDeletePromotion);
     on<DeactivatePromotionEvent>(_onDeactivatePromotion);
+    on<IncrementPromotionClickEvent>(_onIncrementClick);
+    on<IncrementPromotionRedeemedEvent>(_onIncrementRedeemed);
   }
 
   Future<void> _onLoadPromotions(LoadPromotionsEvent event, Emitter emit) async {
@@ -166,6 +174,30 @@ class PromotionBloc extends Bloc<PromotionEvent, PromotionState> {
       add(LoadPromotionsEvent());
     } catch (e) {
       emit(PromotionError('Failed to deactivate promotion.'));
+    }
+  }
+
+  Future<void> _onIncrementClick(
+      IncrementPromotionClickEvent event, Emitter emit) async {
+    try {
+      await incrementPromotionClick(event.promotionId);
+      // Reload promotions to update counts
+      add(LoadPromotionsEvent());
+    } catch (e) {
+      // Silently fail - analytics shouldn't break the app
+      print('Error incrementing click count: $e');
+    }
+  }
+
+  Future<void> _onIncrementRedeemed(
+      IncrementPromotionRedeemedEvent event, Emitter emit) async {
+    try {
+      await incrementPromotionRedeemed(event.promotionId);
+      // Reload promotions to update counts
+      add(LoadPromotionsEvent());
+    } catch (e) {
+      // Silently fail - analytics shouldn't break the app
+      print('Error incrementing redeemed count: $e');
     }
   }
 

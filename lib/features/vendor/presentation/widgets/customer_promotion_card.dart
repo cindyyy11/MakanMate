@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:makan_mate/core/di/injection_container.dart' as di;
 import '../../data/services/promotion_analytics_service.dart';
 import '../../domain/entities/promotion_entity.dart';
+import '../bloc/promotion_bloc.dart';
+import '../bloc/promotion_event.dart';
 
 /// Customer-facing promotion card with analytics tracking
 /// Use this widget when displaying promotions to customers
@@ -44,12 +47,20 @@ class _CustomerPromotionCardState extends State<CustomerPromotionCard> {
   void _handleTap() {
     // Track click when user taps on the card
     _analyticsService.trackClick(widget.vendorId, widget.promotion.id);
+    // Also increment click count on promotion document
+    context.read<PromotionBloc>().add(
+          IncrementPromotionClickEvent(widget.promotion.id),
+        );
     widget.onTap?.call();
   }
 
   void _handleRedeem() {
     // Track redemption when user redeems the promotion
     _analyticsService.trackRedemption(widget.vendorId, widget.promotion.id);
+    // Also increment redeemed count on promotion document
+    context.read<PromotionBloc>().add(
+          IncrementPromotionRedeemedEvent(widget.promotion.id),
+        );
     widget.onRedeem?.call();
   }
 

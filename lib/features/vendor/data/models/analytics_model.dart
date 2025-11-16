@@ -94,6 +94,7 @@ class PromotionEngagementModel {
     required this.views,
     required this.clicks,
     required this.redeemed,
+
   });
 
   PromotionEngagementEntity toEntity() {
