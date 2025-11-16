@@ -6,6 +6,7 @@ import 'package:makan_mate/features/admin/data/datasources/admin_user_management
 import 'package:makan_mate/features/admin/domain/repositories/admin_user_repository.dart';
 import 'package:makan_mate/features/auth/data/models/user_models.dart';
 import 'package:makan_mate/features/user/domain/entities/user_entity.dart';
+import 'package:makan_mate/features/admin/domain/entities/user_ban_entity.dart';
 
 /// Implementation of admin user repository
 class AdminUserRepositoryImpl implements AdminUserRepository {
@@ -186,6 +187,50 @@ class AdminUserRepositoryImpl implements AdminUserRepository {
       return Left(ServerFailure(e.message));
     } catch (e) {
       return Left(ServerFailure('Failed to delete user data: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<UserBanEntity>>> getBansAndWarnings({
+    String? type,
+    bool? isActive,
+  }) async {
+    if (!await networkInfo.isConnected) {
+      return const Left(NetworkFailure('No internet connection'));
+    }
+
+    try {
+      final bansAndWarnings = await remoteDataSource.getBansAndWarnings(
+        type: type,
+        isActive: isActive,
+      );
+      return Right(bansAndWarnings);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Failed to fetch bans and warnings: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> liftBanOrWarning({
+    required String banId,
+    required String reason,
+  }) async {
+    if (!await networkInfo.isConnected) {
+      return const Left(NetworkFailure('No internet connection'));
+    }
+
+    try {
+      await remoteDataSource.liftBanOrWarning(
+        banId: banId,
+        reason: reason,
+      );
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Failed to lift ban/warning: $e'));
     }
   }
 }

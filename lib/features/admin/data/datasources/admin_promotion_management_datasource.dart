@@ -30,7 +30,7 @@ class AdminPromotionManagementDataSource {
 
       final List<Map<String, dynamic>> promotions = [];
       for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
+        final data = doc.data();
         data['approvalDocId'] = doc.id;
         promotions.add(data);
       }
@@ -42,7 +42,9 @@ class AdminPromotionManagementDataSource {
   }
 
   /// Get all promotions for a vendor
-  Future<List<Map<String, dynamic>>> getVendorPromotions(String vendorId) async {
+  Future<List<Map<String, dynamic>>> getVendorPromotions(
+    String vendorId,
+  ) async {
     try {
       final snapshot = await firestore
           .collection('vendors')
@@ -53,7 +55,7 @@ class AdminPromotionManagementDataSource {
 
       final List<Map<String, dynamic>> promotions = [];
       for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
+        final data = doc.data();
         data['id'] = doc.id;
         data['vendorId'] = vendorId;
         promotions.add(data);
@@ -85,10 +87,10 @@ class AdminPromotionManagementDataSource {
           .collection('promotions')
           .doc(promotionId)
           .update({
-        'status': 'approved',
-        'approvedAt': FieldValue.serverTimestamp(),
-        'approvedBy': adminId,
-      });
+            'status': 'approved',
+            'approvedAt': FieldValue.serverTimestamp(),
+            'approvedBy': adminId,
+          });
 
       // Remove from approval queue
       await firestore
@@ -134,11 +136,11 @@ class AdminPromotionManagementDataSource {
           .collection('promotions')
           .doc(promotionId)
           .update({
-        'status': 'rejected',
-        'rejectedAt': FieldValue.serverTimestamp(),
-        'rejectedBy': adminId,
-        'rejectionReason': reason,
-      });
+            'status': 'rejected',
+            'rejectedAt': FieldValue.serverTimestamp(),
+            'rejectedBy': adminId,
+            'rejectionReason': reason,
+          });
 
       // Remove from approval queue
       await firestore
@@ -221,11 +223,11 @@ class AdminPromotionManagementDataSource {
           .collection('promotions')
           .doc(promotionId)
           .update({
-        'status': 'deactivate',
-        'deactivatedAt': FieldValue.serverTimestamp(),
-        'deactivatedBy': adminId,
-        'deactivationReason': reason,
-      });
+            'status': 'deactivate',
+            'deactivatedAt': FieldValue.serverTimestamp(),
+            'deactivatedBy': adminId,
+            'deactivationReason': reason,
+          });
 
       // Log audit action
       await auditLogService.logAction(
@@ -276,4 +278,3 @@ class AdminPromotionManagementDataSource {
     }
   }
 }
-

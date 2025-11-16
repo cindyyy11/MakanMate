@@ -240,30 +240,44 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
   /// Count pending vendor applications
   Future<int> _getPendingApplications() async {
     try {
-      // Try vendor_applications collection first
+      // Primary: vendors where status == 'pending'
+      final vendorsPending = await firestore
+          .collection('vendors')
+          .where('status', isEqualTo: 'pending')
+          .count()
+          .get();
+      if ((vendorsPending.count ?? 0) > 0) return vendorsPending.count ?? 0;
+
+      // Fallbacks on alternative field names
       try {
-        final snapshot = await firestore
+        final approval = await firestore
+            .collection('vendors')
+            .where('approvalStatus', isEqualTo: 'pending')
+            .count()
+            .get();
+        if ((approval.count ?? 0) > 0) return approval.count ?? 0;
+      } catch (_) {}
+
+      try {
+        final application = await firestore
+            .collection('vendors')
+            .where('applicationStatus', isEqualTo: 'pending')
+            .count()
+            .get();
+        if ((application.count ?? 0) > 0) return application.count ?? 0;
+      } catch (_) {}
+
+      // Legacy applications collection (optional)
+      try {
+        final legacy = await firestore
             .collection('vendor_applications')
             .where('status', isEqualTo: 'pending')
             .count()
             .get();
-        return snapshot.count ?? 0;
+        return legacy.count ?? 0;
       } catch (e) {
-        // Fallback: Check admin/approvals/promotions for pending promotions
-        logger.w('vendor_applications not found, checking admin approvals: $e');
-        try {
-          final snapshot = await firestore
-              .collection('admin')
-              .doc('approvals')
-              .collection('promotions')
-              .where('status', isEqualTo: 'pending')
-              .count()
-              .get();
-          return snapshot.count ?? 0;
-        } catch (e2) {
-          logger.w('No vendor applications found: $e2');
-          return 0;
-        }
+        logger.w('No pending vendor applications found: $e');
+        return 0;
       }
     } catch (e) {
       logger.w('Error counting pending applications: $e');
@@ -274,15 +288,37 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
   /// Count flagged reviews
   Future<int> _getFlaggedReviews() async {
     try {
-      final snapshot = await firestore
-          .collection('flagged_content')
-          .where('status', isEqualTo: 'pending')
-          .count()
-          .get();
-      return snapshot.count ?? 0;
+      // Primary: read from reviews collection per AdminReviewModel schema
+      // Prefer flagged == true and removed == false (if present)
+      try {
+        final snapshot = await firestore
+            .collection('reviews')
+            .where('flagged', isEqualTo: true)
+            .where('removed', isEqualTo: false)
+            .count()
+            .get();
+        return snapshot.count ?? 0;
+      } catch (e) {
+        // Fallback: some documents may not have 'removed' field; count only by flagged
+        final snapshot = await firestore
+            .collection('reviews')
+            .where('flagged', isEqualTo: true)
+            .count()
+            .get();
+        return snapshot.count ?? 0;
+      }
     } catch (e) {
-      // Collection doesn't exist yet - return 0
-      logger.w('flagged_content collection not found: $e');
+      // Fallback: legacy flagged_content collection (optional)
+      try {
+        final legacy = await firestore
+            .collection('flagged_content')
+            .where('status', isEqualTo: 'pending')
+            .count()
+            .get();
+        return legacy.count ?? 0;
+      } catch (e2) {
+        logger.w('Error counting flagged reviews: $e2');
+      }
       return 0;
     }
   }
@@ -365,57 +401,61 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
     }
   }
 
-  /// Count total restaurants
+  /// Count total restaurants based on vendors.outlets
+  ///
+  /// We sum the number of outlets for each vendor. Supports multiple schema shapes:
+  /// - outlets: number                       -> use value directly
+  /// - outlets: List<dynamic> (array)        -> use length
+  /// - numOutlets / outletCount (number)     -> fallback numeric fields
   Future<int> _getTotalRestaurants() async {
     try {
-      // Try restaurants collection first
-      try {
-        final snapshot = await firestore
-            .collection('restaurants')
-            .count()
-            .get();
-        return snapshot.count ?? 0;
-      } catch (e) {
-        // Fallback: Use vendors count (vendors = restaurants in your structure)
-        logger.w('restaurants collection not found, using vendors count: $e');
-        return await _getTotalVendors();
+      int totalOutlets = 0;
+      final vendorsSnapshot = await firestore.collection('vendors').get();
+      for (final doc in vendorsSnapshot.docs) {
+        final data = doc.data();
+        if (data.containsKey('outlets')) {
+          final outlets = data['outlets'];
+          if (outlets is int) {
+            totalOutlets += outlets;
+          } else if (outlets is List) {
+            totalOutlets += outlets.length;
+          } else if (outlets is Map) {
+            // Map of outletId -> outletData
+            totalOutlets += outlets.length;
+          }
+        } else if (data['numOutlets'] is int) {
+          totalOutlets += (data['numOutlets'] as int);
+        } else if (data['outletCount'] is int) {
+          totalOutlets += (data['outletCount'] as int);
+        } else {
+          // If no explicit outlets field, treat as single outlet vendor
+          totalOutlets += 1;
+        }
       }
+      return totalOutlets;
     } catch (e) {
-      logger.w('Error counting restaurants: $e');
+      logger.w('Error counting restaurants (vendors.outlets): $e');
       return 0;
     }
   }
 
-  /// Count total food items
+  /// Count total food items using vendors/{vendorId}/menu subcollections
   Future<int> _getTotalFoodItems() async {
     try {
-      // Try food_items collection first
-      try {
-        final snapshot = await firestore.collection('food_items').count().get();
-        return snapshot.count ?? 0;
-      } catch (e) {
-        // Fallback: Count menu items from vendors/{vendorId}/menu subcollections
-        logger.w('food_items collection not found, counting menu items: $e');
+      int totalMenuItems = 0;
+      final vendorsSnapshot = await firestore.collection('vendors').get();
+      for (var vendorDoc in vendorsSnapshot.docs) {
         try {
-          int totalMenuItems = 0;
-          final vendorsSnapshot = await firestore.collection('vendors').get();
-
-          for (var vendorDoc in vendorsSnapshot.docs) {
-            final menuSnapshot = await vendorDoc.reference
-                .collection('menu')
-                .count()
-                .get();
-            totalMenuItems += menuSnapshot.count ?? 0;
-          }
-
-          return totalMenuItems;
-        } catch (e2) {
-          logger.w('Error counting menu items: $e2');
-          return 0;
+          final menuCount = await vendorDoc.reference.collection('menus').count().get();
+          totalMenuItems += menuCount.count ?? 0;
+        } catch (e) {
+          // If the vendor has no menu subcollection, skip
+          logger.v('No menu subcollection for vendor ${vendorDoc.id}: $e');
         }
       }
+      return totalMenuItems;
     } catch (e) {
-      logger.w('Error counting food items: $e');
+      logger.w('Error counting food items from vendor menus: $e');
       return 0;
     }
   }

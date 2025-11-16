@@ -25,6 +25,17 @@ class VendorProfileEntity extends Equatable {
   final String? rejectedBy; // Admin user ID
   final String? rejectionReason;
 
+  // Suspension fields
+  final DateTime? suspendedAt;
+  final String? suspendedBy; // Admin user ID
+  final String? suspensionReason;
+  final DateTime? suspendedUntil;
+
+  // Deactivation fields
+  final DateTime? deactivatedAt;
+  final String? deactivatedBy; // Admin user ID
+  final String? deactivationReason;
+
   const VendorProfileEntity({
     required this.id,
     this.profilePhotoUrl,
@@ -48,6 +59,13 @@ class VendorProfileEntity extends Equatable {
     this.rejectedAt,
     this.rejectedBy,
     this.rejectionReason,
+    this.suspendedAt,
+    this.suspendedBy,
+    this.suspensionReason,
+    this.suspendedUntil,
+    this.deactivatedAt,
+    this.deactivatedBy,
+    this.deactivationReason,
   });
 
   VendorProfileEntity copyWith({
@@ -73,6 +91,13 @@ class VendorProfileEntity extends Equatable {
     DateTime? rejectedAt,
     String? rejectedBy,
     String? rejectionReason,
+    DateTime? suspendedAt,
+    String? suspendedBy,
+    String? suspensionReason,
+    DateTime? suspendedUntil,
+    DateTime? deactivatedAt,
+    String? deactivatedBy,
+    String? deactivationReason,
   }) {
     return VendorProfileEntity(
       id: id ?? this.id,
@@ -97,6 +122,13 @@ class VendorProfileEntity extends Equatable {
       rejectedAt: rejectedAt ?? this.rejectedAt,
       rejectedBy: rejectedBy ?? this.rejectedBy,
       rejectionReason: rejectionReason ?? this.rejectionReason,
+      suspendedAt: suspendedAt ?? this.suspendedAt,
+      suspendedBy: suspendedBy ?? this.suspendedBy,
+      suspensionReason: suspensionReason ?? this.suspensionReason,
+      suspendedUntil: suspendedUntil ?? this.suspendedUntil,
+      deactivatedAt: deactivatedAt ?? this.deactivatedAt,
+      deactivatedBy: deactivatedBy ?? this.deactivatedBy,
+      deactivationReason: deactivationReason ?? this.deactivationReason,
     );
   }
 
@@ -124,6 +156,13 @@ class VendorProfileEntity extends Equatable {
     rejectedAt,
     rejectedBy,
     rejectionReason,
+    suspendedAt,
+    suspendedBy,
+    suspensionReason,
+    suspendedUntil,
+    deactivatedAt,
+    deactivatedBy,
+    deactivationReason,
   ];
 }
 

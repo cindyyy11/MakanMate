@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:makan_mate/core/errors/failures.dart';
 import 'package:makan_mate/features/user/domain/entities/user_entity.dart';
+import 'package:makan_mate/features/admin/domain/entities/user_ban_entity.dart';
 
 /// Repository interface for admin user management operations
 abstract class AdminUserRepository {
@@ -47,6 +48,18 @@ abstract class AdminUserRepository {
   /// Delete user data (PDPA compliance)
   Future<Either<Failure, void>> deleteUserData({
     required String userId,
+    required String reason,
+  });
+  
+  /// Get all bans and warnings
+  Future<Either<Failure, List<UserBanEntity>>> getBansAndWarnings({
+    String? type, // 'ban' or 'warning' or null for all
+    bool? isActive, // true for active, false for expired, null for all
+  });
+  
+  /// Lift a ban or remove a warning
+  Future<Either<Failure, void>> liftBanOrWarning({
+    required String banId,
     required String reason,
   });
 }

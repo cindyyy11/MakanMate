@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:makan_mate/features/user/domain/entities/user_entity.dart';
+import 'package:makan_mate/features/admin/domain/entities/user_ban_entity.dart';
 
 /// Base class for admin user management states
 abstract class AdminUserManagementState extends Equatable {
@@ -67,6 +68,16 @@ class AdminUserManagementError extends AdminUserManagementState {
 
   @override
   List<Object?> get props => [message];
+}
+
+/// Bans and warnings loaded
+class BansAndWarningsLoaded extends AdminUserManagementState {
+  final List<UserBanEntity> bansAndWarnings;
+
+  const BansAndWarningsLoaded(this.bansAndWarnings);
+
+  @override
+  List<Object?> get props => [bansAndWarnings];
 }
 
 
