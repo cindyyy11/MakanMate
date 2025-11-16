@@ -92,7 +92,7 @@ class SearchRemoteDataSourceImpl implements SearchRemoteDataSource {
         .doc(_userId)
         .collection('searchHistory')
         .orderBy('updatedAt', descending: true)
-        .limit(6)
+        .limit(10)
         .get();
 
     return snapshot.docs
