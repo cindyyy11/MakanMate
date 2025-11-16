@@ -6,12 +6,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_fortune_wheel/flutter_fortune_wheel.dart';
 import 'package:geolocator/geolocator.dart';
 
-import 'package:makan_mate/core/widgets/bottom_nav_widget.dart';
-import 'package:makan_mate/features/favorite/presentation/pages/favorite_page.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_bloc.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_state.dart';
 import 'package:makan_mate/features/home/domain/entities/restaurant_entity.dart';
-import 'package:makan_mate/features/home/presentation/pages/home_page.dart';
 
 class SpinWheelPage extends StatefulWidget {
   const SpinWheelPage({Key? key}) : super(key: key);
@@ -25,7 +22,6 @@ class _SpinWheelPageState extends State<SpinWheelPage> {
   List<RestaurantEntity> _nearbyRestaurants = [];
   bool _isLoading = true;
   Position? _userPosition;
-  int _currentIndex = 2;
 
   @override
   void initState() {
@@ -63,7 +59,10 @@ class _SpinWheelPageState extends State<SpinWheelPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('Location permission denied. Cannot load nearby restaurants.')),
+            content: Text(
+              'Location permission denied. Cannot load nearby restaurants.',
+            ),
+          ),
         );
       }
       return;
@@ -175,8 +174,6 @@ class _SpinWheelPageState extends State<SpinWheelPage> {
 
   @override
   Widget build(BuildContext context) {
-    final homeState = context.watch<HomeBloc>().state;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Spin the Wheel'),
@@ -185,54 +182,54 @@ class _SpinWheelPageState extends State<SpinWheelPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _nearbyRestaurants.isEmpty
-              ? const Center(child: Text('No nearby restaurants found.'))
-              : Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: FortuneWheel(
-                          selected: _selected.stream,
-                          indicators: const <FortuneIndicator>[
-                            FortuneIndicator(
-                              alignment: Alignment.topCenter,
-                              child: TriangleIndicator(color: Colors.orange),
+          ? const Center(child: Text('No nearby restaurants found.'))
+          : Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: FortuneWheel(
+                      selected: _selected.stream,
+                      indicators: const <FortuneIndicator>[
+                        FortuneIndicator(
+                          alignment: Alignment.topCenter,
+                          child: TriangleIndicator(color: Colors.orange),
+                        ),
+                      ],
+                      items: [
+                        for (final r in _nearbyRestaurants)
+                          FortuneItem(
+                            child: Text(
+                              r.vendor.businessName,
+                              style: const TextStyle(fontSize: 14),
                             ),
-                          ],
-                          items: [
-                            for (final r in _nearbyRestaurants)
-                              FortuneItem(
-                                child: Text(
-                                  r.vendor.businessName,
-                                  style: const TextStyle(fontSize: 14),
-                                ),
-                                style: const FortuneItemStyle(
-                                  color: Colors.orangeAccent,
-                                  borderColor: Colors.white,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                          minimumSize: const Size(180, 50),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            style: const FortuneItemStyle(
+                              color: Colors.orangeAccent,
+                              borderColor: Colors.white,
+                            ),
                           ),
-                        ),
-                        onPressed: _spinWheel,
-                        icon: const Icon(Icons.casino, color: Colors.white),
-                        label: const Text(
-                          'SPIN NOW',
-                          style: TextStyle(fontSize: 18, color: Colors.white),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 20),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      minimumSize: const Size(180, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: _spinWheel,
+                    icon: const Icon(Icons.casino, color: Colors.white),
+                    label: const Text(
+                      'SPIN NOW',
+                      style: TextStyle(fontSize: 18, color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            ),
       /* bottomNavigationBar: BottomNavWidget(
         currentIndex: _currentIndex,
         onTap: (index) {

@@ -12,7 +12,6 @@ import 'package:makan_mate/core/di/injection_container.dart' as di;
 import 'package:makan_mate/features/food/domain/repositories/food_repository.dart';
 import 'package:makan_mate/features/user/domain/repositories/user_repository.dart';
 import 'package:makan_mate/features/recommendations/domain/repositories/recommendation_repository.dart';
-import 'package:makan_mate/features/food/data/models/food_models.dart';
 import 'package:makan_mate/features/auth/data/models/user_models.dart'
     as user_model;
 import 'package:path_provider/path_provider.dart';

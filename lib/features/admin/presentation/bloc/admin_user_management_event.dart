@@ -121,4 +121,32 @@ class RefreshUsers extends AdminUserManagementEvent {
   const RefreshUsers();
 }
 
+/// Load all bans and warnings
+class LoadBansAndWarnings extends AdminUserManagementEvent {
+  final String? type; // 'ban' or 'warning' or null for all
+  final bool? isActive; // true for active, false for expired, null for all
+  
+  const LoadBansAndWarnings({
+    this.type,
+    this.isActive,
+  });
+  
+  @override
+  List<Object?> get props => [type, isActive];
+}
+
+/// Lift a ban or remove a warning
+class LiftBanOrWarning extends AdminUserManagementEvent {
+  final String banId;
+  final String reason;
+  
+  const LiftBanOrWarning({
+    required this.banId,
+    required this.reason,
+  });
+  
+  @override
+  List<Object?> get props => [banId, reason];
+}
+
 

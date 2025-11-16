@@ -107,23 +107,4 @@ class RestaurantCard extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildTag(String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.withOpacity(color, 0.1),
-        borderRadius: UIConstants.borderRadiusSm,
-        border: Border.all(color: color),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: color,
-          fontSize: UIConstants.fontSizeSm,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
 }

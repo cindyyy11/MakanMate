@@ -10,8 +10,8 @@ import 'package:makan_mate/features/home/presentation/pages/categories_restauran
 import 'package:makan_mate/features/home/presentation/pages/restaurant_detail_page.dart';
 import 'package:makan_mate/features/map/presentation/bloc/map_bloc.dart';
 import 'package:makan_mate/features/map/presentation/pages/map_page.dart';
-import 'package:makan_mate/features/map/presentation/bloc/map_event.dart' as map;
-
+import 'package:makan_mate/features/map/presentation/bloc/map_event.dart'
+    as map;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -22,7 +22,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
-  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -67,7 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
       //         context,
       //         MaterialPageRoute(
       //           builder: (_) => BlocProvider.value(
-      //             value: context.read<MapBloc>(), 
+      //             value: context.read<MapBloc>(),
       //             child: const SpinWheelPage(),
       //           ),
       //         ),
@@ -146,7 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: Colors.black87,
                 ),
               ),
-              _buildMapSection(), 
+              _buildMapSection(),
               const SizedBox(height: 24),
               _buildCategoriesSection(categories),
               const SizedBox(height: 24),
@@ -157,7 +156,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
-
 
   Widget _buildWelcomeSection() {
     return Container(
@@ -187,10 +185,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 SizedBox(height: 8),
                 Text(
                   'Discover amazing local food around you',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(color: Colors.white70, fontSize: 16),
                 ),
               ],
             ),
@@ -228,12 +223,15 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
         ),
         onSubmitted: (value) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Search for: $value')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Search for: $value')));
         },
       ),
     );
@@ -254,13 +252,11 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       clipBehavior: Clip.hardEdge,
       child: BlocProvider.value(
-        value: context.read<MapBloc>()..add(map.LoadMapEvent()), 
+        value: context.read<MapBloc>()..add(map.LoadMapEvent()),
         child: const MapPage(),
       ),
     );
   }
-
-
 
   Widget _buildCategoriesSection(List<RestaurantEntity> categories) {
     return Column(
@@ -391,7 +387,9 @@ class _HomeScreenState extends State<HomeScreen> {
             final user = FirebaseAuth.instance.currentUser;
             if (user == null) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Please log in to add favorites.')),
+                const SnackBar(
+                  content: Text('Please log in to add favorites.'),
+                ),
               );
               return;
             }
@@ -422,106 +420,108 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildFoodCard(RestaurantEntity food) {
-  final vendor = food.vendor;
+    final vendor = food.vendor;
 
-  final image = vendor.businessLogoUrl?.isNotEmpty == true
-      ? vendor.businessLogoUrl!
-      : 'assets/images/logos/image-not-found.jpg';
+    final image = vendor.businessLogoUrl?.isNotEmpty == true
+        ? vendor.businessLogoUrl!
+        : 'assets/images/logos/image-not-found.jpg';
 
-  return GestureDetector(
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => RestaurantDetailPage(restaurant: food),
-        ),
-      );
-    },
-    child: Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => RestaurantDetailPage(restaurant: food),
           ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                image,
-                width: 80,
-                height: 80,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: Colors.grey[200],
-                    width: 80,
-                    height: 80,
-                    child: const Icon(Icons.image_not_supported, color: Colors.grey),
-                  );
-                },
-              ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    vendor.businessName,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    vendor.shortDescription,
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 16),
-                      const SizedBox(width: 4),
-                      Text(
-                        vendor.ratingAverage?.toStringAsFixed(1) ?? '-',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        vendor.priceRange ?? '-',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orange,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            _buildFavoriteButton(food),
           ],
         ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  image,
+                  width: 80,
+                  height: 80,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.grey[200],
+                      width: 80,
+                      height: 80,
+                      child: const Icon(
+                        Icons.image_not_supported,
+                        color: Colors.grey,
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      vendor.businessName,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      vendor.shortDescription,
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.star, color: Colors.amber, size: 16),
+                        const SizedBox(width: 4),
+                        Text(
+                          vendor.ratingAverage?.toStringAsFixed(1) ?? '-',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          vendor.priceRange ?? '-',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              _buildFavoriteButton(food),
+            ],
+          ),
+        ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 
   @override
   void dispose() {

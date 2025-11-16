@@ -82,6 +82,10 @@ class _AnimatedMetricCardState extends State<AnimatedMetricCard>
             return Transform.scale(
               scale: _scaleAnimation.value,
               child: Container(
+                constraints: const BoxConstraints(
+                  // Enforce consistent card height across varying content
+                  minHeight: 220,
+                ),
                 padding: const EdgeInsets.all(UIConstants.spacingLg),
                 decoration: BoxDecoration(
                   // Enhanced background with better theme support
@@ -132,50 +136,62 @@ class _AnimatedMetricCardState extends State<AnimatedMetricCard>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Enhanced icon container
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            gradient: hasGradient
-                                ? null
-                                : LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [
-                                      widget.color.withValues(alpha: 0.25),
-                                      widget.color.withValues(alpha: 0.15),
-                                    ],
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        // Responsive icon sizing to avoid overflow on small cards
+                        final iconSize =
+                            constraints.biggest.shortestSide * 0.22;
+                        final clampedIcon = iconSize.clamp(18.0, 28.0);
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                gradient: hasGradient
+                                    ? null
+                                    : LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [
+                                          widget.color.withValues(alpha: 0.25),
+                                          widget.color.withValues(alpha: 0.15),
+                                        ],
+                                      ),
+                                color: hasGradient
+                                    ? Colors.white.withValues(alpha: 0.2)
+                                    : null,
+                                borderRadius: BorderRadius.circular(14),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: widget.color.withValues(alpha: 0.35),
+                                    blurRadius: 10,
+                                    spreadRadius: 0,
+                                    offset: const Offset(0, 3),
                                   ),
-                            color: hasGradient
-                                ? Colors.white.withValues(alpha: 0.2)
-                                : null,
-                            borderRadius: BorderRadius.circular(14),
-                            boxShadow: [
-                              BoxShadow(
-                                color: widget.color.withValues(alpha: 0.4),
-                                blurRadius: 12,
-                                spreadRadius: 0,
-                                offset: const Offset(0, 4),
+                                ],
                               ),
-                            ],
-                          ),
-                          child: Icon(
-                            widget.icon,
-                            color: hasGradient ? Colors.white : widget.color,
-                            size: UIConstants.iconSizeXl,
-                          ),
-                        ),
-                        _buildPulseIndicator(widget.color),
-                      ],
+                              child: Icon(
+                                widget.icon,
+                                color: hasGradient
+                                    ? Colors.white
+                                    : widget.color,
+                                size: clampedIcon.toDouble(),
+                              ),
+                            ),
+                            _buildPulseIndicator(widget.color),
+                          ],
+                        );
+                      },
                     ),
                     const SizedBox(height: UIConstants.spacingLg),
                     Text(
                       widget.title,
+                      softWrap: true,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         color: hasGradient
                             ? Colors.white
@@ -190,7 +206,6 @@ class _AnimatedMetricCardState extends State<AnimatedMetricCard>
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Flexible(
-                          flex: widget.trailing != null ? 2 : 1,
                           child: FittedBox(
                             fit: BoxFit.scaleDown,
                             alignment: Alignment.centerLeft,
@@ -211,19 +226,20 @@ class _AnimatedMetricCardState extends State<AnimatedMetricCard>
                             ),
                           ),
                         ),
-                        if (widget.trailing != null) ...[
-                          const SizedBox(width: UIConstants.spacingSm),
-                          Flexible(
-                            flex: 1,
-                            child: widget.trailing!,
-                          ),
-                        ],
                       ],
                     ),
+                    if (widget.trailing != null) ...[
+                      const SizedBox(height: UIConstants.spacingSm),
+                      // Place trend indicator on its own line and allow it to fill remaining width
+                      SizedBox(width: double.infinity, child: widget.trailing!),
+                    ],
                     if (widget.subtitle != null) ...[
                       const SizedBox(height: UIConstants.spacingXs),
                       Text(
                         widget.subtitle!,
+                        softWrap: true,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: hasGradient
                               ? Colors.white.withValues(alpha: 0.9)
@@ -291,6 +307,3 @@ class _AnimatedMetricCardState extends State<AnimatedMetricCard>
     );
   }
 }
-
-
-

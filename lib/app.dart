@@ -50,7 +50,7 @@ class MakanMateApp extends StatelessWidget {
             darkTheme: AppTheme.darkTheme,
             themeMode: themeState.themeMode,
             onGenerateRoute: AppRouter.onGenerateRoute,
-            initialRoute: '/',
+            initialRoute: '/splash',
           );
         },
       ),

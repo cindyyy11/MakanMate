@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:makan_mate/core/di/injection_container.dart';
-import 'package:makan_mate/features/auth/data/models/user_models.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_state.dart';
 import '../../domain/entities/review_entity.dart';
@@ -25,9 +23,6 @@ class ReviewCard extends StatefulWidget {
 }
 
 class _ReviewCardState extends State<ReviewCard> {
-  UserModel? _user;
-  bool _isLoadingUser = true;
-
   @override
   void initState() {
     super.initState();

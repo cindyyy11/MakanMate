@@ -10,6 +10,7 @@ import 'package:makan_mate/features/home/presentation/pages/restaurant_detail_sc
 import 'package:makan_mate/features/recommendations/presentation/pages/recommendations_page.dart';
 import 'package:makan_mate/features/recommendations/presentation/bloc/recommendation_bloc.dart';
 import 'package:makan_mate/features/admin/presentation/pages/admin_dashboard_page.dart';
+import 'package:makan_mate/features/admin/presentation/pages/admin_profile_page.dart';
 import 'package:makan_mate/features/admin/presentation/bloc/admin_bloc.dart';
 import 'package:makan_mate/features/admin/presentation/bloc/admin_event.dart';
 import 'package:makan_mate/features/admin/presentation/bloc/admin_user_management_bloc.dart';
@@ -18,6 +19,10 @@ import 'package:makan_mate/features/admin/presentation/pages/user_details_page.d
 import 'package:makan_mate/features/admin/presentation/pages/admin_voucher_approval_page.dart';
 import 'package:makan_mate/features/user/domain/entities/user_entity.dart';
 import 'package:makan_mate/core/ml/model_testing_screen.dart';
+import 'package:makan_mate/features/splash/presentation/pages/splash_page.dart';
+import 'package:makan_mate/features/splash/presentation/bloc/splash_bloc.dart';
+import 'package:makan_mate/features/onboarding/presentation/pages/onboarding_page.dart';
+import 'package:makan_mate/features/onboarding/presentation/bloc/onboarding_bloc.dart';
 import 'package:makan_mate/core/di/injection_container.dart' as di;
 
 class AppRouter {
@@ -25,6 +30,22 @@ class AppRouter {
     switch (settings.name) {
       case '/':
         return MaterialPageRoute(builder: (_) => const AuthWrapper());
+
+      case '/splash':
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => di.sl<SplashBloc>(),
+            child: const SplashPage(),
+          ),
+        );
+
+      case '/onboarding':
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => di.sl<OnboardingBloc>(),
+            child: const OnboardingPage(),
+          ),
+        );
 
       case '/login':
         return MaterialPageRoute(builder: (_) => const LoginPage());
@@ -91,6 +112,12 @@ class AppRouter {
               child: const AdminVoucherApprovalPage(),
             );
           },
+          settings: settings,
+        );
+
+      case '/adminProfile':
+        return MaterialPageRoute(
+          builder: (_) => const AdminProfilePage(),
           settings: settings,
         );
 

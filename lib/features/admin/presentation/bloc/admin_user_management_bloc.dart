@@ -19,6 +19,8 @@ class AdminUserManagementBloc
     on<LoadUserViolationHistory>(_onLoadUserViolationHistory);
     on<DeleteUserData>(_onDeleteUserData);
     on<RefreshUsers>(_onRefreshUsers);
+    on<LoadBansAndWarnings>(_onLoadBansAndWarnings);
+    on<LiftBanOrWarning>(_onLiftBanOrWarning);
   }
 
   Future<void> _onLoadUsers(
@@ -155,5 +157,35 @@ class AdminUserManagementBloc
     // This assumes we keep track of last filters, but for simplicity,
     // we'll just reload all users
     add(const LoadUsers());
+  }
+
+  Future<void> _onLoadBansAndWarnings(
+    LoadBansAndWarnings event,
+    Emitter<AdminUserManagementState> emit,
+  ) async {
+    emit(const AdminUserManagementLoading());
+    final result = await repository.getBansAndWarnings(
+      type: event.type,
+      isActive: event.isActive,
+    );
+    result.fold(
+      (failure) => emit(AdminUserManagementError(failure.message)),
+      (bansAndWarnings) => emit(BansAndWarningsLoaded(bansAndWarnings)),
+    );
+  }
+
+  Future<void> _onLiftBanOrWarning(
+    LiftBanOrWarning event,
+    Emitter<AdminUserManagementState> emit,
+  ) async {
+    emit(const AdminUserManagementLoading());
+    final result = await repository.liftBanOrWarning(
+      banId: event.banId,
+      reason: event.reason,
+    );
+    result.fold(
+      (failure) => emit(AdminUserManagementError(failure.message)),
+      (_) => emit(const UserOperationSuccess('Ban/Warning lifted successfully')),
+    );
   }
 }
