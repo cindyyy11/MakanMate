@@ -7,6 +7,7 @@ import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_event.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_bloc.dart';
 import 'package:makan_mate/features/map/presentation/bloc/map_bloc.dart';
+import 'package:makan_mate/features/promotions/presentation/bloc/user_promotion_bloc.dart';
 import 'package:makan_mate/features/vendor/presentation/bloc/analytics_bloc.dart';
 import 'package:makan_mate/features/vendor/presentation/bloc/promotion_bloc.dart';
 import 'package:makan_mate/features/vendor/presentation/bloc/promotion_event.dart';
@@ -17,6 +18,7 @@ import 'package:makan_mate/features/admin/presentation/bloc/admin_review_managem
 import 'package:makan_mate/features/admin/presentation/bloc/admin_voucher_management_bloc.dart';
 import 'package:makan_mate/routes/app_router.dart';
 
+import 'features/promotions/presentation/bloc/user_promotion_event.dart';
 import 'features/vendor/presentation/bloc/vendor_event.dart';
 
 class MakanMateApp extends StatelessWidget {
@@ -31,7 +33,10 @@ class MakanMateApp extends StatelessWidget {
         ),
         BlocProvider(create: (_) => di.sl<HomeBloc>()),
         BlocProvider(create: (_) => ThemeBloc()),
-
+        BlocProvider(
+          create: (_) =>
+              di.sl<UserPromotionBloc>()..add(LoadUserPromotionsEvent()),
+        ),
         BlocProvider(create: (_) => di.sl<VendorBloc>()..add(LoadMenuEvent())),
         BlocProvider(
           create: (_) => di.sl<PromotionBloc>()..add(LoadPromotionsEvent()),

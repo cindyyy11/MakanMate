@@ -190,6 +190,67 @@ class PromotionCard extends StatelessWidget {
 
           const SizedBox(height: 16),
 
+          // Analytics Stats
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue[50],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Analytics',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[800],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildStatItem(
+                        icon: Icons.touch_app,
+                        label: 'Clicks',
+                        value: promotion.clickCount.toString(),
+                      ),
+                    ),
+                    Container(
+                      width: 1,
+                      height: 30,
+                      color: Colors.grey[300],
+                    ),
+                    Expanded(
+                      child: _buildStatItem(
+                        icon: Icons.check_circle,
+                        label: 'Redeemed',
+                        value: promotion.redeemedCount.toString(),
+                      ),
+                    ),
+                    Container(
+                      width: 1,
+                      height: 30,
+                      color: Colors.grey[300],
+                    ),
+                    Expanded(
+                      child: _buildStatItem(
+                        icon: Icons.trending_up,
+                        label: 'Conversion',
+                        value: '${promotion.conversionRate.toStringAsFixed(1)}%',
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
           // Action buttons
           Padding(
             padding: const EdgeInsets.all(16),
@@ -280,6 +341,34 @@ class PromotionCard extends StatelessWidget {
       case PromotionStatus.expired:
         return 'Expired';
     }
+  }
+
+  Widget _buildStatItem({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Column(
+      children: [
+        Icon(icon, size: 18, color: Colors.blue[700]),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey[800],
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: Colors.grey[600],
+          ),
+        ),
+      ],
+    );
   }
 }
 

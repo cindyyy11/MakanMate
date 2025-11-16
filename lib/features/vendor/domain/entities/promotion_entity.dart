@@ -6,12 +6,12 @@ enum PromotionType {
 }
 
 enum PromotionStatus {
-  pending, // Waiting for admin approval
-  approved, // Approved by admin
-  rejected, // Rejected by admin
-  active, // Currently active
-  expired, // Past expiry date
-  deactivated, // Manually deactivated by vendor
+  pending,
+  approved, 
+  rejected, 
+  active, 
+  expired, 
+  deactivated, 
 }
 
 class PromotionEntity {
@@ -30,6 +30,11 @@ class PromotionEntity {
   final DateTime createdAt;
   final DateTime? approvedAt;
   final String? approvedBy; // Admin user ID
+  final int clickCount; // Number of clicks on promotion
+  final int redeemedCount; // Number of redemptions
+  final double conversionRate; // (redeemedCount / clickCount) * 100, 0 if clickCount is 0
+  final String? vendorId; 
+  final String? vendorName; /// Vendor ID who owns this promotion (for user-side)
 
   const PromotionEntity({
     required this.id,
@@ -47,6 +52,11 @@ class PromotionEntity {
     required this.createdAt,
     this.approvedAt,
     this.approvedBy,
+    this.clickCount = 0,
+    this.redeemedCount = 0,
+    this.conversionRate = 0.0,
+    this.vendorId,
+    this.vendorName,
   });
 
   // Helper method to get display text for promotion

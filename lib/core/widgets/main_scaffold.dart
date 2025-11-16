@@ -12,6 +12,8 @@ import 'package:makan_mate/features/favorite/presentation/pages/favorite_page.da
 import 'package:makan_mate/features/home/presentation/pages/home_page.dart';
 import 'package:makan_mate/features/home/presentation/pages/profile_page.dart';
 import 'package:makan_mate/features/home/presentation/pages/spin_wheel_page.dart';
+import 'package:makan_mate/features/promotions/presentation/pages/user_promotions_page.dart';
+import 'package:makan_mate/features/promotions/presentation/bloc/user_promotion_bloc.dart';
 import 'package:makan_mate/features/vendor/presentation/pages/menu_management_page.dart';
 import 'package:makan_mate/features/vendor/presentation/pages/promotion_management_page.dart';
 import 'package:makan_mate/features/vendor/presentation/pages/vendor_home_page.dart';
@@ -66,7 +68,16 @@ class _MainScaffoldState extends State<MainScaffold> {
         ];
       case 'user':
       default:
-        return [const HomeScreen(), const FavoritePage(), const SpinWheelPage(), const ProfilePage()];
+        return [
+          const HomeScreen(),
+          const FavoritePage(),
+          BlocProvider(
+            create: (_) => di.sl<UserPromotionBloc>(),
+            child: const UserPromotionsPage(),
+          ),
+          const SpinWheelPage(),
+          const ProfilePage(),
+        ];
     }
   }
 
@@ -104,6 +115,10 @@ class _MainScaffoldState extends State<MainScaffold> {
           BottomNavigationBarItem(
             icon: Icon(Icons.favorite),
             label: 'Favorites',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.local_offer),
+            label: 'Promotions',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.casino), label: 'Spin Wheel'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/promotion_entity.dart';
 
 class PromotionModel extends PromotionEntity {
+
   const PromotionModel({
     required super.id,
     required super.title,
@@ -18,6 +19,11 @@ class PromotionModel extends PromotionEntity {
     required super.createdAt,
     super.approvedAt,
     super.approvedBy,
+    super.clickCount,
+    super.redeemedCount,
+    super.conversionRate,
+    super.vendorId,
+    super.vendorName,
   });
 
   factory PromotionModel.fromMap(Map<String, dynamic> map) {
@@ -48,7 +54,36 @@ class PromotionModel extends PromotionEntity {
           ? parseDate(map['approvedAt'])
           : null,
       approvedBy: map['approvedBy'],
+      clickCount: (map['clickCount'] as num?)?.toInt() ?? 0,
+      redeemedCount: (map['redeemedCount'] as num?)?.toInt() ?? 0,
+      conversionRate: _calculateConversionRate(
+        (map['clickCount'] as num?)?.toInt() ?? 0,
+        (map['redeemedCount'] as num?)?.toInt() ?? 0,
+      ),
+      vendorId: map['vendorId'] as String?,
+      vendorName: map['vendorName'] as String?,
     );
+  }
+
+  factory PromotionModel.fromFirestore(
+    DocumentSnapshot<Map<String, dynamic>> doc,
+  ) {
+    final data = doc.data() ?? <String, dynamic>{};
+    final vendorId = doc.reference.parent.parent?.id ??
+        data['vendorId'] as String?;
+
+    return PromotionModel.fromMap({
+      'id': doc.id,
+      'vendorId': vendorId,
+      ...data,
+    });
+  }
+
+  PromotionEntity toEntity() => this;
+
+  static double _calculateConversionRate(int clickCount, int redeemedCount) {
+    if (clickCount == 0) return 0.0;
+    return (redeemedCount / clickCount) * 100;
   }
 
   static PromotionType _parsePromotionType(String? type) {
@@ -102,6 +137,11 @@ class PromotionModel extends PromotionEntity {
       'createdAt': Timestamp.fromDate(createdAt),
       'approvedAt': approvedAt != null ? Timestamp.fromDate(approvedAt!) : null,
       'approvedBy': approvedBy,
+      'vendorId': vendorId,
+      'vendorName': vendorName,
+      'clickCount': clickCount,
+      'redeemedCount': redeemedCount,
+      'conversionRate': conversionRate,
     };
   }
 

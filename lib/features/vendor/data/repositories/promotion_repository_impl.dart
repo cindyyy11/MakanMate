@@ -32,6 +32,7 @@ class PromotionRepositoryImpl implements PromotionRepository {
   Future<void> addPromotion(PromotionEntity promotion) async {
     final model = PromotionModel(
       id: promotion.id,
+      vendorId: vendorId, 
       title: promotion.title,
       description: promotion.description,
       type: promotion.type,
@@ -80,6 +81,31 @@ class PromotionRepositoryImpl implements PromotionRepository {
   @override
   Future<void> deactivatePromotion(String id) async {
     await remoteDataSource.deactivatePromotion(vendorId, id);
+  }
+
+  @override
+  Future<void> incrementClick(String promotionId) async {
+    await remoteDataSource.incrementClick(vendorId, promotionId);
+  }
+
+  @override
+  Future<void> incrementRedeemed(String promotionId) async {
+    await remoteDataSource.incrementRedeemed(vendorId, promotionId);
+  }
+
+  @override
+  Future<void> incrementClickForUser(String vendorId, String promotionId) async {
+    await remoteDataSource.incrementClick(vendorId, promotionId);
+  }
+
+  @override
+  Future<void> incrementRedeemedForUser(String vendorId, String promotionId) async {
+    await remoteDataSource.incrementRedeemed(vendorId, promotionId);
+  }
+
+  @override
+  Stream<List<PromotionEntity>> watchApprovedPromotions() {
+    return remoteDataSource.watchApprovedPromotions();
   }
 }
 

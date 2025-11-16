@@ -9,6 +9,9 @@ abstract class PromotionRemoteDataSource {
   Future<void> updatePromotion(String vendorId, PromotionModel promotion);
   Future<void> deletePromotion(String vendorId, String promotionId);
   Future<void> deactivatePromotion(String vendorId, String promotionId);
+  Future<void> incrementClick(String vendorId, String promotionId);
+  Future<void> incrementRedeemed(String vendorId, String promotionId);
+  Stream<List<PromotionModel>> watchApprovedPromotions();
 }
 
 class PromotionRemoteDataSourceImpl implements PromotionRemoteDataSource {
@@ -107,6 +110,10 @@ class PromotionRemoteDataSourceImpl implements PromotionRemoteDataSource {
     final promotionMap = promotion.toMap();
     promotionMap.remove('id'); // Remove id as Firestore will generate it
     
+    // Ensure default values for clickCount and redeemedCount
+    promotionMap['clickCount'] = promotionMap['clickCount'] ?? 0;
+    promotionMap['redeemedCount'] = promotionMap['redeemedCount'] ?? 0;
+    
     // Add to vendor's promotions collection
     final docRef = await firestore
         .collection('vendors')
@@ -156,6 +163,119 @@ class PromotionRemoteDataSourceImpl implements PromotionRemoteDataSource {
         .doc(promotionId)
         .update({
       'status': 'deactivated',
+    });
+  }
+
+  @override
+  Future<void> incrementClick(String vendorId, String promotionId) async {
+    try {
+      await firestore
+          .collection('vendors')
+          .doc(vendorId)
+          .collection('promotions')
+          .doc(promotionId)
+          .update({
+        'clickCount': FieldValue.increment(1),
+      });
+    } catch (e) {
+      // If document doesn't exist or field doesn't exist, set it to 1
+      await firestore
+          .collection('vendors')
+          .doc(vendorId)
+          .collection('promotions')
+          .doc(promotionId)
+          .set({
+        'clickCount': 1,
+        'redeemedCount': 0,
+      }, SetOptions(merge: true));
+    }
+  }
+
+  @override
+  Future<void> incrementRedeemed(String vendorId, String promotionId) async {
+    try {
+      await firestore
+          .collection('vendors')
+          .doc(vendorId)
+          .collection('promotions')
+          .doc(promotionId)
+          .update({
+        'redeemedCount': FieldValue.increment(1),
+      });
+    } catch (e) {
+      // If document doesn't exist or field doesn't exist, set it to 1
+      await firestore
+          .collection('vendors')
+          .doc(vendorId)
+          .collection('promotions')
+          .doc(promotionId)
+          .set({
+        'clickCount': 0,
+        'redeemedCount': 1,
+      }, SetOptions(merge: true));
+    }
+  }
+
+  @override
+  Stream<List<PromotionModel>> watchApprovedPromotions() {
+    final now = DateTime.now();
+    final nowTs = Timestamp.fromDate(now);
+
+    // Use collection group query to get promotions from all vendors
+    // Query by status == 'approved' and expiryDate >= now
+    // Then filter client-side for startDate <= now
+    return firestore
+        .collectionGroup('promotions')
+        .where('status', isEqualTo: 'approved')
+        .where('expiryDate', isGreaterThanOrEqualTo: nowTs)
+        .snapshots()
+        .map((snapshot) {
+      final promotions = <PromotionModel>[];
+
+      for (var doc in snapshot.docs) {
+        try {
+          final data = doc.data() as Map<String, dynamic>?;
+          if (data == null) continue;
+
+          // Parse dates
+          DateTime? startDate;
+          final startDateValue = data['startDate'];
+          if (startDateValue is Timestamp) {
+            startDate = startDateValue.toDate();
+          } else if (startDateValue is DateTime) {
+            startDate = startDateValue;
+          }
+
+          // Filter: startDate <= now
+          if (startDate != null && startDate.isAfter(now)) {
+            continue;
+          }
+
+          // Extract vendorId from document path: vendors/{vendorId}/promotions/{promotionId}
+          final pathSegments = doc.reference.path.split('/');
+          String? vendorId;
+          if (pathSegments.length >= 4 && pathSegments[0] == 'vendors') {
+            vendorId = pathSegments[1];
+          }
+
+          final promotionData = {
+            'id': doc.id,
+            'vendorId': vendorId,
+            ...data,
+          };
+
+          final promotion = PromotionModel.fromMap(promotionData);
+          promotions.add(promotion);
+        } catch (e) {
+          // Skip invalid documents
+          print('Error parsing promotion ${doc.id}: $e');
+        }
+      }
+
+      // Sort by expiry date (ascending - expiring soon first)
+      promotions.sort((a, b) => a.expiryDate.compareTo(b.expiryDate));
+
+      return promotions;
     });
   }
 

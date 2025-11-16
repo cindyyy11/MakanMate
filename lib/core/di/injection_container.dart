@@ -31,6 +31,8 @@ import 'package:makan_mate/features/map/domain/repositories/map_repository.dart'
 import 'package:makan_mate/features/map/domain/repositories/map_repository_impl.dart';
 import 'package:makan_mate/features/map/domain/usecases/get_nearby_restaurants_usecase.dart';
 import 'package:makan_mate/features/map/presentation/bloc/map_bloc.dart';
+import 'package:makan_mate/features/promotions/domain/usecases/redeem_promotion_usecase.dart';
+import 'package:makan_mate/features/promotions/domain/usecases/check_user_redemption_usecase.dart';
 import 'package:makan_mate/features/recommendations/domain/usecases/get_contextual_recommendations_usecase.dart';
 import 'package:makan_mate/features/recommendations/domain/usecases/get_similar_items_usecase.dart';
 import 'package:makan_mate/features/recommendations/domain/usecases/track_interaction_usecase.dart';
@@ -141,6 +143,16 @@ import 'package:makan_mate/features/vendor/domain/usecases/add_promotion_usecase
 import 'package:makan_mate/features/vendor/domain/usecases/update_promotion_usecase.dart';
 import 'package:makan_mate/features/vendor/domain/usecases/delete_promotion_usecase.dart';
 import 'package:makan_mate/features/vendor/domain/usecases/deactivate_promotion_usecase.dart';
+import 'package:makan_mate/features/vendor/domain/usecases/increment_promotion_click_usecase.dart';
+import 'package:makan_mate/features/vendor/domain/usecases/increment_promotion_redeemed_usecase.dart';
+import 'package:makan_mate/features/vendor/domain/usecases/watch_approved_promotions_usecase.dart';
+import 'package:makan_mate/features/vendor/domain/usecases/increment_promotion_click_for_user_usecase.dart';
+import 'package:makan_mate/features/vendor/domain/usecases/increment_promotion_redeemed_for_user_usecase.dart';
+import 'package:makan_mate/features/promotions/data/datasources/user_promotion_remote_datasource.dart';
+import 'package:makan_mate/features/promotions/data/repositories/user_promotion_repository_impl.dart';
+import 'package:makan_mate/features/promotions/domain/user_promotion_repository.dart';
+import 'package:makan_mate/features/promotions/domain/usecases/watch_user_promotions_usecase.dart';
+import 'package:makan_mate/features/promotions/presentation/bloc/user_promotion_bloc.dart';
 import 'package:makan_mate/features/vendor/presentation/bloc/vendor_bloc.dart';
 import 'package:makan_mate/features/vendor/presentation/bloc/promotion_bloc.dart';
 import 'package:makan_mate/features/vendor/presentation/bloc/vendor_review_bloc.dart';
@@ -834,7 +846,8 @@ void _initVendor() {
   sl.registerLazySingleton<VendorRepository>(
     () => VendorRepositoryImpl(remoteDataSource: sl()),
   );
-
+  sl.registerLazySingleton(() => CheckUserRedemptionUseCase(sl()));
+  sl.registerLazySingleton(() => RedeemPromotionUseCase(sl()));
   // Data sources
   sl.registerLazySingleton<VendorRemoteDataSource>(
     () => VendorRemoteDataSourceImpl(),
@@ -879,6 +892,11 @@ void _initVendor() {
   sl.registerLazySingleton(() => UpdatePromotionUseCase(sl()));
   sl.registerLazySingleton(() => DeletePromotionUseCase(sl()));
   sl.registerLazySingleton(() => DeactivatePromotionUseCase(sl()));
+  sl.registerLazySingleton(() => IncrementPromotionClickUseCase(sl()));
+  sl.registerLazySingleton(() => IncrementPromotionRedeemedUseCase(sl()));
+  sl.registerLazySingleton(() => WatchApprovedPromotionsUseCase(sl()));
+  sl.registerLazySingleton(() => IncrementPromotionClickForUserUseCase(sl()));
+  sl.registerLazySingleton(() => IncrementPromotionRedeemedForUserUseCase(sl()));
 
   sl.registerFactory(
     () => PromotionBloc(
@@ -888,6 +906,8 @@ void _initVendor() {
       updatePromotion: sl(),
       deletePromotion: sl(),
       deactivatePromotion: sl(),
+      incrementPromotionClick: sl(),
+      incrementPromotionRedeemed: sl(),
       storageService: sl(),
     ),
   );
@@ -901,6 +921,23 @@ void _initVendor() {
       watchReviews: sl(),
       replyToReview: sl(),
       reportReview: sl(),
+    ),
+  );
+
+  // User Promotion Feature
+  sl.registerLazySingleton<UserPromotionRemoteDataSource>(
+    () => UserPromotionRemoteDataSourceImpl(firestore: sl()),
+  );
+  sl.registerLazySingleton<UserPromotionRepository>(
+    () => UserPromotionRepositoryImpl(remoteDataSource: sl()),
+  );
+  sl.registerLazySingleton(() => WatchUserPromotionsUseCase(sl()));
+
+  sl.registerFactory(
+    () => UserPromotionBloc(
+      watchUserPromotions: sl(),
+      incrementClick: sl(),
+      incrementRedeemed: sl(),
     ),
   );
 
