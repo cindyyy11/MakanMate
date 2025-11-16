@@ -16,6 +16,7 @@ import 'package:makan_mate/features/auth/data/datasources/auth_local_secure_data
 import 'package:makan_mate/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:makan_mate/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:makan_mate/features/auth/domain/repositories/auth_repository.dart';
+import 'package:makan_mate/features/auth/domain/usecases/delete_account_usecase.dart';
 import 'package:makan_mate/features/auth/domain/usecases/forgot_password_usecase.dart';
 import 'package:makan_mate/features/auth/domain/usecases/google_sign_in_usecase.dart';
 import 'package:makan_mate/features/auth/domain/usecases/sign_in_usecase.dart';
@@ -307,6 +308,7 @@ void _initAuth() {
       signOut: sl(),
       googleSignIn: sl(),
       forgotPassword: sl(),
+      deleteAccount: sl(),
     ),
   );
 
@@ -316,6 +318,7 @@ void _initAuth() {
   sl.registerLazySingleton(() => SignOutUseCase(sl()));
   sl.registerLazySingleton(() => GoogleSignInUseCase(sl()));
   sl.registerLazySingleton(() => ForgotPasswordUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteAccountUseCase());
 
   // Repository
   sl.registerLazySingleton<AuthRepository>(

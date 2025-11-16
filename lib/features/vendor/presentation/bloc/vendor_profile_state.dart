@@ -97,3 +97,5 @@ class ImageUploadError extends VendorProfileState {
   List<Object?> get props => [message];
 }
 
+
+

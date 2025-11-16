@@ -28,5 +28,3 @@ class ReportVendorReview extends VendorReviewEvent {
   @override
   List<Object?> get props => [reviewId, reason];
 }
-
-

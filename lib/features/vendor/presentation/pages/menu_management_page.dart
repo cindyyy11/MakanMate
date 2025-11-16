@@ -20,7 +20,6 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
   @override
   void initState() {
     super.initState();
-    // Load menu items when page opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<VendorBloc>().add(LoadMenuEvent());
     });
@@ -42,7 +41,6 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
         ),
       ),
     ).then((_) {
-      // Refresh menu after returning from add/edit page
       context.read<VendorBloc>().add(LoadMenuEvent());
     });
   }
@@ -97,10 +95,8 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
               ),
             );
           } else if (state is VendorLoaded && state.menu.isEmpty) {
-            // Show success message when item is deleted
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                // content: Text('Menu item deleted successfully'),
                 content: Text('No menu items found.'),
                 backgroundColor: Colors.green,
               ),
