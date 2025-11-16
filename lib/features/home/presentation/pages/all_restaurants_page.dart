@@ -1,64 +1,48 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:makan_mate/features/home/domain/entities/restaurant_entity.dart';
-import 'package:makan_mate/features/home/presentation/bloc/home_bloc.dart';
-import 'package:makan_mate/features/home/presentation/bloc/home_state.dart';
 import 'package:makan_mate/features/home/presentation/pages/restaurant_detail_page.dart';
 
-class CategoryRestaurantPage extends StatelessWidget {
-  final String categoryName;
+class AllRestaurantsPage extends StatelessWidget {
+  final List<RestaurantEntity> restaurants;
 
-  const CategoryRestaurantPage({Key? key, required this.categoryName})
-    : super(key: key);
+  const AllRestaurantsPage({Key? key, required this.restaurants})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: Text('$categoryName Restaurants'),
+        title: const Text(
+          "All Restaurants",
+          style: TextStyle(color: Colors.black),
+        ),
         backgroundColor: Colors.orange[300],
+        iconTheme: const IconThemeData(color: Colors.black),
+        elevation: 0.5,
       ),
-      body: BlocBuilder<HomeBloc, HomeState>(
-        builder: (context, state) {
-          if (state is HomeLoading) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (state is HomeLoaded) {
-            final filteredList = state.recommendations
-                .where((r) =>
-                    (r.vendor.cuisineType ?? '').toLowerCase() ==
-                    categoryName.toLowerCase())
-                .toList();
-
-            if (filteredList.isEmpty) {
-              return Center(
-                child: Text(
-                  'No $categoryName restaurants found.',
-                  style: const TextStyle(fontSize: 16, color: Colors.grey),
-                ),
-              );
-            }
-
-            return ListView.builder(
+      body: restaurants.isEmpty
+          ? const Center(
+              child: Text(
+                "No restaurants available.",
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            )
+          : ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: filteredList.length,
+              itemCount: restaurants.length,
               itemBuilder: (context, index) =>
-                  _buildRestaurantCard(context, filteredList[index]),
-            );
-          } else if (state is HomeError) {
-            return Center(child: Text(state.message));
-          }
-          return const SizedBox();
-        },
-      ),
+                  _buildRestaurantCard(context, restaurants[index]),
+            ),
     );
   }
 
   Widget _buildRestaurantCard(BuildContext context, RestaurantEntity r) {
     final vendor = r.vendor;
 
-    // SAFE IMAGE HANDLING
     final String? imageUrl = vendor.businessLogoUrl;
+    final rating =
+        vendor.ratingAverage != null ? vendor.ratingAverage!.toStringAsFixed(1) : '-';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -86,7 +70,6 @@ class CategoryRestaurantPage extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              // --- IMAGE WITH FALLBACK ---
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: (imageUrl != null && imageUrl.isNotEmpty)
@@ -114,7 +97,6 @@ class CategoryRestaurantPage extends StatelessWidget {
 
               const SizedBox(width: 12),
 
-              // --- DETAILS ---
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,26 +104,33 @@ class CategoryRestaurantPage extends StatelessWidget {
                     Text(
                       vendor.businessName,
                       style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
+
                     const SizedBox(height: 4),
+
                     Text(
                       vendor.shortDescription,
-                      style:
-                          TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+
                     const SizedBox(height: 8),
+
                     Row(
                       children: [
-                        const Icon(Icons.star,
-                            size: 16, color: Colors.amber),
+                        const Icon(Icons.star, color: Colors.amber, size: 16),
                         const SizedBox(width: 4),
-                        Text(
-                          vendor.ratingAverage?.toStringAsFixed(1) ?? '-',
-                        ),
+                        Text(rating),
+
                         const Spacer(),
+
                         Text(
                           vendor.priceRange ?? '-',
                           style: const TextStyle(

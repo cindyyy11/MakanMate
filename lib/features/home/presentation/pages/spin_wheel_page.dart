@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_fortune_wheel/flutter_fortune_wheel.dart';
@@ -26,7 +25,20 @@ class _SpinWheelPageState extends State<SpinWheelPage> {
   @override
   void initState() {
     super.initState();
-    _getUserLocation();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = context.read<HomeBloc>().state;
+
+      if (state is HomeLoaded) {
+        _getUserLocation();
+      } else {
+        context.read<HomeBloc>().stream.listen((s) {
+          if (s is HomeLoaded) {
+            _getUserLocation();
+          }
+        });
+      }
+    });
   }
 
   @override
@@ -35,21 +47,19 @@ class _SpinWheelPageState extends State<SpinWheelPage> {
     super.dispose();
   }
 
+  // GET USER LOCATION
   Future<void> _getUserLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please enable location services.')),
+          const SnackBar(content: Text("Please enable location services.")),
         );
       }
       return;
     }
 
-    permission = await Geolocator.checkPermission();
+    LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
     }
@@ -58,55 +68,43 @@ class _SpinWheelPageState extends State<SpinWheelPage> {
         permission == LocationPermission.deniedForever) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Location permission denied. Cannot load nearby restaurants.',
-            ),
-          ),
+          const SnackBar(content: Text("Location permission denied.")),
         );
       }
       return;
     }
 
     final position = await Geolocator.getCurrentPosition();
-    setState(() {
-      _userPosition = position;
-    });
+    setState(() => _userPosition = position);
 
     _filterNearbyRestaurants();
   }
 
   void _filterNearbyRestaurants() {
-    final homeState = context.read<HomeBloc>().state;
+    final state = context.read<HomeBloc>().state;
 
-    if (homeState is! HomeLoaded) {
-      // HomeBloc not ready
-      setState(() {
-        _isLoading = false;
-      });
+    if (state is! HomeLoaded) {
+      setState(() => _isLoading = false);
       return;
     }
 
-    final allRestaurants = homeState.recommendations;
-
+    final allRestaurants = state.recommendations;
     const maxDistanceKm = 5.0;
 
     final filtered = allRestaurants.where((r) {
       if (_userPosition == null) return false;
 
-      final outlets = r.vendor.outlets;
-      if (outlets.isEmpty) return false;
+      final vendor = r.vendor;
 
-      // use first outlet as main location
-      final o = outlets.first;
-
-      if (o.latitude == null || o.longitude == null) return false;
+      if (vendor.latitude == null || vendor.longitude == null) {
+        return false; // skip restaurants with no coordinates
+      }
 
       final distance = Geolocator.distanceBetween(
         _userPosition!.latitude,
         _userPosition!.longitude,
-        o.latitude!,
-        o.longitude!,
+        vendor.latitude!,
+        vendor.longitude!,
       );
 
       return distance / 1000 <= maxDistanceKm;
@@ -119,9 +117,11 @@ class _SpinWheelPageState extends State<SpinWheelPage> {
   }
 
   void _spinWheel() {
-    if (_nearbyRestaurants.isEmpty) {
+    if (_nearbyRestaurants.length < 2) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No nearby restaurants found.')),
+        const SnackBar(
+          content: Text("At least 2 nearby restaurants are required to spin."),
+        ),
       );
       return;
     }
@@ -141,7 +141,7 @@ class _SpinWheelPageState extends State<SpinWheelPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Image.network(
-                vendor.businessLogoUrl ?? '',
+                vendor.businessLogoUrl ?? "",
                 height: 120,
                 width: 120,
                 fit: BoxFit.cover,
@@ -151,20 +151,19 @@ class _SpinWheelPageState extends State<SpinWheelPage> {
               const SizedBox(height: 12),
               Text("Cuisine: ${vendor.cuisineType ?? '-'}"),
               Text("Price Range: ${vendor.priceRange ?? '-'}"),
-              const SizedBox(height: 4),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(Icons.star, color: Colors.amber, size: 18),
-                  Text(vendor.ratingAverage?.toStringAsFixed(1) ?? '-'),
+                  Text(vendor.ratingAverage?.toStringAsFixed(1) ?? "-"),
                 ],
-              ),
+              )
             ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Close'),
+              child: const Text("Close"),
             ),
           ],
         ),
@@ -173,89 +172,65 @@ class _SpinWheelPageState extends State<SpinWheelPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Spin the Wheel'),
-        backgroundColor: Colors.orange,
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _nearbyRestaurants.isEmpty
-          ? const Center(child: Text('No nearby restaurants found.'))
-          : Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: FortuneWheel(
-                      selected: _selected.stream,
-                      indicators: const <FortuneIndicator>[
-                        FortuneIndicator(
-                          alignment: Alignment.topCenter,
-                          child: TriangleIndicator(color: Colors.orange),
-                        ),
-                      ],
-                      items: [
-                        for (final r in _nearbyRestaurants)
-                          FortuneItem(
-                            child: Text(
-                              r.vendor.businessName,
-                              style: const TextStyle(fontSize: 14),
-                            ),
-                            style: const FortuneItemStyle(
-                              color: Colors.orangeAccent,
-                              borderColor: Colors.white,
-                            ),
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text("Spin the Wheel"),
+      backgroundColor: Colors.orange[300],
+    ),
+    body: _isLoading
+    ? const Center(child: CircularProgressIndicator())
+    : _nearbyRestaurants.isEmpty
+        ? const Center(child: Text("No nearby restaurants found."))
+        : _nearbyRestaurants.length < 2
+            ? const Center(child: Text("Need at least 2 nearby restaurants to spin."))
+            : Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    /// WHEEL
+                    Expanded(
+                      child: FortuneWheel(
+                        selected: _selected.stream,
+                        indicators: const <FortuneIndicator>[
+                          FortuneIndicator(
+                            alignment: Alignment.topCenter,
+                            child: TriangleIndicator(color: Colors.orange),
                           ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      minimumSize: const Size(180, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        ],
+                        items: _nearbyRestaurants
+                            .map(
+                              (r) => FortuneItem(
+                                child: Text(r.vendor.businessName),
+                              ),
+                            )
+                            .toList(),
                       ),
                     ),
-                    onPressed: _spinWheel,
-                    icon: const Icon(Icons.casino, color: Colors.white),
-                    label: const Text(
-                      'SPIN NOW',
-                      style: TextStyle(fontSize: 18, color: Colors.white),
-                    ),
-                  ),
-                ],
+
+                    const SizedBox(height: 20),
+
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _spinWheel,
+              icon: const Icon(Icons.casino, color: Colors.white),
+              label: const Text(
+                "SPIN NOW",
+                style: TextStyle(fontSize: 18, color: Colors.white),
+              ),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                backgroundColor: Colors.orange,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
-      /* bottomNavigationBar: BottomNavWidget(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const HomeScreen()),
-              );
-              break;
-            case 1:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const FavoritePage()),
-              );
-              break;
-            case 2:
-              break;
-            case 3:
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Profile feature coming soon!')),
-              );
-              break;
-          }
-        },
-      ), */
-    );
-  }
+          ),
+        ],
+      ),
+    ),
+  );
+}
 }

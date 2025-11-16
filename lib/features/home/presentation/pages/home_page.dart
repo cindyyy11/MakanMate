@@ -6,6 +6,7 @@ import 'package:makan_mate/features/home/presentation/bloc/home_bloc.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_event.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_state.dart';
 import 'package:makan_mate/features/home/domain/entities/restaurant_entity.dart';
+import 'package:makan_mate/features/home/presentation/pages/all_restaurants_page.dart';
 import 'package:makan_mate/features/home/presentation/pages/categories_restaurant_page.dart';
 import 'package:makan_mate/features/home/presentation/pages/restaurant_detail_page.dart';
 import 'package:makan_mate/features/map/presentation/bloc/map_bloc.dart';
@@ -89,24 +90,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      // actions: [
-      //   IconButton(
-      //     icon: const Icon(Icons.notifications_outlined, color: Colors.black54),
-      //     onPressed: () {
-      //       ScaffoldMessenger.of(context).showSnackBar(
-      //         const SnackBar(content: Text('Notifications feature coming soon!')),
-      //       );
-      //     },
-      //   ),
-      //   IconButton(
-      //     icon: const Icon(Icons.person_outline, color: Colors.black54),
-      //     onPressed: () {
-      //       ScaffoldMessenger.of(context).showSnackBar(
-      //         const SnackBar(content: Text('Profile feature coming soon!')),
-      //       );
-      //     },
-      //   ),
-      // ],
     );
   }
 
@@ -319,8 +302,11 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             TextButton(
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('See all recommendations')),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => AllRestaurantsPage(restaurants: recommendations),
+                  ),
                 );
               },
               child: const Text('See All'),
@@ -331,7 +317,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: recommendations.length,
+          itemCount: recommendations.length > 5 ? 5 : recommendations.length,
           itemBuilder: (context, index) {
             final food = recommendations[index];
             return _buildFoodCard(food);
