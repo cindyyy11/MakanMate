@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_fortune_wheel/flutter_fortune_wheel.dart';
@@ -8,6 +9,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_bloc.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_state.dart';
 import 'package:makan_mate/features/home/domain/entities/restaurant_entity.dart';
+import 'package:makan_mate/features/home/presentation/pages/restaurant_detail_page.dart';
 
 class SpinWheelPage extends StatefulWidget {
   const SpinWheelPage({Key? key}) : super(key: key);
@@ -149,39 +151,84 @@ class _SpinWheelPageState extends State<SpinWheelPage> {
 
       showDialog(
         context: context,
-        builder: (_) => AlertDialog(
-          title: Text(vendor.businessName),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.network(
-                vendor.businessLogoUrl ?? "",
-                height: 120,
-                width: 120,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) =>
-                    const Icon(Icons.image_not_supported, size: 60),
-              ),
-              const SizedBox(height: 12),
-              Text("Cuisine: ${vendor.cuisineType ?? '-'}"),
-              Text("Price Range: ${vendor.priceRange ?? '-'}"),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+        builder: (_) => StreamBuilder<double>(
+          stream: _watchVendorRating(vendor.id),
+          builder: (context, snap) {
+            final avgRating = snap.data ?? vendor.ratingAverage ?? 0.0;
+
+            return AlertDialog(
+              title: Text(vendor.businessName),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.star, color: Colors.amber, size: 18),
-                  Text(vendor.ratingAverage?.toStringAsFixed(1) ?? "-"),
+                  Image.network(
+                    vendor.businessLogoUrl ?? "",
+                    height: 120,
+                    width: 120,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) =>
+                        const Icon(Icons.image_not_supported, size: 60),
+                  ),
+                  const SizedBox(height: 12),
+
+                  Text("Cuisine: ${vendor.cuisineType ?? '-'}"),
+                  Text("Price Range: ${vendor.priceRange ?? '-'}"),
+
+                  const SizedBox(height: 8),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.star, color: Colors.amber, size: 18),
+                      Text(avgRating.toStringAsFixed(1)),
+                    ],
+                  ),
                 ],
-              )
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Close"),
-            ),
-          ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Close"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => RestaurantDetailPage(restaurant: r),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text("View Restaurant"),
+                )
+              ],
+            );
+          },
         ),
       );
+    });
+  }
+
+  Stream<double> _watchVendorRating(String vendorId) {
+    return FirebaseFirestore.instance
+        .collection('reviews')
+        .where('vendorId', isEqualTo: vendorId)
+        .snapshots()
+        .map((snap) {
+      if (snap.docs.isEmpty) return 0.0;
+
+      double total = 0;
+      for (var doc in snap.docs) {
+        final rating = (doc['rating'] as num?)?.toDouble() ?? 0.0;
+        total += rating;
+      }
+
+      return total / snap.docs.length;
     });
   }
 
