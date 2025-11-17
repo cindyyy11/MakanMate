@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:makan_mate/features/vendor/presentation/pages/change_password_page.dart';
+
 
 import 'vendor_profile_page.dart';
 import 'help_support_page.dart';
@@ -153,7 +155,13 @@ class VendorSettingsPage extends StatelessWidget {
                   leading: const Icon(Icons.lock),
                   title: const Text("Change Password"),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const ChangePasswordPage()),
+                    );
+                  },
                 ),
 
                 const SizedBox(height: 18),
