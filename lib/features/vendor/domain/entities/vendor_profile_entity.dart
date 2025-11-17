@@ -3,7 +3,6 @@ import 'package:makan_mate/features/vendor/domain/entities/menu_item_entity.dart
 
 class VendorProfileEntity extends Equatable {
   final String id;
-  final String? profilePhotoUrl;
   final String? businessLogoUrl;
   final String? bannerImageUrl;
   final String businessName;
@@ -40,7 +39,6 @@ class VendorProfileEntity extends Equatable {
 
   const VendorProfileEntity({
     required this.id,
-    this.profilePhotoUrl,
     this.businessLogoUrl,
     this.bannerImageUrl,
     required this.businessName,
@@ -74,7 +72,6 @@ class VendorProfileEntity extends Equatable {
 
   VendorProfileEntity copyWith({
     String? id,
-    String? profilePhotoUrl,
     String? businessLogoUrl,
     String? bannerImageUrl,
     String? businessName,
@@ -107,7 +104,6 @@ class VendorProfileEntity extends Equatable {
   }) {
     return VendorProfileEntity(
       id: id ?? this.id,
-      profilePhotoUrl: profilePhotoUrl ?? this.profilePhotoUrl,
       businessLogoUrl: businessLogoUrl ?? this.businessLogoUrl,
       bannerImageUrl: bannerImageUrl ?? this.bannerImageUrl,
       businessName: businessName ?? this.businessName,
@@ -143,7 +139,6 @@ class VendorProfileEntity extends Equatable {
   @override
   List<Object?> get props => [
     id,
-    profilePhotoUrl,
     businessLogoUrl,
     bannerImageUrl,
     businessName,

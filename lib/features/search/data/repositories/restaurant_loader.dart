@@ -26,7 +26,6 @@ class RestaurantLoader {
           ? (data['ratingAverage'] as int).toDouble()
           : data['ratingAverage']?.toDouble(),
       approvalStatus: data['approvalStatus'] ?? '',
-      profilePhotoUrl: data['profilePhotoUrl'],
       businessLogoUrl: data['businessLogoUrl'],
       bannerImageUrl: data['bannerImageUrl'],
       operatingHours: {},

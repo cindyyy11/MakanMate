@@ -97,20 +97,26 @@ class VendorProfileBloc extends Bloc<VendorProfileEvent, VendorProfileState> {
     UploadProfilePhotoEvent event,
     Emitter<VendorProfileState> emit,
   ) async {
+    // Capture current profile before we emit a non-ready state so we can persist the URL
+    final currentState = state;
+    if (currentState is! VendorProfileReadyState) {
+      emit(const ImageUploadError(
+        'Load profile before uploading a photo',
+      ));
+      return;
+    }
+
     emit(ImageUploading(type: 'profilePhoto'));
     try {
       final imageUrl = await storageService.uploadProfilePhoto(event.imageFile);
       emit(ImageUploaded(imageUrl: imageUrl, type: 'profilePhoto'));
 
-      // Update profile with new photo URL
-      if (state is VendorProfileReadyState) {
-        final currentProfile = (state as VendorProfileReadyState).profile;
-        final updatedProfile = currentProfile.copyWith(
-          profilePhotoUrl: imageUrl,
-          updatedAt: DateTime.now(),
-        );
-        add(UpdateVendorProfileEvent(updatedProfile));
-      }
+      // Persist new photo URL to Firestore
+      final updatedProfile = currentState.profile.copyWith(
+        businessLogoUrl: imageUrl,
+        updatedAt: DateTime.now(),
+      );
+      add(UpdateVendorProfileEvent(updatedProfile));
     } catch (e) {
       emit(ImageUploadError('Failed to upload profile photo: $e'));
     }

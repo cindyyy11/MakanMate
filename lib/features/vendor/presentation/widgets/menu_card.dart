@@ -7,12 +7,7 @@ class MenuCard extends StatelessWidget {
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 
-  const MenuCard({
-    required this.item,
-    this.onEdit,
-    this.onDelete,
-    super.key,
-  });
+  const MenuCard({required this.item, this.onEdit, this.onDelete, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -21,9 +16,7 @@ class MenuCard extends StatelessWidget {
       child: Card(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -31,8 +24,9 @@ class MenuCard extends StatelessWidget {
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(12)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(12),
+                  ),
                   child: item.imageUrl.isNotEmpty
                       ? CachedNetworkImage(
                           imageUrl: item.imageUrl,
@@ -44,14 +38,17 @@ class MenuCard extends StatelessWidget {
                             height: 200,
                             color: Colors.grey[300],
                             child: const Center(
-                                child: CircularProgressIndicator()),
+                              child: CircularProgressIndicator(),
+                            ),
                           ),
                           errorWidget: (context, url, error) => Container(
                             width: double.infinity,
                             height: 200,
                             color: Colors.grey[300],
-                            child:
-                                const Icon(Icons.image_not_supported, size: 48),
+                            child: const Icon(
+                              Icons.image_not_supported,
+                              size: 48,
+                            ),
                           ),
                         )
                       : Container(
@@ -82,10 +79,14 @@ class MenuCard extends StatelessWidget {
                               },
                             ),
                             ListTile(
-                              leading: const Icon(Icons.delete,
-                                  color: Colors.red),
-                              title: const Text('Delete',
-                                  style: TextStyle(color: Colors.red)),
+                              leading: const Icon(
+                                Icons.delete,
+                                color: Colors.red,
+                              ),
+                              title: const Text(
+                                'Delete',
+                                style: TextStyle(color: Colors.red),
+                              ),
                               onTap: () {
                                 Navigator.pop(context);
                                 onDelete?.call();
@@ -101,22 +102,26 @@ class MenuCard extends StatelessWidget {
                   ),
                 ),
 
-                // UNAVAILABLE overlay 
+                // UNAVAILABLE overlay
                 if (!item.available)
                   Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.55),
-                        borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(12)),
-                      ),
-                      child: const Center(
-                        child: Text(
-                          'Unavailable',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
+                    child: IgnorePointer(
+                      ignoring: true, // 👈 IMPORTANT: Don't block touches
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.55),
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(12),
+                          ),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'Unavailable',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),

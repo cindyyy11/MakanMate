@@ -112,7 +112,6 @@ class FavoritePage extends StatelessWidget {
                     shortDescription: fav['description'] ?? '',
                     businessLogoUrl: fav['image'],
                     bannerImageUrl: null,
-                    profilePhotoUrl: null,
                     priceRange: fav['priceRange'],
                     ratingAverage: null,
                     approvalStatus: 'verified',
