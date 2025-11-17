@@ -374,5 +374,72 @@ class AdminUserManagementDataSource {
       rethrow;
     }
   }
+
+  /// Create a new admin account
+  Future<String> createAdmin({
+    required String email,
+    required String password,
+    required String displayName,
+  }) async {
+    try {
+      final currentAdminId = auth.currentUser?.uid;
+      if (currentAdminId == null) {
+        throw Exception('Admin not authenticated');
+      }
+
+      // Create user in Firebase Auth
+      final userCredential = await auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      final newAdminId = userCredential.user?.uid;
+      if (newAdminId == null) {
+        throw Exception('Failed to create admin user');
+      }
+
+      // Update display name
+      await userCredential.user?.updateDisplayName(displayName);
+      await userCredential.user?.reload();
+
+      // Create user document in Firestore with admin role
+      await firestore.collection('users').doc(newAdminId).set({
+        'id': newAdminId,
+        'name': displayName,
+        'email': email,
+        'role': 'admin',
+        'isVerified': true,
+        'isBanned': false,
+        'dietaryRestrictions': [],
+        'cuisinePreferences': {},
+        'spiceTolerance': 0.5,
+        'culturalBackground': 'mixed',
+        'currentLocation': {
+          'latitude': 0.0,
+          'longitude': 0.0,
+          'address': '',
+        },
+        'behaviorPatterns': {},
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+        'warnings': [],
+        'createdBy': currentAdminId,
+      }, SetOptions(merge: false));
+
+      // Log the action
+      await auditLogService.logAction(
+        action: 'create_admin',
+        entityType: 'user',
+        entityId: newAdminId,
+        reason: 'Admin account created by $currentAdminId',
+      );
+
+      logger.i('Admin account created: $newAdminId');
+      return newAdminId;
+    } catch (e, stackTrace) {
+      logger.e('Error creating admin: $e', stackTrace: stackTrace);
+      rethrow;
+    }
+  }
 }
 

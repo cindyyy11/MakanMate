@@ -17,6 +17,8 @@ abstract class AuthRepository {
   
   Future<Either<Failure, UserEntity>> signInWithGoogle();
   
+  Future<Either<Failure, UserEntity>> signInAsGuest();
+  
   Future<Either<Failure, void>> signOut();
   
   Future<Either<Failure, UserEntity?>> getCurrentUser();

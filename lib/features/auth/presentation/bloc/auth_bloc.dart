@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:makan_mate/features/auth/domain/usecases/forgot_password_usecase.dart';
 import 'package:makan_mate/features/auth/domain/usecases/google_sign_in_usecase.dart';
 import 'package:makan_mate/features/auth/domain/usecases/sign_in_usecase.dart';
+import 'package:makan_mate/features/auth/domain/usecases/sign_in_as_guest_usecase.dart';
 import 'package:makan_mate/features/auth/domain/usecases/sign_out_usecase.dart';
 import 'package:makan_mate/features/auth/domain/usecases/sign_up_usecase.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_event.dart';
@@ -12,6 +13,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final SignUpUseCase signUp;
   final SignOutUseCase signOut;
   final GoogleSignInUseCase googleSignIn;
+  final SignInAsGuestUseCase signInAsGuest;
   final ForgotPasswordUseCase forgotPassword;
 
   AuthBloc({
@@ -19,12 +21,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.signUp,
     required this.signOut,
     required this.googleSignIn,
+    required this.signInAsGuest,
     required this.forgotPassword,
   }) : super(AuthInitial()) {
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<SignInRequested>(_onSignInRequested);
     on<SignUpRequested>(_onSignUpRequested);
     on<GoogleSignInRequested>(_onGoogleSignInRequested);
+    on<GuestSignInRequested>(_onGuestSignInRequested);
     on<SignOutRequested>(_onSignOutRequested);
     on<ForgotPasswordRequested>(_onForgotPasswordRequested);
   }
@@ -82,6 +86,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
 
     final result = await googleSignIn();
+
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (user) => emit(Authenticated(user)),
+    );
+  }
+
+  Future<void> _onGuestSignInRequested(
+    GuestSignInRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+
+    final result = await signInAsGuest();
 
     result.fold(
       (failure) => emit(AuthError(failure.message)),

@@ -6,7 +6,6 @@ import 'package:makan_mate/features/auth/presentation/pages/login_page.dart';
 import 'package:makan_mate/features/auth/presentation/pages/signup_page.dart';
 import 'package:makan_mate/features/home/domain/entities/restaurant_entity.dart';
 import 'package:makan_mate/features/home/presentation/pages/home_page.dart';
-import 'package:makan_mate/features/home/presentation/pages/restaurant_detail_page.dart';
 import 'package:makan_mate/features/home/presentation/pages/restaurant_detail_screen.dart';
 import 'package:makan_mate/features/recommendations/presentation/pages/recommendations_page.dart';
 import 'package:makan_mate/features/recommendations/presentation/bloc/recommendation_bloc.dart';
@@ -18,8 +17,6 @@ import 'package:makan_mate/features/admin/presentation/bloc/admin_user_managemen
 import 'package:makan_mate/features/admin/presentation/bloc/admin_voucher_management_bloc.dart';
 import 'package:makan_mate/features/admin/presentation/pages/user_details_page.dart';
 import 'package:makan_mate/features/admin/presentation/pages/admin_voucher_approval_page.dart';
-import 'package:makan_mate/features/search/presentation/bloc/search_bloc.dart';
-import 'package:makan_mate/features/search/presentation/pages/search_page.dart';
 import 'package:makan_mate/features/user/domain/entities/user_entity.dart';
 import 'package:makan_mate/core/ml/model_testing_screen.dart';
 import 'package:makan_mate/features/splash/presentation/pages/splash_page.dart';
@@ -89,7 +86,7 @@ class AppRouter {
       case '/restaurantDetail':
         final restaurant = settings.arguments as RestaurantEntity;
         return MaterialPageRoute(
-          builder: (_) => RestaurantDetailPage(restaurant: restaurant),
+          builder: (_) => RestaurantDetailScreen(restaurant: restaurant),
           settings: settings,
         );
 
@@ -118,13 +115,6 @@ class AppRouter {
           settings: settings,
         );
 
-      case '/search':
-        return MaterialPageRoute(
-          builder: (_) => BlocProvider(
-            create: (_) => di.sl<SearchBloc>(),
-            child: const SearchPage(),
-          ),
-        );
       case '/adminProfile':
         return MaterialPageRoute(
           builder: (_) => const AdminProfilePage(),

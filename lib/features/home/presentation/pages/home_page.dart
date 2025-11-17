@@ -11,7 +11,9 @@ import 'package:makan_mate/features/home/presentation/pages/restaurant_detail_pa
 import 'package:makan_mate/features/map/presentation/bloc/map_bloc.dart';
 import 'package:makan_mate/features/map/presentation/pages/map_page.dart';
 import 'package:makan_mate/features/map/presentation/bloc/map_event.dart' as map;
-import 'package:makan_mate/features/search/presentation/pages/search_page.dart';
+import 'package:makan_mate/features/home/presentation/widgets/ai_recommendations_section.dart';
+import 'package:makan_mate/core/widgets/announcements_banner.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 
 class HomeScreen extends StatefulWidget {
@@ -114,16 +116,27 @@ class _HomeScreenState extends State<HomeScreen> {
     required List<RestaurantEntity> categories,
     required List<RestaurantEntity> recommendations,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              _buildWelcomeSection(),
-              const SizedBox(height: 20),
-              _buildSearchBar(),
+      // Get user role for announcements
+      final user = FirebaseAuth.instance.currentUser;
+      String? userRole;
+      if (user != null) {
+        // You may need to fetch user role from Firestore
+        // For now, we'll use 'all' to show all announcements
+        userRole = 'all';
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Announcements Banner
+          AnnouncementsBanner(userRole: userRole),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                _buildWelcomeSection(),
+                const SizedBox(height: 20),
+                _buildSearchBar(),
               const SizedBox(height: 24),
               const Text(
                 'Nearby Restaurants',
@@ -136,6 +149,8 @@ class _HomeScreenState extends State<HomeScreen> {
               _buildMapSection(),
               const SizedBox(height: 24),
               _buildCategoriesSection(categories),
+              const SizedBox(height: 24),
+              const AIRecommendationsSection(),
               const SizedBox(height: 24),
               _buildRecommendationsSection(recommendations),
             ],

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
@@ -11,46 +11,49 @@ import 'package:makan_mate/core/di/injection_container.dart' as di;
 import 'package:makan_mate/core/utils/logger.dart';
 import 'package:makan_mate/firebase_options.dart';
 import 'package:makan_mate/services/metrics_service.dart';
+import 'package:makan_mate/core/services/push_notification_service.dart';
+
+/// Background message handler - MUST be top-level function
+/// This runs in a separate isolate when app is terminated or in background
+///
+/// **What it uses:**
+/// - Firebase Cloud Messaging (FCM) service
+/// - Runs in background isolate (separate from main app)
+/// - Handles notifications when app is closed or backgrounded
+///
+/// **When it's called:**
+/// - App is terminated and notification arrives
+/// - App is in background and notification arrives
+/// - System shows notification automatically
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Initialize Firebase in background isolate
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Log the notification
+  log.i('Background message received: ${message.messageId}');
+  log.i('Notification title: ${message.notification?.title}');
+  log.i('Notification body: ${message.notification?.body}');
+  log.i('Notification data: ${message.data}');
+
+  // You can process data here, update local database, etc.
+  // Note: Can't show UI or navigate here - runs in background isolate
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // // 2) Crashlytics (enable in release, disable in debug)
-  // await FirebaseCrashlytics.instance
-  //     .setCrashlyticsCollectionEnabled(!kDebugMode);
-  //
-  // // Forward Flutter framework errors to Crashlytics (and our logger)
-  // FlutterError.onError = (FlutterErrorDetails details) {
-  //   log.e('Flutter framework error', details.exception, details.stack);
-  //   FirebaseCrashlytics.instance.recordFlutterFatalError(details);
-  // };
-  //
-  // // Forward uncaught async errors (Zones) to Crashlytics
-  // PlatformDispatcher.instance.onError = (error, stack) {
-  //   log.e('Uncaught async error', error, stack);
-  //   FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-  //   return true;
-  // };
+  // Register background message handler BEFORE runApp()
+  // This allows notifications to be handled when app is terminated
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  // // 3) (Optional but recommended) Firebase App Check
-  // // Requires you to set up platform providers:
-  // // - Web: reCAPTCHA v3 or Enterprise -> replace 'YOUR_RECAPTCHA_V3_SITE_KEY'
-  // // - Android: Play Integrity (default), iOS: DeviceCheck/App Attest
-  // try {
-  //   await FirebaseAppCheck.instance.activate(
-  //     webProvider: kIsWeb
-  //         ? ReCaptchaV3Provider('YOUR_RECAPTCHA_V3_SITE_KEY') // TODO: set site key
-  //         : null,
-  //     androidProvider: AndroidProvider.playIntegrity,
-  //     appleProvider: AppleProvider.appAttest, // or .deviceCheck
-  //   );
-  // } catch (e, st) {
-  //   // Don't block the app if App Check init fails; just log.
-  //   log.w('App Check activation failed: $e');
-  //   log.e('App Check stack', e, st);
-  // }
+  // Initialize push notification service listeners
+  // This sets up handlers for foreground messages and notification taps
+  PushNotificationService.initializeListeners();
+
+
 
   await dotenv.load(fileName: ".env");
 

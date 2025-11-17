@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:makan_mate/core/constants/ui_constants.dart';
+import 'package:makan_mate/core/theme/app_colors.dart';
+import 'package:makan_mate/core/theme/app_theme.dart';
+import 'package:makan_mate/core/widgets/glass_container.dart';
+import 'package:makan_mate/core/widgets/loading_widget.dart';
 import 'package:makan_mate/features/admin/domain/entities/seasonal_trend_entity.dart';
 import 'package:makan_mate/features/admin/presentation/bloc/admin_bloc.dart';
 import 'package:makan_mate/features/admin/presentation/bloc/admin_event.dart';
 import 'package:makan_mate/features/admin/presentation/bloc/admin_state.dart';
+import 'package:intl/intl.dart';
 
 /// Seasonal Insights Widget
 ///
@@ -23,11 +29,21 @@ class SeasonalInsightsWidget extends StatelessWidget {
         if (state is AdminLoaded && state.seasonalTrends != null) {
           return _buildDashboard(context, state.seasonalTrends!);
         } else if (state is AdminLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(UIConstants.spacingXl),
+              child: LoadingWidget(),
+            ),
+          );
         } else {
-          // Load seasonal trends if not loaded
+          // Load seasonal trends from real data (no mock data)
           context.read<AdminBloc>().add(const LoadSeasonalTrends());
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(UIConstants.spacingXl),
+              child: LoadingWidget(),
+            ),
+          );
         }
       },
     );
@@ -37,119 +53,111 @@ class SeasonalInsightsWidget extends StatelessWidget {
     BuildContext context,
     SeasonalTrendAnalysis trends,
   ) {
-    return RefreshIndicator(
-      onRefresh: () async {
-        context.read<AdminBloc>().add(const RefreshSeasonalTrends());
-        await Future.delayed(const Duration(seconds: 1));
-      },
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Seasonal Trend Analysis',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.refresh),
-                  onPressed: () {
-                    context.read<AdminBloc>().add(const RefreshSeasonalTrends());
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Last updated: ${_formatDateTime(trends.calculatedAt)}',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 24),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Current Season Card
+        _buildCurrentSeasonCard(context, trends.currentSeason),
+        const SizedBox(height: UIConstants.spacingLg),
 
-            // Current Season Card
-            _buildCurrentSeasonCard(context, trends.currentSeason),
-            const SizedBox(height: 24),
+        // Trending Dishes
+        if (trends.trendingDishes.isNotEmpty) ...[
+          _buildTrendingDishes(context, trends.trendingDishes),
+          const SizedBox(height: UIConstants.spacingLg),
+        ],
 
-            // Trending Dishes
-            if (trends.trendingDishes.isNotEmpty) ...[
-              _buildTrendingDishes(context, trends.trendingDishes),
-              const SizedBox(height: 24),
-            ],
+        // Trending Cuisines
+        if (trends.trendingCuisines.isNotEmpty) ...[
+          _buildTrendingCuisines(context, trends.trendingCuisines),
+          const SizedBox(height: UIConstants.spacingLg),
+        ],
 
-            // Trending Cuisines
-            if (trends.trendingCuisines.isNotEmpty) ...[
-              _buildTrendingCuisines(context, trends.trendingCuisines),
-              const SizedBox(height: 24),
-            ],
+        // Upcoming Events
+        if (trends.upcomingEvents.isNotEmpty) ...[
+          _buildUpcomingEvents(context, trends.upcomingEvents),
+          const SizedBox(height: UIConstants.spacingLg),
+        ],
 
-            // Upcoming Events
-            if (trends.upcomingEvents.isNotEmpty) ...[
-              _buildUpcomingEvents(context, trends.upcomingEvents),
-              const SizedBox(height: 24),
-            ],
+        // Admin Recommendations
+        if (trends.recommendations.isNotEmpty) ...[
+          _buildRecommendations(context, trends.recommendations),
+          const SizedBox(height: UIConstants.spacingLg),
+        ],
 
-            // Admin Recommendations
-            if (trends.recommendations.isNotEmpty) ...[
-              _buildRecommendations(context, trends.recommendations),
-              const SizedBox(height: 24),
-            ],
-
-            // Analysis Info
-            _buildAnalysisInfo(context, trends),
-          ],
-        ),
-      ),
+        // Analysis Info
+        _buildAnalysisInfo(context, trends),
+      ],
     );
   }
 
   Widget _buildCurrentSeasonCard(BuildContext context, Season season) {
-    return Card(
-      elevation: 3,
-      color: _getSeasonColor(season).withOpacity(0.1),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Row(
-          children: [
-            Text(
+    final seasonColor = _getSeasonColor(season);
+
+    return GlassContainer(
+      padding: UIConstants.paddingLg,
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  seasonColor.withOpacity(0.3),
+                  seasonColor.withOpacity(0.1),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(
               season.emoji,
               style: const TextStyle(fontSize: 48),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Current Season',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${season.displayName} ${season.emoji}',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: _getSeasonColor(season),
-                    ),
-                  ),
-                ],
+          ),
+          const SizedBox(width: UIConstants.spacingLg),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Current Season',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColorsExtension.getTextSecondary(context),
+                        fontSize: UIConstants.fontSizeSm,
+                      ),
+                ),
+                const SizedBox(height: UIConstants.spacingXs),
+                Text(
+                  '${season.displayName} ${season.emoji}',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: seasonColor,
+                      ),
+                ),
+              ],
+            ),
+          ),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                context.read<AdminBloc>().add(const RefreshSeasonalTrends());
+              },
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.refresh_rounded,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -158,31 +166,48 @@ class SeasonalInsightsWidget extends StatelessWidget {
     BuildContext context,
     List<TrendingDish> dishes,
   ) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Trending Dishes',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+    return GlassContainer(
+      padding: UIConstants.paddingLg,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.restaurant_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            ...dishes.take(10).map((dish) => _buildTrendingItem(
+              const SizedBox(width: UIConstants.spacingMd),
+              Text(
+                'Trending Dishes',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColorsExtension.getTextPrimary(context),
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: UIConstants.spacingLg),
+          ...dishes.take(10).map((dish) => Padding(
+                padding: const EdgeInsets.only(bottom: UIConstants.spacingMd),
+                child: _buildTrendingItem(
                   context,
                   dish.dishName,
                   dish.percentageChange,
                   dish.currentCount,
                   dish.previousCount,
                   dish.cuisineType,
-                )),
-          ],
-        ),
+                ),
+              )),
+        ],
       ),
     );
   }
@@ -191,31 +216,48 @@ class SeasonalInsightsWidget extends StatelessWidget {
     BuildContext context,
     List<TrendingCuisine> cuisines,
   ) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Trending Cuisines',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+    return GlassContainer(
+      padding: UIConstants.paddingLg,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: AppColors.secondaryGradient,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.local_dining_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            ...cuisines.map((cuisine) => _buildTrendingItem(
+              const SizedBox(width: UIConstants.spacingMd),
+              Text(
+                'Trending Cuisines',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColorsExtension.getTextPrimary(context),
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: UIConstants.spacingLg),
+          ...cuisines.map((cuisine) => Padding(
+                padding: const EdgeInsets.only(bottom: UIConstants.spacingMd),
+                child: _buildTrendingItem(
                   context,
                   cuisine.cuisineName,
                   cuisine.percentageChange,
                   cuisine.currentCount,
                   cuisine.previousCount,
                   null,
-                )),
-          ],
-        ),
+                ),
+              )),
+        ],
       ),
     );
   }
@@ -229,40 +271,53 @@ class SeasonalInsightsWidget extends StatelessWidget {
     String? cuisineType,
   ) {
     final isUp = percentageChange > 0;
-    final color = isUp ? Colors.green : Colors.red;
-    final icon = isUp ? Icons.trending_up : Icons.trending_down;
+    final color = isUp ? AppColors.success : AppColors.error;
+    final icon = isUp ? Icons.trending_up_rounded : Icons.trending_down_rounded;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
+      padding: UIConstants.paddingMd,
       decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[200]!),
+        color: isDark
+            ? Colors.white.withOpacity(0.05)
+            : AppColors.grey50,
+        borderRadius: UIConstants.borderRadiusMd,
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withOpacity(0.1)
+              : AppColors.grey200,
+        ),
       ),
       child: Row(
         children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(width: 12),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(width: UIConstants.spacingMd),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColorsExtension.getTextPrimary(context),
+                      ),
                 ),
                 if (cuisineType != null) ...[
-                  const SizedBox(height: 4),
+                  const SizedBox(height: UIConstants.spacingXs),
                   Text(
                     cuisineType,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColorsExtension.getTextSecondary(context),
+                          fontSize: UIConstants.fontSizeXs,
+                        ),
                   ),
                 ],
               ],
@@ -274,17 +329,18 @@ class SeasonalInsightsWidget extends StatelessWidget {
               Text(
                 '${isUp ? '+' : ''}${percentageChange.toStringAsFixed(1)}%',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: UIConstants.fontSizeLg,
                   fontWeight: FontWeight.bold,
                   color: color,
                 ),
               ),
+              const SizedBox(height: 2),
               Text(
                 '$currentCount vs $previousCount',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColorsExtension.getTextSecondary(context),
+                      fontSize: UIConstants.fontSizeXs,
+                    ),
               ),
             ],
           ),
@@ -297,38 +353,58 @@ class SeasonalInsightsWidget extends StatelessWidget {
     BuildContext context,
     List<UpcomingEvent> events,
   ) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Upcoming Events',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+    return GlassContainer(
+      padding: UIConstants.paddingLg,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: AppColors.warningGradient,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.event_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            ...events.map((event) => _buildEventItem(context, event)),
-          ],
-        ),
+              const SizedBox(width: UIConstants.spacingMd),
+              Text(
+                'Upcoming Events',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColorsExtension.getTextPrimary(context),
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: UIConstants.spacingLg),
+          ...events.map((event) => Padding(
+                padding: const EdgeInsets.only(bottom: UIConstants.spacingMd),
+                child: _buildEventItem(context, event),
+              )),
+        ],
       ),
     );
   }
 
   Widget _buildEventItem(BuildContext context, UpcomingEvent event) {
     final impactColor = _getImpactColor(event.impact);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      padding: UIConstants.paddingMd,
       decoration: BoxDecoration(
         color: impactColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: impactColor.withOpacity(0.3)),
+        borderRadius: UIConstants.borderRadiusMd,
+        border: Border.all(
+          color: impactColor.withOpacity(0.3),
+          width: 1.5,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -336,83 +412,107 @@ class SeasonalInsightsWidget extends StatelessWidget {
           Row(
             children: [
               Icon(
-                Icons.event,
+                Icons.event_rounded,
                 color: impactColor,
                 size: 24,
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: UIConstants.spacingMd),
               Expanded(
                 child: Text(
                   event.eventName,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: impactColor,
-                  ),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: impactColor,
+                      ),
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
+                  horizontal: UIConstants.spacingSm,
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: impactColor,
+                  gradient: LinearGradient(
+                    colors: [impactColor, impactColor.withOpacity(0.8)],
+                  ),
                   borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: impactColor.withOpacity(0.3),
+                      blurRadius: 8,
+                      spreadRadius: 0,
+                    ),
+                  ],
                 ),
                 child: Text(
                   '${event.daysUntil} days',
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
-                    fontSize: 12,
+                    fontSize: UIConstants.fontSizeXs,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: UIConstants.spacingSm),
           Row(
             children: [
               Icon(
-                Icons.info_outline,
+                Icons.info_outline_rounded,
                 size: 16,
-                color: Colors.grey[600],
+                color: AppColorsExtension.getGrey600(context),
               ),
               const SizedBox(width: 4),
               Text(
                 event.impact.displayName,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColorsExtension.getTextSecondary(context),
+                      fontSize: UIConstants.fontSizeXs,
+                    ),
               ),
             ],
           ),
           if (event.predictedTrendingItems.isNotEmpty) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: UIConstants.spacingMd),
             Text(
               'Predicted Trending:',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[700],
-              ),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColorsExtension.getTextPrimary(context),
+                    fontSize: UIConstants.fontSizeSm,
+                  ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: UIConstants.spacingXs),
             Wrap(
               spacing: 8,
               runSpacing: 4,
               children: event.predictedTrendingItems
                   .take(5)
                   .map(
-                    (item) => Chip(
-                      label: Text(
-                        item,
-                        style: const TextStyle(fontSize: 11),
+                    (item) => Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
                       ),
-                      padding: EdgeInsets.zero,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.white.withOpacity(0.1)
+                            : AppColors.grey100,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: isDark
+                              ? Colors.white.withOpacity(0.1)
+                              : AppColors.grey300,
+                        ),
+                      ),
+                      child: Text(
+                        item,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              fontSize: UIConstants.fontSizeXs,
+                              color: AppColorsExtension.getTextPrimary(context),
+                            ),
+                      ),
                     ),
                   )
                   .toList(),
@@ -427,30 +527,46 @@ class SeasonalInsightsWidget extends StatelessWidget {
     BuildContext context,
     List<AdminRecommendation> recommendations,
   ) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.lightbulb, color: Colors.amber[700]),
-                const SizedBox(width: 8),
-                const Text(
-                  'Admin Recommendations',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+    return GlassContainer(
+      padding: UIConstants.paddingLg,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.warning,
+                      AppColors.warning.withOpacity(0.8),
+                    ],
                   ),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            ...recommendations.map((rec) => _buildRecommendationItem(context, rec)),
-          ],
-        ),
+                child: const Icon(
+                  Icons.lightbulb_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: UIConstants.spacingMd),
+              Text(
+                'Admin Recommendations',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColorsExtension.getTextPrimary(context),
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: UIConstants.spacingLg),
+          ...recommendations.map((rec) => Padding(
+                padding: const EdgeInsets.only(bottom: UIConstants.spacingMd),
+                child: _buildRecommendationItem(context, rec),
+              )),
+        ],
       ),
     );
   }
@@ -461,13 +577,15 @@ class SeasonalInsightsWidget extends StatelessWidget {
   ) {
     final priorityColor = _getPriorityColor(recommendation.priority);
     final typeIcon = _getTypeIcon(recommendation.type);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      padding: UIConstants.paddingMd,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        color: isDark
+            ? Colors.white.withOpacity(0.05)
+            : Colors.white,
+        borderRadius: UIConstants.borderRadiusMd,
         border: Border.all(
           color: priorityColor.withOpacity(0.3),
           width: 2,
@@ -478,16 +596,22 @@ class SeasonalInsightsWidget extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(typeIcon, color: priorityColor, size: 20),
-              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: priorityColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(typeIcon, color: priorityColor, size: 18),
+              ),
+              const SizedBox(width: UIConstants.spacingSm),
               Expanded(
                 child: Text(
                   recommendation.title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: priorityColor,
-                  ),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: priorityColor,
+                      ),
                 ),
               ),
               Container(
@@ -497,12 +621,12 @@ class SeasonalInsightsWidget extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: priorityColor.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   recommendation.priority.name.toUpperCase(),
                   style: TextStyle(
-                    fontSize: 10,
+                    fontSize: UIConstants.fontSizeXs,
                     fontWeight: FontWeight.bold,
                     color: priorityColor,
                   ),
@@ -510,13 +634,12 @@ class SeasonalInsightsWidget extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: UIConstants.spacingSm),
           Text(
             recommendation.description,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[700],
-            ),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColorsExtension.getTextSecondary(context),
+                ),
           ),
         ],
       ),
@@ -527,57 +650,83 @@ class SeasonalInsightsWidget extends StatelessWidget {
     BuildContext context,
     SeasonalTrendAnalysis trends,
   ) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Analysis Information',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+    return GlassContainer(
+      padding: UIConstants.paddingLg,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: AppColors.infoGradient,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.analytics_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            _buildInfoRow(
-              'Analysis Period',
-              '${_formatDate(trends.analysisStartDate)} - ${_formatDate(trends.analysisEndDate)}',
-            ),
-            _buildInfoRow(
-              'Total Searches Analyzed',
-              '${trends.totalSearches}',
-            ),
-            _buildInfoRow(
-              'Calculated At',
-              _formatDateTime(trends.calculatedAt),
-            ),
-          ],
-        ),
+              const SizedBox(width: UIConstants.spacingMd),
+              Text(
+                'Analysis Information',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColorsExtension.getTextPrimary(context),
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: UIConstants.spacingLg),
+          _buildInfoRow(
+            context,
+            'Analysis Period',
+            '${_formatDate(trends.analysisStartDate)} - ${_formatDate(trends.analysisEndDate)}',
+          ),
+          _buildInfoRow(
+            context,
+            'Total Searches Analyzed',
+            '${trends.totalSearches}',
+          ),
+          _buildInfoRow(
+            context,
+            'Calculated At',
+            _formatDateTime(trends.calculatedAt),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
+  Widget _buildInfoRow(BuildContext context, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      padding: const EdgeInsets.symmetric(vertical: UIConstants.spacingXs),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
+          Expanded(
+            flex: 2,
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColorsExtension.getTextSecondary(context),
+                  ),
             ),
           ),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+          const SizedBox(width: UIConstants.spacingMd),
+          Expanded(
+            flex: 3,
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColorsExtension.getTextPrimary(context),
+                  ),
             ),
           ),
         ],
@@ -588,35 +737,35 @@ class SeasonalInsightsWidget extends StatelessWidget {
   Color _getSeasonColor(Season season) {
     switch (season) {
       case Season.ramadan:
-        return Colors.purple;
+        return AppColors.secondary;
       case Season.cny:
-        return Colors.red;
+        return AppColors.error;
       case Season.durian:
-        return Colors.orange;
+        return AppColors.warning;
       case Season.regular:
-        return Colors.blue;
+        return AppColors.info;
     }
   }
 
   Color _getImpactColor(EventImpact impact) {
     switch (impact) {
       case EventImpact.high:
-        return Colors.red;
+        return AppColors.error;
       case EventImpact.medium:
-        return Colors.orange;
+        return AppColors.warning;
       case EventImpact.low:
-        return Colors.blue;
+        return AppColors.info;
     }
   }
 
   Color _getPriorityColor(RecommendationPriority priority) {
     switch (priority) {
       case RecommendationPriority.high:
-        return Colors.red;
+        return AppColors.error;
       case RecommendationPriority.medium:
-        return Colors.orange;
+        return AppColors.warning;
       case RecommendationPriority.low:
-        return Colors.blue;
+        return AppColors.info;
     }
   }
 
@@ -636,11 +785,11 @@ class SeasonalInsightsWidget extends StatelessWidget {
   }
 
   String _formatDateTime(DateTime dateTime) {
-    return '${dateTime.day}/${dateTime.month}/${dateTime.year} ${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
+    return DateFormat('MMM dd, yyyy • HH:mm').format(dateTime);
   }
 
   String _formatDate(DateTime dateTime) {
-    return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+    return DateFormat('MMM dd, yyyy').format(dateTime);
   }
 }
 
