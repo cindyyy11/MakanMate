@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:makan_mate/features/home/domain/entities/restaurant_entity.dart';
 import 'package:makan_mate/features/home/presentation/pages/restaurant_detail_page.dart';
@@ -7,6 +8,25 @@ class AllRestaurantsPage extends StatelessWidget {
 
   const AllRestaurantsPage({Key? key, required this.restaurants})
       : super(key: key);
+
+
+  Stream<double> _watchVendorRating(String vendorId) {
+    return FirebaseFirestore.instance
+        .collection('reviews')
+        .where('vendorId', isEqualTo: vendorId)
+        .snapshots()
+        .map((snap) {
+      if (snap.docs.isEmpty) return 0.0;
+
+      double total = 0;
+      for (var doc in snap.docs) {
+        final r = (doc['rating'] as num?)?.toDouble() ?? 0.0;
+        total += r;
+      }
+
+      return total / snap.docs.length;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -127,7 +147,23 @@ class AllRestaurantsPage extends StatelessWidget {
                       children: [
                         const Icon(Icons.star, color: Colors.amber, size: 16),
                         const SizedBox(width: 4),
-                        Text(rating),
+                        StreamBuilder<double>(
+                          stream: _watchVendorRating(vendor.id),
+                          builder: (context, snapshot) {
+                            if (!snapshot.hasData) {
+                              return const Text("-");
+                            }
+
+                            final avg = snapshot.data!;
+                            return Text(
+                              avg > 0 ? avg.toStringAsFixed(1) : "-",
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            );
+                          },
+                        ),
 
                         const Spacer(),
 
