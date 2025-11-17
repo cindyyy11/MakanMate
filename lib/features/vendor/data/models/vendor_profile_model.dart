@@ -4,7 +4,6 @@ import 'menu_item_model.dart';
 
 class VendorProfileModel {
   final String id;
-  final String? profilePhotoUrl;
   final String? businessLogoUrl;
   final String? bannerImageUrl;
   final String businessName;
@@ -39,7 +38,6 @@ class VendorProfileModel {
 
   const VendorProfileModel({
     required this.id,
-    this.profilePhotoUrl,
     this.businessLogoUrl,
     this.bannerImageUrl,
     required this.businessName,
@@ -71,7 +69,6 @@ class VendorProfileModel {
 
   Map<String, dynamic> toMap() {
     return {
-      'profilePhotoUrl': profilePhotoUrl,
       'businessLogoUrl': businessLogoUrl,
       'bannerImageUrl': bannerImageUrl,
       'businessName': businessName,
@@ -181,7 +178,6 @@ class VendorProfileModel {
   factory VendorProfileModel.fromEntity(VendorProfileEntity entity) {
     return VendorProfileModel(
       id: entity.id,
-      profilePhotoUrl: entity.profilePhotoUrl,
       businessLogoUrl: entity.businessLogoUrl,
       bannerImageUrl: entity.bannerImageUrl,
       businessName: entity.businessName,
@@ -230,7 +226,6 @@ class VendorProfileModel {
 
     return VendorProfileModel(
       id: doc.id,
-      profilePhotoUrl: data['profilePhotoUrl'],
       businessLogoUrl: data['businessLogoUrl'],
       bannerImageUrl: data['bannerImageUrl'],
       businessName: data['businessName'] ?? '',
@@ -265,7 +260,6 @@ class VendorProfileModel {
   VendorProfileEntity toEntity() {
     return VendorProfileEntity(
       id: id,
-      profilePhotoUrl: profilePhotoUrl,
       businessLogoUrl: businessLogoUrl,
       bannerImageUrl: bannerImageUrl,
       businessName: businessName,

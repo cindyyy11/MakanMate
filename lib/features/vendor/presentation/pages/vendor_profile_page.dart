@@ -58,6 +58,8 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
 
   bool _isEditing = false;
   File? _selectedProfilePhoto;
+  File? _pickedImage;
+
   Map<String, OperatingHours> _operatingHours = {};
   List<OutletEntity> _outlets = [];
   String _approvalStatus = 'pending';
@@ -112,7 +114,10 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
     if (image != null) {
       setState(() {
         _selectedProfilePhoto = File(image.path);
+        _pickedImage = File(image.path);
       });
+
+      // Upload to Firebase Storage
       context.read<VendorProfileBloc>().add(
         UploadProfilePhotoEvent(_selectedProfilePhoto!),
       );
@@ -157,14 +162,14 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
 
     // Get current profile to preserve existing data
     final currentState = context.read<VendorProfileBloc>().state;
-    String? profilePhotoUrl;
+    String? businessLogoUrl;
     List<CertificationEntity> certifications = [];
     DateTime createdAt = DateTime.now();
     String? existingCuisineType;
     String? existingPriceRange;
 
     if (currentState is VendorProfileReadyState) {
-      profilePhotoUrl = currentState.profile.profilePhotoUrl;
+      businessLogoUrl = currentState.profile.businessLogoUrl;
       certifications = currentState.profile.certifications;
       createdAt = currentState.profile.createdAt;
       existingCuisineType = currentState.profile.cuisineType;
@@ -173,7 +178,7 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
 
     final profile = VendorProfileEntity(
       id: user.uid,
-      profilePhotoUrl: profilePhotoUrl,
+      businessLogoUrl: businessLogoUrl,
       businessName: _businessNameController.text.trim(),
       contactNumber: _contactNumberController.text.trim(),
       emailAddress: _emailController.text.trim(),
@@ -883,6 +888,8 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
           );
           setState(() {
             _isEditing = false;
+            _pickedImage = null;
+            _selectedProfilePhoto = null;
           });
         } else if (state is VendorProfileReadyState && !_isEditing) {
           _populateFields(state.profile);
@@ -1061,15 +1068,17 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                 CircleAvatar(
                   radius: 70,
                   backgroundColor: Colors.grey[300],
-                  backgroundImage:
-                      profile.profilePhotoUrl != null &&
-                          profile.profilePhotoUrl!.isNotEmpty
-                      ? NetworkImage(profile.profilePhotoUrl!)
+                  backgroundImage: _pickedImage != null
+                      ? FileImage(_pickedImage!)
+                      : (profile.businessLogoUrl != null &&
+                            profile.businessLogoUrl!.isNotEmpty)
+                      ? NetworkImage(profile.businessLogoUrl!)
                       : null,
                   child:
-                      profile.profilePhotoUrl == null ||
-                          profile.profilePhotoUrl!.isEmpty
-                      ? const Icon(Icons.person, size: 70)
+                      (_pickedImage == null &&
+                          (profile.businessLogoUrl == null ||
+                              profile.businessLogoUrl!.isEmpty))
+                      ? const Icon(Icons.person, size: 60)
                       : null,
                 ),
               ],
@@ -1323,16 +1332,16 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                   CircleAvatar(
                     radius: 70,
                     backgroundColor: Colors.grey[300],
-                    backgroundImage: _selectedProfilePhoto != null
+                    backgroundImage: _pickedImage != null
                         ? FileImage(_selectedProfilePhoto!)
-                        : (profile?.profilePhotoUrl != null &&
-                                  profile!.profilePhotoUrl!.isNotEmpty
-                              ? NetworkImage(profile.profilePhotoUrl!)
+                        : (profile?.businessLogoUrl != null &&
+                                  profile!.businessLogoUrl!.isNotEmpty
+                              ? NetworkImage(profile.businessLogoUrl!)
                               : null),
                     child:
-                        _selectedProfilePhoto == null &&
-                            (profile?.profilePhotoUrl == null ||
-                                profile!.profilePhotoUrl!.isEmpty)
+                        _pickedImage == null &&
+                            (profile?.businessLogoUrl == null ||
+                                profile!.businessLogoUrl!.isEmpty)
                         ? const Icon(Icons.person, size: 70)
                         : null,
                   ),

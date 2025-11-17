@@ -138,7 +138,6 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
       businessAddress: d['businessAddress'] ?? "",
       businessLogoUrl: d['businessLogoUrl'],
       bannerImageUrl: d['bannerImageUrl'],
-      profilePhotoUrl: d['profilePhotoUrl'],
       cuisineType: d['cuisineType'],
       shortDescription: d['shortDescription'] ?? "",
       contactNumber: d['contactNumber'] ?? "",

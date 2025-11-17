@@ -74,12 +74,12 @@ class VendorSettingsPage extends StatelessWidget {
                         CircleAvatar(
                           radius: 45,
                           backgroundColor: Colors.grey[300],
-                          backgroundImage: profile.profilePhotoUrl != null &&
-                                  profile.profilePhotoUrl!.isNotEmpty
-                              ? NetworkImage(profile.profilePhotoUrl!)
+                          backgroundImage: profile.businessLogoUrl != null &&
+                                  profile.businessLogoUrl!.isNotEmpty
+                              ? NetworkImage(profile.businessLogoUrl!)
                               : null,
-                          child: (profile.profilePhotoUrl == null ||
-                                  profile.profilePhotoUrl!.isEmpty)
+                          child: (profile.businessLogoUrl == null ||
+                                  profile.businessLogoUrl!.isEmpty)
                               ? const Icon(Icons.person, size: 50)
                               : null,
                         ),

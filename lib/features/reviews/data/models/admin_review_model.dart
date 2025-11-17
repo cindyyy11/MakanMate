@@ -216,7 +216,6 @@ class AdminReviewModel {
       vendorImageUrls: [
         if (vendor?.bannerImageUrl != null) vendor!.bannerImageUrl!,
         if (vendor?.businessLogoUrl != null) vendor!.businessLogoUrl!,
-        if (vendor?.profilePhotoUrl != null) vendor!.profilePhotoUrl!,
       ],
     );
   }

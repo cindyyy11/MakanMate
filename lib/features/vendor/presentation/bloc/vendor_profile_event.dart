@@ -15,6 +15,13 @@ class UploadProfilePhotoEvent extends VendorProfileEvent {
   UploadProfilePhotoEvent(this.imageFile);
 }
 
+class UpdateVendorLogoEvent extends VendorProfileEvent {
+  final File imageFile;
+
+  UpdateVendorLogoEvent(this.imageFile);
+}
+
+
 
 class AddOutletEvent extends VendorProfileEvent {
   final OutletEntity outlet;

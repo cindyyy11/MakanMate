@@ -334,7 +334,6 @@ class AdminVendorManagementDataSource {
       // Return model with menu items
       return VendorProfileModel(
         id: model.id,
-        profilePhotoUrl: model.profilePhotoUrl,
         businessLogoUrl: model.businessLogoUrl,
         bannerImageUrl: model.bannerImageUrl,
         businessName: model.businessName,
