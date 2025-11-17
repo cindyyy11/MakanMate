@@ -89,6 +89,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
       emit(
         HomeLoaded(
+          allRestaurants: restaurants,
           categories: categories,
           recommendations: recommendations,
           restaurants: restaurants,

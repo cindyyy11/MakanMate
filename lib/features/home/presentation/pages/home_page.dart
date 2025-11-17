@@ -41,6 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
             return const Center(child: CircularProgressIndicator());
           } else if (state is HomeLoaded) {
             return _buildBody(
+              allRestaurants: state.allRestaurants,
               categories: state.categories,
               recommendations: state.recommendations,
               isPersonalized: state.isPersonalized,
@@ -94,6 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildBody({
+    required List<RestaurantEntity> allRestaurants,
     required List<RestaurantEntity> categories,
     required List<RestaurantEntity> recommendations,
     required bool isPersonalized,
@@ -126,6 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 24),
 
               _buildRecommendationsSection(
+                allRestaurants,
                 recommendations,
                 isPersonalized,
               ),
@@ -297,6 +300,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildRecommendationsSection(
+    List<RestaurantEntity> allRestaurants,
     List<RestaurantEntity> recommendations,
     bool personalized,
   ) {
@@ -322,7 +326,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   context,
                   MaterialPageRoute(
                     builder: (_) =>
-                        AllRestaurantsPage(restaurants: recommendations),
+                        AllRestaurantsPage(restaurants: allRestaurants),
                   ),
                 );
               },

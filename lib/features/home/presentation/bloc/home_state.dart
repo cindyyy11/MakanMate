@@ -17,6 +17,7 @@ class HomeLoading extends HomeState {
 }
 
 class HomeLoaded extends HomeState {
+  final List<RestaurantEntity> allRestaurants;
   final List<RestaurantEntity> categories;
   final List<RestaurantEntity> recommendations;
   final List<RestaurantEntity> restaurants;
@@ -25,6 +26,7 @@ class HomeLoaded extends HomeState {
   final bool isPersonalized;
 
   const HomeLoaded({
+    required this.allRestaurants,
     required this.categories,
     required this.recommendations,
     required this.restaurants,

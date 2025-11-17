@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:makan_mate/features/home/domain/entities/restaurant_entity.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_bloc.dart';
 import 'package:makan_mate/features/home/presentation/bloc/home_state.dart';
@@ -9,7 +10,25 @@ class CategoryRestaurantPage extends StatelessWidget {
   final String categoryName;
 
   const CategoryRestaurantPage({Key? key, required this.categoryName})
-    : super(key: key);
+      : super(key: key);
+
+  /// ⭐ SAME rating stream as RestaurantDetailPage
+  Stream<double> _watchVendorRating(String vendorId) {
+    return FirebaseFirestore.instance
+        .collection('reviews')
+        .where('vendorId', isEqualTo: vendorId)
+        .snapshots()
+        .map((snap) {
+      if (snap.docs.isEmpty) return 0.0;
+
+      double total = 0;
+      for (var doc in snap.docs) {
+        final r = (doc['rating'] as num?)?.toDouble() ?? 0.0;
+        total += r;
+      }
+      return total / snap.docs.length;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +43,7 @@ class CategoryRestaurantPage extends StatelessWidget {
           if (state is HomeLoading) {
             return const Center(child: CircularProgressIndicator());
           } else if (state is HomeLoaded) {
-            final filteredList = state.recommendations
+            final filteredList = state.restaurants
                 .where((r) =>
                     (r.vendor.cuisineType ?? '').toLowerCase() ==
                     categoryName.toLowerCase())
@@ -57,8 +76,7 @@ class CategoryRestaurantPage extends StatelessWidget {
   Widget _buildRestaurantCard(BuildContext context, RestaurantEntity r) {
     final vendor = r.vendor;
 
-    // SAFE IMAGE HANDLING
-    final String? imageUrl = vendor.businessLogoUrl;
+    final imageUrl = vendor.businessLogoUrl;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -86,7 +104,7 @@ class CategoryRestaurantPage extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              // --- IMAGE WITH FALLBACK ---
+              /// IMAGE
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: (imageUrl != null && imageUrl.isNotEmpty)
@@ -95,14 +113,12 @@ class CategoryRestaurantPage extends StatelessWidget {
                         width: 80,
                         height: 80,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Image.asset(
-                            'assets/images/logos/image-not-found.png',
-                            width: 80,
-                            height: 80,
-                            fit: BoxFit.cover,
-                          );
-                        },
+                        errorBuilder: (_, __, ___) => Image.asset(
+                          'assets/images/logos/image-not-found.png',
+                          width: 80,
+                          height: 80,
+                          fit: BoxFit.cover,
+                        ),
                       )
                     : Image.asset(
                         'assets/images/logos/image-not-found.png',
@@ -114,7 +130,7 @@ class CategoryRestaurantPage extends StatelessWidget {
 
               const SizedBox(width: 12),
 
-              // --- DETAILS ---
+              /// DETAILS
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -124,7 +140,9 @@ class CategoryRestaurantPage extends StatelessWidget {
                       style: const TextStyle(
                           fontSize: 16, fontWeight: FontWeight.bold),
                     ),
+
                     const SizedBox(height: 4),
+
                     Text(
                       vendor.shortDescription,
                       style:
@@ -132,16 +150,29 @@ class CategoryRestaurantPage extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+
                     const SizedBox(height: 8),
+
+                    /// ⭐ LIVE RATING STREAM
                     Row(
                       children: [
                         const Icon(Icons.star,
                             size: 16, color: Colors.amber),
                         const SizedBox(width: 4),
-                        Text(
-                          vendor.ratingAverage?.toStringAsFixed(1) ?? '-',
+
+                        StreamBuilder<double>(
+                          stream: _watchVendorRating(vendor.id),
+                          builder: (context, snap) {
+                            if (!snap.hasData) return const Text("-");
+                            final avg = snap.data!;
+                            return Text(
+                              avg > 0 ? avg.toStringAsFixed(1) : "-",
+                            );
+                          },
                         ),
+
                         const Spacer(),
+
                         Text(
                           vendor.priceRange ?? '-',
                           style: const TextStyle(
@@ -151,7 +182,7 @@ class CategoryRestaurantPage extends StatelessWidget {
                           ),
                         ),
                       ],
-                    ),
+                    )
                   ],
                 ),
               ),
