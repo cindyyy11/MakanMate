@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:makan_mate/features/home/domain/entities/restaurant_entity.dart';
 import 'package:makan_mate/features/home/presentation/pages/restaurant_detail_page.dart';
@@ -54,6 +55,59 @@ class AllRestaurantsPage extends StatelessWidget {
               itemBuilder: (context, index) =>
                   _buildRestaurantCard(context, restaurants[index]),
             ),
+    );
+  }
+
+  Widget _buildFavoriteButton(RestaurantEntity restaurant) {
+    final vendor = restaurant.vendor;
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('favorites')
+          .doc(FirebaseAuth.instance.currentUser?.uid)
+          .collection('items')
+          .doc(vendor.id)
+          .snapshots(),
+      builder: (context, snapshot) {
+        final isFavorited = snapshot.data?.exists ?? false;
+
+        return IconButton(
+          icon: Icon(
+            isFavorited ? Icons.favorite : Icons.favorite_border,
+            color: isFavorited ? Colors.red : Colors.grey,
+          ),
+          onPressed: () async {
+            final user = FirebaseAuth.instance.currentUser;
+
+            if (user == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Please log in first.")),
+              );
+              return;
+            }
+
+            final ref = FirebaseFirestore.instance
+                .collection('favorites')
+                .doc(user.uid)
+                .collection('items')
+                .doc(vendor.id);
+
+            if (isFavorited) {
+              await ref.delete();
+            } else {
+              await ref.set({
+                'id': vendor.id,
+                'name': vendor.businessName,
+                'cuisineType': vendor.cuisineType,
+                'rating': vendor.ratingAverage,
+                'priceRange': vendor.priceRange,
+                'image': vendor.businessLogoUrl,
+                'description': vendor.shortDescription,
+              });
+            }
+          },
+        );
+      },
     );
   }
 
@@ -175,6 +229,8 @@ class AllRestaurantsPage extends StatelessWidget {
                             color: Colors.orange,
                           ),
                         ),
+                        const SizedBox(width: 8),
+                        _buildFavoriteButton(r),
                       ],
                     ),
                   ],

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:makan_mate/core/network/network_info.dart';
@@ -274,10 +275,52 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
         foregroundColor: Colors.black,
         title: Text(vendor!.businessName),
           actions: [
+            StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('favorites')
+                  .doc(FirebaseAuth.instance.currentUser?.uid)
+                  .collection('items')
+                  .doc(vendor!.id)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                final isFavorited = snapshot.data?.exists ?? false;
+
+                return IconButton(
+                  icon: Icon(
+                    isFavorited ? Icons.favorite : Icons.favorite_border,
+                    color: isFavorited ? Colors.red : Colors.black,
+                  ),
+                  onPressed: () async {
+                    final user = FirebaseAuth.instance.currentUser;
+                    if (user == null) return;
+
+                    final ref = FirebaseFirestore.instance
+                        .collection('favorites')
+                        .doc(user.uid)
+                        .collection('items')
+                        .doc(vendor!.id);
+
+                    if (isFavorited) {
+                      await ref.delete();
+                    } else {
+                      await ref.set({
+                        'id': vendor!.id,
+                        'name': vendor!.businessName,
+                        'cuisineType': vendor!.cuisineType,
+                        'rating': vendor!.ratingAverage,
+                        'priceRange': vendor!.priceRange,
+                        'image': vendor!.businessLogoUrl,
+                        'description': vendor!.shortDescription,
+                      });
+                    }
+                  },
+                );
+              },
+            ),
+
             IconButton(
               icon: const Icon(Icons.share),
               onPressed: _shareRestaurant,
-              tooltip: "Share",
             ),
           ],
       ),
