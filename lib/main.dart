@@ -13,10 +13,10 @@ import 'package:makan_mate/core/utils/logger.dart';
 import 'package:makan_mate/firebase_options.dart';
 import 'package:makan_mate/services/metrics_service.dart';
 import 'package:timezone/data/latest_10y.dart' as tz;
+import 'package:makan_mate/core/services/push_notification_service.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
-import 'package:makan_mate/core/services/push_notification_service.dart';
 
 /// Background message handler - MUST be top-level function
 /// This runs in a separate isolate when app is terminated or in background
