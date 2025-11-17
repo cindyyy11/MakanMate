@@ -228,10 +228,37 @@ class ProfilePage extends StatelessWidget {
           const SizedBox(height: 30),
 
           TextButton(
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-              Navigator.pushNamedAndRemoveUntil(
-                  context, '/login', (route) => false);
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (_) => AlertDialog(
+                  title: const Text(
+                    "Log Out?",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  content: const Text(
+                    "Are you sure you want to log out?",
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text("Cancel"),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        Navigator.pop(context); 
+                        await FirebaseAuth.instance.signOut();
+                        Navigator.pushNamedAndRemoveUntil(
+                            context, '/login', (route) => false);
+                      },
+                      child: const Text(
+                        "Log Out",
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  ],
+                ),
+              );
             },
             child: const Text(
               "Log Out",
