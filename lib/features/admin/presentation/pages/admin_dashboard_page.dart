@@ -17,20 +17,16 @@ import 'package:makan_mate/core/widgets/loading_animation.dart';
 import 'package:makan_mate/core/theme/theme_bloc.dart';
 import 'package:makan_mate/features/admin/presentation/widgets/notification_badge.dart';
 import 'package:makan_mate/features/admin/presentation/widgets/realtime_monitoring_widget.dart';
-import 'package:makan_mate/features/admin/presentation/widgets/trend_chart_widget.dart';
 import 'package:makan_mate/features/admin/presentation/widgets/fairness_dashboard_widget.dart';
 import 'package:makan_mate/features/admin/presentation/widgets/data_quality_dashboard_widget.dart';
-import 'package:makan_mate/features/admin/presentation/widgets/quick_action_card.dart';
 import 'package:makan_mate/features/admin/presentation/widgets/metric_trend_indicator.dart';
-import 'package:makan_mate/features/admin/presentation/widgets/3d_card.dart';
 import 'package:makan_mate/features/admin/presentation/widgets/animated_background.dart';
+import 'package:makan_mate/features/admin/presentation/widgets/seasonal_insights_widget.dart';
 import 'package:makan_mate/features/admin/presentation/utils/admin_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:makan_mate/core/navigation/admin_nav_controller.dart';
-import 'package:makan_mate/core/di/injection_container.dart' as di;
 
 /// Admin dashboard page showing platform analytics
 class AdminDashboardPage extends StatefulWidget {
@@ -1648,50 +1644,27 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   }
 
   Widget _buildTrendsTab(AdminLoaded? loadedState) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildEnhancedSectionTitle('Trend Analysis', Icons.trending_up_rounded),
-        const SizedBox(height: UIConstants.spacingXl),
-        if (loadedState?.userTrend != null)
-          TrendChartWidget(
-            trend: loadedState!.userTrend!,
-            lineColor: AppColors.info,
-            title: 'User Growth (7 Days)',
+    // Load seasonal trends if not already loaded
+    if (loadedState?.seasonalTrends == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<AdminBloc>().add(const LoadSeasonalTrends());
+      });
+    }
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Seasonal Trend Analysis Section
+          _buildEnhancedSectionTitle(
+            'Seasonal Trend Analysis',
+            Icons.calendar_today_rounded,
           ),
-        if (loadedState?.userTrend != null && loadedState?.vendorTrend != null)
           const SizedBox(height: UIConstants.spacingLg),
-        if (loadedState?.vendorTrend != null)
-          TrendChartWidget(
-            trend: loadedState!.vendorTrend!,
-            lineColor: AppColors.primary,
-            title: 'Vendor Growth (7 Days)',
-          ),
-        if (loadedState?.userTrend == null && loadedState?.vendorTrend == null)
-          Center(
-            child: Padding(
-              padding: UIConstants.paddingXl,
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.show_chart_rounded,
-                    size: 64,
-                    color: AppColorsExtension.getGrey600(context),
-                  ),
-                  const SizedBox(height: UIConstants.spacingMd),
-                  Text(
-                    'No trend data available',
-                    style: TextStyle(
-                      color: AppColorsExtension.getGrey600(context),
-                      fontSize: UIConstants.fontSizeLg,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        const SizedBox(height: UIConstants.spacingXl),
-      ],
+          const SeasonalInsightsWidget(),
+          const SizedBox(height: UIConstants.spacingXl),
+        ],
+      ),
     );
   }
 
@@ -1976,10 +1949,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         ),
         const SizedBox(height: UIConstants.spacingXl),
 
-        // Quick Actions Section
-        _buildQuickActionsSection(context, metrics),
-        const SizedBox(height: UIConstants.spacingXl),
-
         // User metrics section with better spacing
         _buildEnhancedSectionTitle('User Analytics', Icons.people_rounded),
         const SizedBox(height: UIConstants.spacingLg),
@@ -2171,111 +2140,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               ),
             ),
           ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildQuickActionsSection(BuildContext context, metrics) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildEnhancedSectionTitle('Quick Actions', Icons.flash_on_rounded),
-        const SizedBox(height: UIConstants.spacingMd),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final crossAxisCount = constraints.maxWidth > 600 ? 4 : 2;
-            final childAspectRatio = constraints.maxWidth > 600 ? 1.3 : 1.1;
-
-            return GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: crossAxisCount,
-              crossAxisSpacing: UIConstants.spacingMd,
-              mainAxisSpacing: UIConstants.spacingMd,
-              childAspectRatio: childAspectRatio,
-              children: [
-                Card3D(
-                  onTap: () {
-                    di.sl<AdminNavController>().goTo('Vendor Management');
-                    Navigator.of(context).pushNamed('/admin');
-                  },
-                  child: QuickActionCard(
-                    title: 'Vendor Applications',
-                    subtitle: 'Review pending applications',
-                    icon: Icons.store_rounded,
-                    color: AppColors.warning,
-                    badgeCount: metrics.pendingApplications,
-                    onTap: () {
-                      di.sl<AdminNavController>().goTo('Vendor Management');
-                      Navigator.of(context).pushNamed('/admin');
-                    },
-                  ),
-                ),
-                Card3D(
-                  onTap: () {
-                    di.sl<AdminNavController>().goTo('User Management');
-                    Navigator.of(context).pushNamed('/admin');
-                  },
-                  child: QuickActionCard(
-                    title: 'Review Moderation',
-                    subtitle: 'Moderate flagged reviews',
-                    icon: Icons.flag_rounded,
-                    color: AppColors.error,
-                    badgeCount: metrics.flaggedReviews,
-                    onTap: () {
-                      di.sl<AdminNavController>().goTo('User Management');
-                      Navigator.of(context).pushNamed('/admin');
-                    },
-                  ),
-                ),
-                Card3D(
-                  onTap: () =>
-                      Navigator.of(context).pushNamed('/voucherApproval'),
-                  child: QuickActionCard(
-                    title: 'Voucher Approvals',
-                    subtitle: 'Approve pending vouchers',
-                    icon: Icons.card_giftcard_rounded,
-                    color: AppColors.secondary,
-                    onTap: () =>
-                        Navigator.of(context).pushNamed('/voucherApproval'),
-                  ),
-                ),
-                Card3D(
-                  onTap: () {
-                    di.sl<AdminNavController>().goTo('Audit Log Viewer');
-                    Navigator.of(context).pushNamed('/admin');
-                  },
-                  child: QuickActionCard(
-                    title: 'Audit Logs',
-                    subtitle: 'View admin action history',
-                    icon: Icons.history_rounded,
-                    color: AppColors.info,
-                    onTap: () {
-                      di.sl<AdminNavController>().goTo('Audit Log Viewer');
-                      Navigator.of(context).pushNamed('/admin');
-                    },
-                  ),
-                ),
-                Card3D(
-                  onTap: () {
-                    di.sl<AdminNavController>().goTo('System Configuration');
-                    Navigator.of(context).pushNamed('/admin');
-                  },
-                  child: QuickActionCard(
-                    title: 'System Config',
-                    subtitle: 'Manage settings & flags',
-                    icon: Icons.settings_rounded,
-                    color: AppColors.primary,
-                    onTap: () {
-                      di.sl<AdminNavController>().goTo('System Configuration');
-                      Navigator.of(context).pushNamed('/admin');
-                    },
-                  ),
-                ),
-              ],
-            );
-          },
         ),
       ],
     );

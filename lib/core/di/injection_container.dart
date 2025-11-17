@@ -20,6 +20,7 @@ import 'package:makan_mate/features/auth/domain/usecases/delete_account_usecase.
 import 'package:makan_mate/features/auth/domain/usecases/forgot_password_usecase.dart';
 import 'package:makan_mate/features/auth/domain/usecases/google_sign_in_usecase.dart';
 import 'package:makan_mate/features/auth/domain/usecases/sign_in_usecase.dart';
+import 'package:makan_mate/features/auth/domain/usecases/sign_in_as_guest_usecase.dart';
 import 'package:makan_mate/features/auth/domain/usecases/sign_out_usecase.dart';
 import 'package:makan_mate/features/auth/domain/usecases/sign_up_usecase.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
@@ -81,7 +82,6 @@ import 'package:makan_mate/features/admin/domain/usecases/get_activity_logs_usec
 import 'package:makan_mate/features/admin/domain/usecases/get_metric_trend_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_notifications_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_platform_metrics_usecase.dart';
-import 'package:makan_mate/features/admin/domain/usecases/stream_system_metrics_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_fairness_metrics_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_seasonal_trends_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_data_quality_metrics_usecase.dart';
@@ -98,6 +98,8 @@ import 'package:makan_mate/features/admin/domain/usecases/unban_user_usecase.dar
 import 'package:makan_mate/features/admin/domain/usecases/warn_user_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_user_violation_history_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/delete_user_data_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/create_admin_usecase.dart';
+import 'package:makan_mate/features/admin/domain/usecases/create_announcement_usecase.dart';
 import 'package:makan_mate/features/admin/presentation/bloc/admin_bloc.dart';
 import 'package:makan_mate/features/reviews/data/datasources/review_remote_datasource.dart';
 import 'package:makan_mate/features/reviews/domain/usecases/get_item_reviews_usecase.dart';
@@ -308,6 +310,7 @@ void _initAuth() {
       signUp: sl(),
       signOut: sl(),
       googleSignIn: sl(),
+      signInAsGuest: sl(),
       forgotPassword: sl(),
       deleteAccount: sl(),
     ),
@@ -318,6 +321,7 @@ void _initAuth() {
   sl.registerLazySingleton(() => SignUpUseCase(sl()));
   sl.registerLazySingleton(() => SignOutUseCase(sl()));
   sl.registerLazySingleton(() => GoogleSignInUseCase(sl()));
+  sl.registerLazySingleton(() => SignInAsGuestUseCase(sl()));
   sl.registerLazySingleton(() => ForgotPasswordUseCase(sl()));
   sl.registerLazySingleton(() => DeleteAccountUseCase());
 
@@ -564,7 +568,6 @@ void _initAdmin() {
       getFairnessMetrics: sl(),
       getSeasonalTrends: sl(),
       exportMetrics: sl(),
-      streamSystemMetrics: sl(),
       adminRepository: sl(),
       logger: logger,
     ),
@@ -601,7 +604,6 @@ void _initAdmin() {
   sl.registerLazySingleton(() => GetActivityLogsUseCase(sl()));
   sl.registerLazySingleton(() => GetNotificationsUseCase(sl()));
   sl.registerLazySingleton(() => ExportMetricsUseCase(sl()));
-  sl.registerLazySingleton(() => StreamSystemMetricsUseCase(sl()));
   sl.registerLazySingleton(() => GetFairnessMetricsUseCase(sl()));
   sl.registerLazySingleton(() => GetSeasonalTrendsUseCase(sl()));
   sl.registerLazySingleton(() => GetDataQualityMetricsUseCase(sl()));
@@ -630,6 +632,7 @@ void _initAdmin() {
   sl.registerLazySingleton<AdminVendorRepository>(
     () => AdminVendorRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
   );
+
 
   sl.registerLazySingleton<AdminUserManagementDataSource>(
     () => AdminUserManagementDataSource(
@@ -721,6 +724,8 @@ void _initAdmin() {
   sl.registerLazySingleton(() => WarnUserUseCase(sl()));
   sl.registerLazySingleton(() => GetUserViolationHistoryUseCase(sl()));
   sl.registerLazySingleton(() => DeleteUserDataUseCase(sl()));
+  sl.registerLazySingleton(() => CreateAdminUseCase(sl()));
+  sl.registerLazySingleton(() => CreateAnnouncementUseCase(sl()));
 }
 
 // ---------------------------

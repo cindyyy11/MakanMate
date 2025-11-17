@@ -15,6 +15,7 @@ abstract class AuthRemoteDataSource {
     String role,
   );
   Future<UserModel> signInWithGoogle();
+  Future<UserModel> signInAsGuest();
   Future<void> signOut();
   Future<UserModel?> getCurrentUser();
   Future<void> sendPasswordResetEmail(String email);
@@ -85,7 +86,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           firebaseUser.email!.split('@').first,
       email: firebaseUser.email!,
       role: data['role'] ?? 'user',
-      isVerified: data['isVerified'],
+      isVerified: data['isVerified'] ?? false,
       profileImageUrl: data['profileImageUrl'],
       dietaryRestrictions: List<String>.from(data['dietaryRestrictions'] ?? []),
       cuisinePreferences: Map<String, double>.from(
@@ -99,6 +100,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       ),
       createdAt: _safeToDate(data['createdAt']),
       updatedAt: _safeToDate(data['updatedAt']),
+      isBanned: data['isBanned'] ?? false,
+      banReason: data['banReason'],
+      bannedAt: data['bannedAt'] != null ? _safeToDate(data['bannedAt']) : null,
+      bannedUntil: data['bannedUntil'] != null ? _safeToDate(data['bannedUntil']) : null,
+      bannedBy: data['bannedBy'],
+      warnings: List<Map<String, dynamic>>.from(data['warnings'] ?? []),
     );
   }
 
@@ -120,7 +127,74 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         await refreshUserVerificationStatus(user);
       }
 
-      return await getUserFromFirestore(user);
+      final userModel = await getUserFromFirestore(user);
+
+      // Check if user is banned
+      if (userModel.isBanned) {
+        final now = DateTime.now();
+        // Check if ban has expired
+        if (userModel.bannedUntil != null && userModel.bannedUntil!.isAfter(now)) {
+          final daysLeft = userModel.bannedUntil!.difference(now).inDays;
+          throw AuthException(
+            'Your account has been suspended${userModel.banReason != null ? ': ${userModel.banReason}' : ''}. '
+            'Suspension expires in $daysLeft day${daysLeft != 1 ? 's' : ''}. '
+            'Please contact support if you believe this is an error.',
+          );
+        } else if (userModel.bannedUntil == null) {
+          // Permanent ban
+          throw AuthException(
+            'Your account has been permanently suspended${userModel.banReason != null ? ': ${userModel.banReason}' : ''}. '
+            'Please contact support if you believe this is an error.',
+          );
+        }
+        // Ban expired, allow login (admin should unban, but we allow expired bans)
+      }
+
+      // Check vendor status if user is a vendor
+      if (userModel.role == 'vendor') {
+        final vendorDoc = await FirebaseFirestore.instance
+            .collection('vendors')
+            .doc(userModel.id)
+            .get();
+
+        if (vendorDoc.exists) {
+          final vendorData = vendorDoc.data()!;
+          final suspendedUntil = vendorData['suspendedUntil'] as Timestamp?;
+          final suspendedAt = vendorData['suspendedAt'] as Timestamp?;
+          final suspensionReason = vendorData['suspensionReason'] as String?;
+
+          if (suspendedAt != null) {
+            final now = DateTime.now();
+            if (suspendedUntil != null && suspendedUntil.toDate().isAfter(now)) {
+              final daysLeft = suspendedUntil.toDate().difference(now).inDays;
+              throw AuthException(
+                'Your vendor account has been suspended${suspensionReason != null ? ': $suspensionReason' : ''}. '
+                'Suspension expires in $daysLeft day${daysLeft != 1 ? 's' : ''}. '
+                'Please contact support for assistance.',
+              );
+            } else if (suspendedUntil == null) {
+              // Permanent suspension
+              throw AuthException(
+                'Your vendor account has been permanently suspended${suspensionReason != null ? ': $suspensionReason' : ''}. '
+                'Please contact support if you believe this is an error.',
+              );
+            }
+            // Suspension expired, allow login
+          }
+
+          // Check approval status
+          final approvalStatus = vendorData['approvalStatus'] as String? ?? 'pending';
+          if (approvalStatus == 'rejected') {
+            final rejectionReason = vendorData['rejectionReason'] as String?;
+            throw AuthException(
+              'Your vendor application has been rejected${rejectionReason != null ? ': $rejectionReason' : ''}. '
+              'Please contact support if you wish to appeal.',
+            );
+          }
+        }
+      }
+
+      return userModel;
     } on FirebaseAuthException catch (e) {
       throw AuthException(_mapFirebaseAuthCode(e));
     }
@@ -224,9 +298,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           .doc(user.uid)
           .get();
 
+      UserModel userModel;
       if (!userDoc.exists) {
         // Create user document if it doesn't exist
-        final userModel = UserModel.fromFirebase(user);
+        userModel = UserModel.fromFirebase(user);
         final userData = userModel.toJson();
         userData['createdAt'] = Timestamp.fromDate(userModel.createdAt);
         userData['updatedAt'] = Timestamp.fromDate(userModel.updatedAt);
@@ -237,25 +312,133 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
             .collection('users')
             .doc(userModel.id)
             .set(userData);
-
-        return userModel;
       } else {
         await FirebaseFirestore.instance
             .collection('users')
             .doc(user.uid)
             .update({'lastActive': FieldValue.serverTimestamp()});
 
-        return await getUserFromFirestore(user);
+        userModel = await getUserFromFirestore(user);
       }
+
+      // Check if user is banned
+      if (userModel.isBanned) {
+        final now = DateTime.now();
+        if (userModel.bannedUntil != null && userModel.bannedUntil!.isAfter(now)) {
+          final daysLeft = userModel.bannedUntil!.difference(now).inDays;
+          throw AuthException(
+            'Your account has been suspended${userModel.banReason != null ? ': ${userModel.banReason}' : ''}. '
+            'Suspension expires in $daysLeft day${daysLeft != 1 ? 's' : ''}. '
+            'Please contact support if you believe this is an error.',
+          );
+        } else if (userModel.bannedUntil == null) {
+          throw AuthException(
+            'Your account has been permanently suspended${userModel.banReason != null ? ': ${userModel.banReason}' : ''}. '
+            'Please contact support if you believe this is an error.',
+          );
+        }
+      }
+
+      // Check vendor status if user is a vendor
+      if (userModel.role == 'vendor') {
+        final vendorDoc = await FirebaseFirestore.instance
+            .collection('vendors')
+            .doc(userModel.id)
+            .get();
+
+        if (vendorDoc.exists) {
+          final vendorData = vendorDoc.data()!;
+          final suspendedUntil = vendorData['suspendedUntil'] as Timestamp?;
+          final suspendedAt = vendorData['suspendedAt'] as Timestamp?;
+          final suspensionReason = vendorData['suspensionReason'] as String?;
+
+          if (suspendedAt != null) {
+            final now = DateTime.now();
+            if (suspendedUntil != null && suspendedUntil.toDate().isAfter(now)) {
+              final daysLeft = suspendedUntil.toDate().difference(now).inDays;
+              throw AuthException(
+                'Your vendor account has been suspended${suspensionReason != null ? ': $suspensionReason' : ''}. '
+                'Suspension expires in $daysLeft day${daysLeft != 1 ? 's' : ''}. '
+                'Please contact support for assistance.',
+              );
+            } else if (suspendedUntil == null) {
+              throw AuthException(
+                'Your vendor account has been permanently suspended${suspensionReason != null ? ': $suspensionReason' : ''}. '
+                'Please contact support if you believe this is an error.',
+              );
+            }
+          }
+
+          final approvalStatus = vendorData['approvalStatus'] as String? ?? 'pending';
+          if (approvalStatus == 'rejected') {
+            final rejectionReason = vendorData['rejectionReason'] as String?;
+            throw AuthException(
+              'Your vendor application has been rejected${rejectionReason != null ? ': $rejectionReason' : ''}. '
+              'Please contact support if you wish to appeal.',
+            );
+          }
+        }
+      }
+
+      return userModel;
     } on FirebaseAuthException catch (e) {
       throw AuthException(_mapFirebaseAuthCode(e));
-      // } on GoogleSignInException catch (e) {
-      //   debugPrint(
-      //     'GOOGLE SIGN-IN SDK ERROR: Code: ${e.code.name}, Description: ${e.description}',
-      //   );
-      //   throw AuthException('Google sign-in ${e.code.name.toLowerCase()}');
     } catch (e) {
+      if (e is AuthException) rethrow;
       throw AuthException('Google sign-in failed: $e');
+    }
+  }
+
+  @override
+  Future<UserModel> signInAsGuest() async {
+    try {
+      final cred = await firebaseAuth.signInAnonymously();
+      final user = cred.user;
+
+      if (user == null) throw AuthException('Guest sign-in failed');
+
+      // Create guest user document
+      final userModel = UserModel(
+        id: user.uid,
+        name: 'Guest User',
+        email: 'guest_${user.uid}@makanmate.guest',
+        role: 'guest',
+        isVerified: false,
+        profileImageUrl: null,
+        dietaryRestrictions: const [],
+        cuisinePreferences: const {},
+        spiceTolerance: 0.5,
+        culturalBackground: 'mixed',
+        currentLocation: const Location(
+          latitude: 3.1390,
+          longitude: 101.6869,
+          city: 'Kuala Lumpur',
+          state: 'Kuala Lumpur',
+          country: 'Malaysia',
+        ),
+        behaviorPatterns: const {},
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        isBanned: false,
+        warnings: const [],
+      );
+
+      final userData = userModel.toJson();
+      userData['createdAt'] = Timestamp.fromDate(userModel.createdAt);
+      userData['updatedAt'] = Timestamp.fromDate(userModel.updatedAt);
+      userData['lastActive'] = FieldValue.serverTimestamp();
+      userData['isGuest'] = true;
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userModel.id)
+          .set(userData, SetOptions(merge: true));
+
+      return userModel;
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(_mapFirebaseAuthCode(e));
+    } catch (e) {
+      throw AuthException('Guest sign-in failed: $e');
     }
   }
 
@@ -310,29 +493,31 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   String _mapFirebaseAuthCode(FirebaseAuthException e) {
     switch (e.code) {
       case 'user-not-found':
-        return 'No user found with this email';
+        return 'No account found with this email address. Please check your email or sign up.';
       case 'wrong-password':
-        return 'Wrong password provided';
+        return 'Incorrect password. Please try again or use "Forgot Password" to reset.';
       case 'invalid-email':
-        return 'Invalid email address';
+        return 'Invalid email address format. Please enter a valid email.';
       case 'user-disabled':
-        return 'This account has been disabled';
+        return 'This account has been disabled. Please contact support.';
       case 'email-already-in-use':
-        return 'Email already in use';
+        return 'An account with this email already exists. Please sign in instead.';
       case 'weak-password':
-        return 'Password is too weak';
+        return 'Password is too weak. Please use at least 6 characters with a mix of letters and numbers.';
       case 'operation-not-allowed':
-        return 'Operation not allowed';
+        return 'This sign-in method is not enabled. Please contact support.';
       case 'network-request-failed':
-        return 'Network error occurred';
+        return 'Network connection failed. Please check your internet and try again.';
       case 'too-many-requests':
-        return 'Too many attempts. Try again later';
+        return 'Too many failed attempts. Please wait a few minutes before trying again.';
       case 'requires-recent-login':
-        return 'Please reauthenticate and try again';
+        return 'For security, please sign in again to continue.';
       case 'account-exists-with-different-credential':
-        return 'Account exists with a different sign-in method';
+        return 'An account exists with a different sign-in method. Please use the original method.';
+      case 'invalid-credential':
+        return 'Invalid email or password. Please check your credentials and try again.';
       default:
-        return 'Authentication failed';
+        return 'Authentication failed. Please try again.';
     }
   }
 }

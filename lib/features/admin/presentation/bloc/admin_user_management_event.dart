@@ -149,4 +149,20 @@ class LiftBanOrWarning extends AdminUserManagementEvent {
   List<Object?> get props => [banId, reason];
 }
 
+/// Create a new admin account
+class CreateAdminRequested extends AdminUserManagementEvent {
+  final String email;
+  final String password;
+  final String displayName;
+
+  const CreateAdminRequested({
+    required this.email,
+    required this.password,
+    required this.displayName,
+  });
+
+  @override
+  List<Object?> get props => [email, password, displayName];
+}
+
 

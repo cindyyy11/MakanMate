@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:makan_mate/core/constants/ui_constants.dart';
 import 'package:makan_mate/core/theme/app_colors.dart';
 import 'package:makan_mate/core/theme/app_theme.dart';
@@ -12,6 +14,12 @@ import 'package:makan_mate/features/vendor/domain/entities/vendor_profile_entity
 import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_event.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:makan_mate/features/admin/presentation/bloc/admin_voucher_management_bloc.dart';
+import 'package:makan_mate/features/admin/presentation/bloc/admin_voucher_management_event.dart';
+import 'package:makan_mate/features/admin/presentation/bloc/admin_voucher_management_state.dart';
+import 'package:makan_mate/features/admin/data/datasources/admin_voucher_management_datasource.dart';
+import 'package:makan_mate/features/vendor/data/models/promotion_model.dart';
+import 'package:makan_mate/features/vendor/domain/entities/promotion_entity.dart';
 
 // Predefined suspension reasons
 class SuspensionReasons {
@@ -60,7 +68,7 @@ class _VendorManagementPageState extends State<VendorManagementPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 6, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     _tabController.addListener(_handleTabSelection);
   }
 
@@ -72,19 +80,7 @@ class _VendorManagementPageState extends State<VendorManagementPage>
   }
 
   void _handleTabSelection() {
-    if (_tabController.indexIsChanging) {
-      return;
-    }
-    // Navigate to voucher approval page when the Voucher Approvals tab is selected
-    if (_tabController.index == 5) {
-      Navigator.of(context).pushNamed('/voucherApproval');
-      // Reset to previous tab after navigation
-      Future.delayed(const Duration(milliseconds: 100), () {
-        if (mounted && _tabController.index == 5) {
-          _tabController.animateTo(0);
-        }
-      });
-    }
+    // Tab selection handling removed - Voucher Approvals now works as a regular tab
   }
 
   @override
@@ -202,10 +198,6 @@ class _VendorManagementPageState extends State<VendorManagementPage>
                   text: 'Deactivated',
                 ),
                 Tab(
-                  icon: Icon(Icons.warning_rounded, size: 20),
-                  text: 'Compliance',
-                ),
-                Tab(
                   icon: Icon(Icons.card_giftcard_rounded, size: 20),
                   text: 'Voucher Approvals',
                 ),
@@ -221,7 +213,6 @@ class _VendorManagementPageState extends State<VendorManagementPage>
           const _ActiveVendorsTab(),
           const _SuspendedVendorsTab(),
           const _DeactivatedVendorsTab(),
-          const _ComplianceTab(),
           const _VoucherApprovalsTab(),
         ],
       ),
@@ -1157,17 +1148,6 @@ class _VendorApplicationsTabState extends State<_VendorApplicationsTab> {
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: UIConstants.spacingXs),
-                  IconButton(
-                    onPressed: () => _showVendorDetails(context, vendor),
-                    icon: const Icon(Icons.more_vert_rounded),
-                    tooltip: 'More options',
-                    constraints: const BoxConstraints(
-                      minWidth: 40,
-                      minHeight: 40,
-                    ),
-                    padding: EdgeInsets.zero,
                   ),
                 ],
               ),
@@ -5019,31 +4999,789 @@ class _DeactivatedVendorsTabState extends State<_DeactivatedVendorsTab> {
   }
 }
 
-class _ComplianceTab extends StatelessWidget {
-  const _ComplianceTab();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(child: Text('Compliance Alerts'));
-  }
-}
-
-class _VoucherApprovalsTab extends StatelessWidget {
+class _VoucherApprovalsTab extends StatefulWidget {
   const _VoucherApprovalsTab();
 
   @override
+  State<_VoucherApprovalsTab> createState() => _VoucherApprovalsTabState();
+}
+
+class _VoucherApprovalsTabState extends State<_VoucherApprovalsTab>
+    with AutomaticKeepAliveClientMixin {
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+
+  // Filter state
+  String? _selectedVoucherType;
+  DateTime? _expiryFromDate;
+  DateTime? _expiryToDate;
+  double? _minDiscount;
+  double? _maxDiscount;
+
+  bool _hasActiveFilters = false;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(_updateFilterState);
+  }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_updateFilterState);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _updateFilterState() {
+    setState(() {
+      _hasActiveFilters = _selectedVoucherType != null ||
+          _expiryFromDate != null ||
+          _expiryToDate != null ||
+          _minDiscount != null ||
+          _maxDiscount != null ||
+          _searchQuery.isNotEmpty;
+    });
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _selectedVoucherType = null;
+      _expiryFromDate = null;
+      _expiryToDate = null;
+      _minDiscount = null;
+      _maxDiscount = null;
+      _searchQuery = '';
+      _searchController.clear();
+      _hasActiveFilters = false;
+    });
+  }
+
+  void _showFilterDialog(BuildContext context) {
+    String? tempVoucherType = _selectedVoucherType;
+    DateTime? tempExpiryFromDate = _expiryFromDate;
+    DateTime? tempExpiryToDate = _expiryToDate;
+    double? tempMinDiscount = _minDiscount;
+    double? tempMaxDiscount = _maxDiscount;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Filter Vouchers'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Voucher Type Filter
+                Text(
+                  'Voucher Type',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: UIConstants.spacingXs),
+                DropdownButtonFormField<String>(
+                  value: tempVoucherType,
+                  decoration: const InputDecoration(
+                    hintText: 'All types',
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'Discount', child: Text('Discount')),
+                    DropdownMenuItem(value: 'Flat Discount', child: Text('Flat Discount')),
+                    DropdownMenuItem(value: 'Buy X Get Y', child: Text('Buy X Get Y')),
+                    DropdownMenuItem(value: 'Birthday', child: Text('Birthday')),
+                  ],
+                  onChanged: (value) {
+                    setState(() => tempVoucherType = value);
+                  },
+                ),
+                const SizedBox(height: UIConstants.spacingMd),
+
+                // Expiry Date Range Filter
+                Text(
+                  'Expiry Date Range',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: UIConstants.spacingXs),
+                // From Date
+                InkWell(
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: tempExpiryFromDate ?? DateTime.now(),
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                    );
+                    if (picked != null) {
+                      setState(() => tempExpiryFromDate = picked);
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppColors.grey300),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.calendar_today, size: 16),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            tempExpiryFromDate != null
+                                ? DateFormat('MMM dd, yyyy').format(tempExpiryFromDate!)
+                                : 'From date (optional)',
+                            style: TextStyle(
+                              color: tempExpiryFromDate != null
+                                  ? null
+                                  : AppColorsExtension.getTextSecondary(context),
+                            ),
+                          ),
+                        ),
+                        if (tempExpiryFromDate != null)
+                          IconButton(
+                            icon: const Icon(Icons.clear, size: 16),
+                            onPressed: () {
+                              setState(() => tempExpiryFromDate = null);
+                            },
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: UIConstants.spacingSm),
+                // To Date
+                InkWell(
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: tempExpiryToDate ?? DateTime.now(),
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                    );
+                    if (picked != null) {
+                      setState(() => tempExpiryToDate = picked);
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppColors.grey300),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.calendar_today, size: 16),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            tempExpiryToDate != null
+                                ? DateFormat('MMM dd, yyyy').format(tempExpiryToDate!)
+                                : 'To date (optional)',
+                            style: TextStyle(
+                              color: tempExpiryToDate != null
+                                  ? null
+                                  : AppColorsExtension.getTextSecondary(context),
+                            ),
+                          ),
+                        ),
+                        if (tempExpiryToDate != null)
+                          IconButton(
+                            icon: const Icon(Icons.clear, size: 16),
+                            onPressed: () {
+                              setState(() => tempExpiryToDate = null);
+                            },
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: UIConstants.spacingMd),
+
+                // Discount Range Filter
+                Text(
+                  'Discount Range (%)',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: UIConstants.spacingXs),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        initialValue: tempMinDiscount?.toString(),
+                        decoration: const InputDecoration(
+                          hintText: 'Min %',
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
+                        ),
+                        keyboardType: TextInputType.number,
+                        onChanged: (value) {
+                          final parsed = double.tryParse(value);
+                          setState(() => tempMinDiscount = parsed);
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: UIConstants.spacingSm),
+                    const Text('-'),
+                    const SizedBox(width: UIConstants.spacingSm),
+                    Expanded(
+                      child: TextFormField(
+                        initialValue: tempMaxDiscount?.toString(),
+                        decoration: const InputDecoration(
+                          hintText: 'Max %',
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
+                        ),
+                        keyboardType: TextInputType.number,
+                        onChanged: (value) {
+                          final parsed = double.tryParse(value);
+                          setState(() => tempMaxDiscount = parsed);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  tempVoucherType = null;
+                  tempExpiryFromDate = null;
+                  tempExpiryToDate = null;
+                  tempMinDiscount = null;
+                  tempMaxDiscount = null;
+                });
+              },
+              child: const Text('Clear All'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                this.setState(() {
+                  _selectedVoucherType = tempVoucherType;
+                  _expiryFromDate = tempExpiryFromDate;
+                  _expiryToDate = tempExpiryToDate;
+                  _minDiscount = tempMinDiscount;
+                  _maxDiscount = tempMaxDiscount;
+                  _updateFilterState();
+                });
+                Navigator.of(dialogContext).pop();
+              },
+              child: const Text('Apply Filters'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // This tab navigates to the voucher approval page
-    // The navigation is handled by the TabController listener in the parent widget
-    return const Center(
+    super.build(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return BlocProvider(
+      create: (_) => sl<AdminVoucherManagementBloc>(),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(),
-          SizedBox(height: UIConstants.spacingMd),
-          Text('Loading voucher approvals...'),
+          // Search and Filter Bar
+          Container(
+            padding: UIConstants.paddingMd,
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+              border: Border(
+                bottom: BorderSide(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.1)
+                      : AppColors.grey200,
+                ),
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search vouchers...',
+                      prefixIcon: const Icon(Icons.search_rounded),
+                      filled: true,
+                      fillColor: isDark
+                          ? const Color(0xFF2C2C2C)
+                          : AppColors.grey100,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(width: UIConstants.spacingSm),
+                IconButton(
+                  icon: Stack(
+                    children: [
+                      Icon(
+                        Icons.filter_list_rounded,
+                        color: _hasActiveFilters
+                            ? AppColors.primary
+                            : AppColorsExtension.getTextSecondary(context),
+                      ),
+                      if (_hasActiveFilters)
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: AppColors.error,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  onPressed: () => _showFilterDialog(context),
+                  tooltip: 'Filter vouchers',
+                ),
+                if (_hasActiveFilters)
+                  IconButton(
+                    icon: const Icon(Icons.clear_rounded),
+                    onPressed: _clearFilters,
+                    tooltip: 'Clear filters',
+                  ),
+              ],
+            ),
+          ),
+          // Voucher Approvals Content
+          Expanded(
+            child: BlocConsumer<AdminVoucherManagementBloc,
+                AdminVoucherManagementState>(
+              listener: (context, state) {
+                if (state is VoucherOperationSuccess) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(state.message),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                } else if (state is AdminVoucherManagementError) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(state.message),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              },
+              builder: (context, state) {
+                if (state is AdminVoucherManagementLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (state is AdminVoucherManagementError) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.error_outline,
+                            size: 64, color: AppColors.error),
+                        const SizedBox(height: UIConstants.spacingMd),
+                        Text(
+                          state.message,
+                          style: Theme.of(context).textTheme.bodyLarge,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: UIConstants.spacingMd),
+                        ElevatedButton(
+                          onPressed: () {
+                            context
+                                .read<AdminVoucherManagementBloc>()
+                                .add(const LoadPendingVouchers());
+                          },
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                List<PromotionWithVendorInfo> vouchers = [];
+                if (state is VouchersLoaded) {
+                  vouchers = state.vouchers;
+                }
+
+                if (state is AdminVoucherManagementInitial) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    context
+                        .read<AdminVoucherManagementBloc>()
+                        .add(const LoadPendingVouchers());
+                  });
+                }
+
+                // Filter vouchers based on search query and filters
+                final filteredVouchers = vouchers.where((voucherWithInfo) {
+                  final voucher = voucherWithInfo.promotion;
+
+                  // Search filter
+                  if (_searchQuery.isNotEmpty) {
+                    final query = _searchQuery.toLowerCase();
+                    if (!voucher.title.toLowerCase().contains(query) &&
+                        !voucher.description.toLowerCase().contains(query)) {
+                      return false;
+                    }
+                  }
+
+                  // Voucher type filter
+                  if (_selectedVoucherType != null &&
+                      voucher.getTypeTag() != _selectedVoucherType) {
+                    return false;
+                  }
+
+                  // Expiry date range filter
+                  if (_expiryFromDate != null &&
+                      voucher.expiryDate.isBefore(_expiryFromDate!)) {
+                    return false;
+                  }
+                  if (_expiryToDate != null &&
+                      voucher.expiryDate.isAfter(_expiryToDate!.add(const Duration(days: 1)))) {
+                    return false;
+                  }
+
+                  // Discount range filter (only applies to percentage discounts)
+                  if (voucher.type == PromotionType.discount &&
+                      voucher.discountPercentage != null) {
+                    final discountValue = voucher.discountPercentage!;
+                    if (_minDiscount != null && discountValue < _minDiscount!) {
+                      return false;
+                    }
+                    if (_maxDiscount != null && discountValue > _maxDiscount!) {
+                      return false;
+                    }
+                  }
+
+                  return true;
+                }).toList();
+
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    context
+                        .read<AdminVoucherManagementBloc>()
+                        .add(const LoadPendingVouchers());
+                  },
+                  child: filteredVouchers.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                _searchQuery.isEmpty
+                                    ? Icons.check_circle
+                                    : Icons.search_off,
+                                size: 64,
+                                color: Colors.grey[400],
+                              ),
+                              const SizedBox(height: UIConstants.spacingMd),
+                              Text(
+                                _searchQuery.isEmpty
+                                    ? 'No pending vouchers'
+                                    : 'No vouchers match your search',
+                                style: Theme.of(context).textTheme.titleLarge,
+                              ),
+                              const SizedBox(height: UIConstants.spacingSm),
+                              Text(
+                                _searchQuery.isEmpty
+                                    ? 'All vouchers have been reviewed'
+                                    : 'Try adjusting your search terms',
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: UIConstants.paddingLg,
+                          itemCount: filteredVouchers.length,
+                          itemBuilder: (context, index) {
+                            final voucherWithInfo = filteredVouchers[index];
+                            return _buildVoucherCard(
+                              context,
+                              voucherWithInfo.promotion,
+                              voucherWithInfo.vendorId,
+                            );
+                          },
+                        ),
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  Widget _buildVoucherCard(
+    BuildContext context,
+    PromotionModel voucher,
+    String vendorId,
+  ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: UIConstants.spacingMd),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: UIConstants.borderRadiusMd,
+      ),
+      child: Padding(
+        padding: UIConstants.paddingMd,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Voucher Image
+            if (voucher.imageUrl.isNotEmpty)
+              ClipRRect(
+                borderRadius: UIConstants.borderRadiusSm,
+                child: CachedNetworkImage(
+                  imageUrl: voucher.imageUrl,
+                  height: 200,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    height: 200,
+                    color: Colors.grey[300],
+                    child: const Center(child: CircularProgressIndicator()),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    height: 200,
+                    color: Colors.grey[300],
+                    child: const Icon(Icons.image_not_supported),
+                  ),
+                ),
+              ),
+            const SizedBox(height: UIConstants.spacingMd),
+
+            // Voucher Title and Type
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    voucher.title,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: UIConstants.spacingSm,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    voucher.getTypeTag(),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: UIConstants.spacingSm),
+
+            // Description
+            Text(
+              voucher.description,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: UIConstants.spacingMd),
+
+            // Discount Details
+            Container(
+              padding: UIConstants.paddingSm,
+              decoration: BoxDecoration(
+                color: isDark
+                    ? Colors.white.withOpacity(0.05)
+                    : AppColors.grey50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.local_offer, color: AppColors.primary, size: 20),
+                  const SizedBox(width: UIConstants.spacingSm),
+                  Text(
+                    voucher.getDisplayText(),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: UIConstants.spacingMd),
+
+            // Date Range
+            Row(
+              children: [
+                Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
+                const SizedBox(width: UIConstants.spacingSm),
+                Text(
+                  '${_formatDate(voucher.startDate)} - ${_formatDate(voucher.expiryDate)}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: UIConstants.spacingMd),
+
+            // Action Buttons
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      context.read<AdminVoucherManagementBloc>().add(
+                            ApproveVoucher(
+                              vendorId: vendorId,
+                              voucherId: voucher.id,
+                              reason: 'Approved by admin',
+                            ),
+                          );
+                    },
+                    icon: const Icon(Icons.check_rounded, size: 18),
+                    label: const Text('Approve'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: UIConstants.spacingMd),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      _showRejectDialog(context, voucher, vendorId);
+                    },
+                    icon: const Icon(Icons.close_rounded, size: 18),
+                    label: const Text('Reject'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.error,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showRejectDialog(
+    BuildContext context,
+    PromotionModel voucher,
+    String vendorId,
+  ) {
+    final reasonController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Reject Voucher'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Please provide a reason for rejecting this voucher:'),
+            const SizedBox(height: UIConstants.spacingMd),
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(
+                hintText: 'Reason for rejection',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (reasonController.text.isNotEmpty) {
+                context.read<AdminVoucherManagementBloc>().add(
+                      RejectVoucher(
+                        vendorId: vendorId,
+                        voucherId: voucher.id,
+                        reason: reasonController.text,
+                      ),
+                    );
+                Navigator.of(dialogContext).pop();
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Reject'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    return DateFormat('MMM dd, yyyy').format(date);
   }
 }

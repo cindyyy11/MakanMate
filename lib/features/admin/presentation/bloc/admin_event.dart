@@ -92,15 +92,6 @@ class ExportMetrics extends AdminEvent {
   List<Object?> get props => [format, startDate, endDate];
 }
 
-/// Event to start streaming real-time system metrics
-class StartStreamingSystemMetrics extends AdminEvent {
-  const StartStreamingSystemMetrics();
-}
-
-/// Event to stop streaming real-time system metrics
-class StopStreamingSystemMetrics extends AdminEvent {
-  const StopStreamingSystemMetrics();
-}
 
 /// Event to load fairness metrics
 class LoadFairnessMetrics extends AdminEvent {

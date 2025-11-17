@@ -11,8 +11,11 @@ import 'package:makan_mate/features/home/presentation/pages/categories_restauran
 import 'package:makan_mate/features/home/presentation/pages/restaurant_detail_page.dart';
 import 'package:makan_mate/features/map/presentation/bloc/map_bloc.dart';
 import 'package:makan_mate/features/map/presentation/pages/map_page.dart';
-import 'package:makan_mate/features/map/presentation/bloc/map_event.dart' as map;
-import 'package:makan_mate/features/search/presentation/pages/search_page.dart';
+import 'package:makan_mate/features/map/presentation/bloc/map_event.dart'
+    as map;
+import 'package:makan_mate/features/home/presentation/widgets/ai_recommendations_section.dart';
+import 'package:makan_mate/core/widgets/announcements_banner.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -61,16 +64,16 @@ class _HomeScreenState extends State<HomeScreen> {
         .where('vendorId', isEqualTo: vendorId)
         .snapshots()
         .map((snap) {
-      if (snap.docs.isEmpty) return 0.0;
+          if (snap.docs.isEmpty) return 0.0;
 
-      double total = 0;
-      for (var doc in snap.docs) {
-        final r = (doc['rating'] as num?)?.toDouble() ?? 0.0;
-        total += r;
-      }
+          double total = 0;
+          for (var doc in snap.docs) {
+            final r = (doc['rating'] as num?)?.toDouble() ?? 0.0;
+            total += r;
+          }
 
-      return total / snap.docs.length;
-    });
+          return total / snap.docs.length;
+        });
   }
 
   PreferredSizeWidget _buildAppBar() {
@@ -100,9 +103,20 @@ class _HomeScreenState extends State<HomeScreen> {
     required List<RestaurantEntity> recommendations,
     required bool isPersonalized,
   }) {
+    // Get user role for announcements
+    final user = FirebaseAuth.instance.currentUser;
+    String? userRole;
+    if (user != null) {
+      // You may need to fetch user role from Firestore
+      // For now, we'll use 'all' to show all announcements
+      userRole = 'all';
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Announcements Banner
+        AnnouncementsBanner(userRole: userRole),
         Expanded(
           child: ListView(
             padding: const EdgeInsets.all(16),
@@ -132,6 +146,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 recommendations,
                 isPersonalized,
               ),
+              const SizedBox(height: 24),
+              const AIRecommendationsSection(),
             ],
           ),
         ),
@@ -200,8 +216,10 @@ class _HomeScreenState extends State<HomeScreen> {
           children: const [
             Icon(Icons.search, color: Colors.grey),
             SizedBox(width: 12),
-            Text("Search for food, restaurants...",
-                style: TextStyle(color: Colors.grey)),
+            Text(
+              "Search for food, restaurants...",
+              style: TextStyle(color: Colors.grey),
+            ),
           ],
         ),
       ),
@@ -311,9 +329,7 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              personalized
-                  ? 'Recommended for You'
-                  : 'Popular Restaurants',
+              personalized ? 'Recommended for You' : 'Popular Restaurants',
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -338,9 +354,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: recommendations.length > 5
-              ? 5
-              : recommendations.length,
+          itemCount: recommendations.length > 5 ? 5 : recommendations.length,
           itemBuilder: (context, index) {
             final food = recommendations[index];
             return _buildFoodCard(food);
@@ -471,8 +485,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     Text(
                       vendor.shortDescription,
-                      style: TextStyle(
-                          fontSize: 14, color: Colors.grey[600]),
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -481,8 +494,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     Row(
                       children: [
-                        const Icon(Icons.star,
-                            color: Colors.amber, size: 16),
+                        const Icon(Icons.star, color: Colors.amber, size: 16),
                         const SizedBox(width: 4),
 
                         StreamBuilder<double>(

@@ -13,8 +13,6 @@ import 'package:makan_mate/features/admin/domain/entities/system_metrics_entity.
 import 'package:makan_mate/features/admin/domain/entities/fairness_metrics_entity.dart';
 import 'package:makan_mate/features/admin/domain/entities/seasonal_trend_entity.dart';
 import 'package:makan_mate/features/admin/domain/entities/data_quality_metrics_entity.dart';
-import 'package:makan_mate/features/admin/domain/entities/ab_test_entity.dart';
-import 'package:makan_mate/features/admin/data/models/ab_test_model.dart';
 import 'package:makan_mate/features/admin/domain/repositories/admin_repository.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
@@ -381,287 +379,70 @@ class AdminRepositoryImpl implements AdminRepository {
     }
   }
 
-  // A/B Test Management
 
   @override
-  Future<Either<Failure, ABTest>> createABTest(ABTest test) async {
-    if (!await networkInfo.isConnected) {
-      return const Left(NetworkFailure('No internet connection'));
-    }
-
-    try {
-      final testModel = ABTestModel(
-        id: test.id,
-        name: test.name,
-        description: test.description,
-        control: ABTestVariantModel(
-          id: test.control.id,
-          name: test.control.name,
-          description: test.control.description,
-          type: test.control.type,
-          config: test.control.config,
-        ),
-        treatment: ABTestVariantModel(
-          id: test.treatment.id,
-          name: test.treatment.name,
-          description: test.treatment.description,
-          type: test.treatment.type,
-          config: test.treatment.config,
-        ),
-        metric: test.metric,
-        controlSplit: test.controlSplit,
-        treatmentSplit: test.treatmentSplit,
-        status: test.status,
-        startDate: test.startDate,
-        endDate: test.endDate,
-        createdAt: test.createdAt,
-        updatedAt: test.updatedAt,
-        createdBy: test.createdBy,
-        metadata: test.metadata,
-      );
-
-      final createdTest = await remoteDataSource.createABTest(testModel);
-      return Right(createdTest);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Failed to create A/B test: $e'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, List<ABTest>>> getABTests({
-    ABTestStatus? status,
-    int? limit,
+  Future<Either<Failure, String>> createAnnouncement({
+    required String title,
+    required String message,
+    String priority = 'medium',
+    String targetAudience = 'all',
+    DateTime? expiresAt,
   }) async {
     if (!await networkInfo.isConnected) {
       return const Left(NetworkFailure('No internet connection'));
     }
 
     try {
-      final tests = await remoteDataSource.getABTests(
-        status: status?.name,
-        limit: limit,
+      final announcementId = await remoteDataSource.createAnnouncement(
+        title: title,
+        message: message,
+        priority: priority,
+        targetAudience: targetAudience,
+        expiresAt: expiresAt,
       );
-      return Right(tests);
+      return Right(announcementId);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
-      return Left(ServerFailure('Failed to fetch A/B tests: $e'));
+      return Left(ServerFailure('Failed to create announcement: $e'));
     }
   }
 
   @override
-  Future<Either<Failure, ABTest>> getABTest(String testId) async {
-    if (!await networkInfo.isConnected) {
-      return const Left(NetworkFailure('No internet connection'));
-    }
-
-    try {
-      final test = await remoteDataSource.getABTest(testId);
-      return Right(test);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Failed to fetch A/B test: $e'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, ABTest>> updateABTest(ABTest test) async {
-    if (!await networkInfo.isConnected) {
-      return const Left(NetworkFailure('No internet connection'));
-    }
-
-    try {
-      final testModel = ABTestModel(
-        id: test.id,
-        name: test.name,
-        description: test.description,
-        control: ABTestVariantModel(
-          id: test.control.id,
-          name: test.control.name,
-          description: test.control.description,
-          type: test.control.type,
-          config: test.control.config,
-        ),
-        treatment: ABTestVariantModel(
-          id: test.treatment.id,
-          name: test.treatment.name,
-          description: test.treatment.description,
-          type: test.treatment.type,
-          config: test.treatment.config,
-        ),
-        metric: test.metric,
-        controlSplit: test.controlSplit,
-        treatmentSplit: test.treatmentSplit,
-        status: test.status,
-        startDate: test.startDate,
-        endDate: test.endDate,
-        createdAt: test.createdAt,
-        updatedAt: test.updatedAt,
-        createdBy: test.createdBy,
-        metadata: test.metadata,
-      );
-
-      final updatedTest = await remoteDataSource.updateABTest(testModel);
-      return Right(updatedTest);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Failed to update A/B test: $e'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> startABTest(String testId) async {
-    if (!await networkInfo.isConnected) {
-      return const Left(NetworkFailure('No internet connection'));
-    }
-
-    try {
-      await remoteDataSource.startABTest(testId);
-      return const Right(null);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Failed to start A/B test: $e'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> pauseABTest(String testId) async {
-    if (!await networkInfo.isConnected) {
-      return const Left(NetworkFailure('No internet connection'));
-    }
-
-    try {
-      await remoteDataSource.pauseABTest(testId);
-      return const Right(null);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Failed to pause A/B test: $e'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> completeABTest(String testId) async {
-    if (!await networkInfo.isConnected) {
-      return const Left(NetworkFailure('No internet connection'));
-    }
-
-    try {
-      await remoteDataSource.completeABTest(testId);
-      return const Right(null);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Failed to complete A/B test: $e'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, ABTestResult>> getABTestResults(String testId) async {
-    if (!await networkInfo.isConnected) {
-      return const Left(NetworkFailure('No internet connection'));
-    }
-
-    try {
-      final result = await remoteDataSource.getABTestResults(testId);
-      return Right(result);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Failed to fetch A/B test results: $e'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, ABTestAssignment>> assignUserToVariant({
-    required String testId,
-    required String userId,
+  Future<Either<Failure, List<Map<String, dynamic>>>> getAnnouncements({
+    String? targetAudience,
+    bool activeOnly = true,
   }) async {
     if (!await networkInfo.isConnected) {
       return const Left(NetworkFailure('No internet connection'));
     }
 
     try {
-      final assignment = await remoteDataSource.assignUserToVariant(
-        testId: testId,
-        userId: userId,
+      final announcements = await remoteDataSource.getAnnouncements(
+        targetAudience: targetAudience,
+        activeOnly: activeOnly,
       );
-      return Right(assignment);
+      return Right(announcements);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
-      return Left(ServerFailure('Failed to assign user to variant: $e'));
+      return Left(ServerFailure('Failed to fetch announcements: $e'));
     }
   }
 
   @override
-  Future<Either<Failure, void>> trackABTestEvent({
-    required String testId,
-    required String userId,
-    required String eventType,
-    Map<String, dynamic>? eventData,
-  }) async {
-    if (!await networkInfo.isConnected) {
-      return const Left(NetworkFailure('No internet connection'));
-    }
-
-    try {
-      await remoteDataSource.trackABTestEvent(
-        testId: testId,
-        userId: userId,
-        eventType: eventType,
-        eventData: eventData,
+  Stream<Either<Failure, List<Map<String, dynamic>>>> streamAnnouncements({
+    String? targetAudience,
+    bool activeOnly = true,
+  }) {
+    return remoteDataSource.streamAnnouncements(
+      targetAudience: targetAudience,
+      activeOnly: activeOnly,
+    ).map((announcements) => Right<Failure, List<Map<String, dynamic>>>(announcements))
+        .handleError((error) {
+      return Left<Failure, List<Map<String, dynamic>>>(
+        ServerFailure('Failed to stream announcements: $error'),
       );
-      return const Right(null);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Failed to track A/B test event: $e'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, ABTestResult>> calculateABTestStats(
-    String testId,
-  ) async {
-    if (!await networkInfo.isConnected) {
-      return const Left(NetworkFailure('No internet connection'));
-    }
-
-    try {
-      final result = await remoteDataSource.calculateABTestStats(testId);
-      return Right(result);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Failed to calculate A/B test statistics: $e'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> rolloutWinner({
-    required String testId,
-    required String winnerVariantId,
-  }) async {
-    if (!await networkInfo.isConnected) {
-      return const Left(NetworkFailure('No internet connection'));
-    }
-
-    try {
-      await remoteDataSource.rolloutWinner(
-        testId: testId,
-        winnerVariantId: winnerVariantId,
-      );
-      return const Right(null);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Failed to rollout winner: $e'));
-    }
+    });
   }
 }

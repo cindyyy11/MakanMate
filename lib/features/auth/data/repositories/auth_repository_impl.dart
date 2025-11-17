@@ -31,7 +31,7 @@ class AuthRepositoryImpl implements AuthRepository {
       role: model.role,
       displayName: model.name,
       photoUrl: model.profileImageUrl,
-      isAnonymous: false, // UserModel doesn't support anonymous users
+      isAnonymous: model.role == 'guest', // Guest users are anonymous
     );
   }
 
@@ -117,6 +117,30 @@ class AuthRepositoryImpl implements AuthRepository {
       // ✅ Call infrastructure services from Repository (Data layer)
       await ActivityLogService().logUserSignIn(user.id, user.name);
       await MetricsService().updateUserActivity(user.id);
+
+      return Right(_toUserEntity(user));
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message));
+    } on CacheException catch (e) {
+      return Left(CacheFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Unexpected error: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, UserEntity>> signInAsGuest() async {
+    if (!await networkInfo.isConnected) {
+      return const Left(NetworkFailure('No internet connection'));
+    }
+    try {
+      final user = await remoteDataSource.signInAsGuest();
+      await localDataSource.cacheUser(user);
+
+      // Log guest sign-in (optional)
+      await ActivityLogService().logUserSignIn(user.id, 'Guest User');
 
       return Right(_toUserEntity(user));
     } on AuthException catch (e) {

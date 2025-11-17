@@ -80,4 +80,14 @@ class BansAndWarningsLoaded extends AdminUserManagementState {
   List<Object?> get props => [bansAndWarnings];
 }
 
+/// Admin account created successfully
+class AdminCreated extends AdminUserManagementState {
+  final String adminId;
+
+  const AdminCreated(this.adminId);
+
+  @override
+  List<Object?> get props => [adminId];
+}
+
 
