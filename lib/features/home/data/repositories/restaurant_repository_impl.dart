@@ -16,4 +16,11 @@ class RestaurantRepositoryImpl implements RestaurantRepository {
   Future<RestaurantEntity> getRestaurantById(String id) {
     return remote.getRestaurantById(id);
   }
+
+  @override
+  Future<List<RestaurantEntity>> getPersonalizedRestaurants(
+    Map<String, dynamic> dietaryPrefs,
+  ) {
+    return remote.getPersonalizedRestaurants(dietaryPrefs);
+  }
 }

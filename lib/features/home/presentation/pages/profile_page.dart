@@ -183,27 +183,27 @@ class ProfilePage extends StatelessWidget {
             },
           ),
 
-          _settingsTile(
-            icon: Icons.dark_mode_outlined,
-            title: "Dark Mode",
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text("Dark mode toggle coming soon!")),
-              );
-            },
-          ),
+          // _settingsTile(
+          //   icon: Icons.dark_mode_outlined,
+          //   title: "Dark Mode",
+          //   onTap: () {
+          //     ScaffoldMessenger.of(context).showSnackBar(
+          //       const SnackBar(
+          //           content: Text("Dark mode toggle coming soon!")),
+          //     );
+          //   },
+          // ),
 
-        _settingsTile(
-          icon: Icons.language_outlined,
-          title: "Language",
-          // onTap: () {
-          //   Navigator.push(
-          //     context,
-          //     MaterialPageRoute(builder: (_) => const LanguageSettingsPage()),
-          //   );
-          // },
-        ),
+        // _settingsTile(
+        //   icon: Icons.language_outlined,
+        //   title: "Language",
+        //   onTap: () {
+        //     Navigator.push(
+        //       context,
+        //       MaterialPageRoute(builder: (_) => const LanguageSettingsPage()),
+        //     );
+        //   },
+        // ),
 
         _settingsTile(
           icon: Icons.restaurant_menu_outlined,
