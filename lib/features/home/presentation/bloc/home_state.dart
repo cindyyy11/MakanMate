@@ -21,14 +21,19 @@ class HomeLoaded extends HomeState {
   final List<RestaurantEntity> recommendations;
   final List<RestaurantEntity> restaurants;
 
+  /// True when recommendations are based on dietary preferences.
+  final bool isPersonalized;
+
   const HomeLoaded({
     required this.categories,
     required this.recommendations,
     required this.restaurants,
+    this.isPersonalized = false,
   });
 
   @override
-  List<Object?> get props => [categories, recommendations];
+  List<Object?> get props =>
+      [categories, recommendations, restaurants, isPersonalized];
 }
 
 class HomeError extends HomeState {

@@ -14,7 +14,6 @@ import 'package:makan_mate/features/map/presentation/pages/map_page.dart';
 import 'package:makan_mate/features/map/presentation/bloc/map_event.dart' as map;
 import 'package:makan_mate/features/search/presentation/pages/search_page.dart';
 
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
@@ -44,6 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
             return _buildBody(
               categories: state.categories,
               recommendations: state.recommendations,
+              isPersonalized: state.isPersonalized,
             );
           } else if (state is HomeError) {
             return Center(child: Text(state.message));
@@ -55,22 +55,22 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Stream<double> _watchVendorRating(String vendorId) {
-  return FirebaseFirestore.instance
-      .collection('reviews')
-      .where('vendorId', isEqualTo: vendorId)
-      .snapshots()
-      .map((snap) {
-        if (snap.docs.isEmpty) return 0.0;
+    return FirebaseFirestore.instance
+        .collection('reviews')
+        .where('vendorId', isEqualTo: vendorId)
+        .snapshots()
+        .map((snap) {
+      if (snap.docs.isEmpty) return 0.0;
 
-        double total = 0;
-        for (var doc in snap.docs) {
-          final r = (doc['rating'] as num?)?.toDouble() ?? 0.0;
-          total += r;
-        }
+      double total = 0;
+      for (var doc in snap.docs) {
+        final r = (doc['rating'] as num?)?.toDouble() ?? 0.0;
+        total += r;
+      }
 
-        return total / snap.docs.length;
-      });
-}
+      return total / snap.docs.length;
+    });
+  }
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
@@ -96,6 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildBody({
     required List<RestaurantEntity> categories,
     required List<RestaurantEntity> recommendations,
+    required bool isPersonalized,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -108,6 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 20),
               _buildSearchBar(),
               const SizedBox(height: 24),
+
               const Text(
                 'Nearby Restaurants',
                 style: TextStyle(
@@ -116,11 +118,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: Colors.black87,
                 ),
               ),
+
               _buildMapSection(),
               const SizedBox(height: 24),
+
               _buildCategoriesSection(categories),
               const SizedBox(height: 24),
-              _buildRecommendationsSection(recommendations),
+
+              _buildRecommendationsSection(
+                recommendations,
+                isPersonalized,
+              ),
             ],
           ),
         ),
@@ -189,7 +197,8 @@ class _HomeScreenState extends State<HomeScreen> {
           children: const [
             Icon(Icons.search, color: Colors.grey),
             SizedBox(width: 12),
-            Text("Search for food, restaurants...", style: TextStyle(color: Colors.grey)),
+            Text("Search for food, restaurants...",
+                style: TextStyle(color: Colors.grey)),
           ],
         ),
       ),
@@ -249,7 +258,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       MaterialPageRoute(
                         builder: (_) => BlocProvider.value(
                           value: context.read<HomeBloc>(),
-                          child: CategoryRestaurantPage(categoryName: cuisineType),
+                          child: CategoryRestaurantPage(
+                            categoryName: cuisineType,
+                          ),
                         ),
                       ),
                     );
@@ -285,16 +296,21 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildRecommendationsSection(List<RestaurantEntity> recommendations) {
+  Widget _buildRecommendationsSection(
+    List<RestaurantEntity> recommendations,
+    bool personalized,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'Recommended for You',
-              style: TextStyle(
+            Text(
+              personalized
+                  ? 'Recommended for You'
+                  : 'Popular Restaurants',
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Colors.black87,
@@ -305,7 +321,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => AllRestaurantsPage(restaurants: recommendations),
+                    builder: (_) =>
+                        AllRestaurantsPage(restaurants: recommendations),
                   ),
                 );
               },
@@ -317,7 +334,9 @@ class _HomeScreenState extends State<HomeScreen> {
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: recommendations.length > 5 ? 5 : recommendations.length,
+          itemCount: recommendations.length > 5
+              ? 5
+              : recommendations.length,
           itemBuilder: (context, index) {
             final food = recommendations[index];
             return _buildFoodCard(food);
@@ -448,7 +467,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     Text(
                       vendor.shortDescription,
-                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      style: TextStyle(
+                          fontSize: 14, color: Colors.grey[600]),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -457,7 +477,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     Row(
                       children: [
-                        const Icon(Icons.star, color: Colors.amber, size: 16),
+                        const Icon(Icons.star,
+                            color: Colors.amber, size: 16),
                         const SizedBox(width: 4),
 
                         StreamBuilder<double>(
@@ -493,6 +514,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
+
               _buildFavoriteButton(food),
             ],
           ),

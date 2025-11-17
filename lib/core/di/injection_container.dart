@@ -25,6 +25,7 @@ import 'package:makan_mate/features/auth/domain/usecases/sign_up_usecase.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:makan_mate/features/home/data/datasources/restaurant_remote_datasource.dart';
 import 'package:makan_mate/features/home/data/repositories/restaurant_repository_impl.dart';
+import 'package:makan_mate/features/home/domain/usecases/get_personalized_restaurants_usecase.dart';
 import 'package:makan_mate/features/home/domain/usecases/get_restaurants_usecase.dart';
 import 'package:makan_mate/features/home/domain/usecases/get_restaurant_details_usecase.dart';
 import 'package:makan_mate/features/map/data/datasources/map_remote_datasource.dart';
@@ -410,17 +411,22 @@ void _initHome() {
     () => RestaurantRepositoryImpl(remote: sl()),
   );
 
-  // Data sources
+  // Data source
   sl.registerLazySingleton<RestaurantRemoteDataSource>(
     () => RestaurantRemoteDataSourceImpl(firestore: sl()),
   );
 
   // Use cases
   sl.registerLazySingleton(() => GetRestaurantsUseCase(sl()));
-  
-  // Bloc
+  sl.registerLazySingleton(() => GetPersonalizedRestaurantsUseCase(sl()));
+
+  // HomeBloc
   sl.registerFactory(
-    () => HomeBloc(getRestaurantDetails: sl(), getRestaurants: sl()),
+    () => HomeBloc(
+      getRestaurants: sl(),
+      getRestaurantDetails: sl(),
+      getPersonalizedRestaurants: sl(),
+    ),
   );
 }
 
