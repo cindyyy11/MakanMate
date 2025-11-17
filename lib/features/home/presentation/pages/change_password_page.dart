@@ -30,7 +30,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       return _showMessage("New passwords do not match.");
     }
 
-    setState(() => _loading = false);
+    setState(() => _loading = true);
 
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -38,20 +38,18 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         throw "User not found";
       }
 
-      // Reauthenticate
       final cred = EmailAuthProvider.credential(
         email: user.email!,
         password: current,
       );
       await user.reauthenticateWithCredential(cred);
 
+      await user.updatePassword(newPass);
+
       await showDialog(
         context: context,
         builder: (_) => AlertDialog(
-          title: const Text(
-            "Success!",
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
+          title: const Text("Success!"),
           content: const Text("Your password has been updated successfully."),
           actions: [
             TextButton(
@@ -62,25 +60,22 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         ),
       );
 
-      // After user presses OK, navigate back
       Navigator.pop(context);
 
     } catch (e) {
-        setState(() => _loading = false);
+      setState(() => _loading = false);
 
-        String msg = "Something went wrong. Please try again.";
+      String msg = "Something went wrong. Please try again.";
 
-        if (e.toString().contains("wrong-password") ||
-            e.toString().contains("invalid-credential")) {
-          msg = "Your current password is incorrect.";
-        } else if (e.toString().contains("requires-recent-login")) {
-          msg = "For security reasons, please log in again to change your password.";
-        } else if (e.toString().contains("user-mismatch")) {
-          msg = "This account does not match the provided credentials.";
-        }
-
-        _showMessage(msg);
+      if (e.toString().contains("wrong-password") ||
+          e.toString().contains("invalid-credential")) {
+        msg = "Your current password is incorrect.";
+      } else if (e.toString().contains("requires-recent-login")) {
+        msg = "For security reasons, please log in again to change your password.";
       }
+
+      _showMessage(msg);
+    }
   }
 
   void _showMessage(String message) {
