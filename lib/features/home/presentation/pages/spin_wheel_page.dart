@@ -88,7 +88,7 @@ class _SpinWheelPageState extends State<SpinWheelPage> {
       return;
     }
 
-    final allRestaurants = state.recommendations;
+    final allRestaurants = state.allRestaurants;
     const maxDistanceKm = 5.0;
 
     final filtered = allRestaurants.where((r) {
@@ -96,18 +96,32 @@ class _SpinWheelPageState extends State<SpinWheelPage> {
 
       final vendor = r.vendor;
 
-      if (vendor.latitude == null || vendor.longitude == null) {
-        return false; // skip restaurants with no coordinates
+      double? lat;
+      double? lng;
+
+      if (vendor.outlets.isNotEmpty) {
+        final outlet = vendor.outlets.first;
+        lat = outlet.latitude;
+        lng = outlet.longitude;
       }
+
+      if ((lat == null || lng == null) &&
+          vendor.latitude != null &&
+          vendor.longitude != null) {
+        lat = vendor.latitude;
+        lng = vendor.longitude;
+      }
+
+      if (lat == null || lng == null) return false;
 
       final distance = Geolocator.distanceBetween(
         _userPosition!.latitude,
         _userPosition!.longitude,
-        vendor.latitude!,
-        vendor.longitude!,
+        lat,
+        lng,
       );
 
-      return distance / 1000 <= maxDistanceKm;
+      return (distance / 1000) <= maxDistanceKm;
     }).toList();
 
     setState(() {
