@@ -12,8 +12,9 @@ import 'package:makan_mate/features/admin/domain/entities/system_metrics_entity.
 import 'package:makan_mate/features/admin/data/models/fairness_metrics_model.dart';
 import 'package:makan_mate/features/admin/data/models/seasonal_trend_model.dart';
 import 'package:makan_mate/features/admin/data/models/data_quality_metrics_model.dart';
-import 'package:makan_mate/features/admin/data/models/ab_test_model.dart';
-import 'package:makan_mate/features/admin/domain/entities/ab_test_entity.dart';
+// TODO: Uncomment when implementing A/B testing feature in the future
+// import 'package:makan_mate/features/admin/data/models/ab_test_model.dart';
+// import 'package:makan_mate/features/admin/domain/entities/ab_test_entity.dart';
 import 'package:makan_mate/features/admin/domain/entities/seasonal_trend_entity.dart';
 import 'package:makan_mate/features/admin/domain/services/fairness_metrics_calculator_interface.dart';
 import 'package:makan_mate/features/admin/domain/services/seasonal_trend_calculator_interface.dart';
@@ -77,16 +78,20 @@ abstract class AdminRemoteDataSource {
   // A/B Test Management
 
   /// Create a new A/B test
-  Future<ABTestModel> createABTest(ABTestModel test);
+  // TODO: Change return type and parameter back to ABTestModel when implementing A/B testing feature
+  Future<dynamic> createABTest(dynamic test);
 
   /// Get all A/B tests
-  Future<List<ABTestModel>> getABTests({String? status, int? limit});
+  // TODO: Change return type back to List<ABTestModel> when implementing A/B testing feature
+  Future<List<dynamic>> getABTests({String? status, int? limit});
 
   /// Get a specific A/B test by ID
-  Future<ABTestModel> getABTest(String testId);
+  // TODO: Change return type back to ABTestModel when implementing A/B testing feature
+  Future<dynamic> getABTest(String testId);
 
   /// Update an A/B test
-  Future<ABTestModel> updateABTest(ABTestModel test);
+  // TODO: Change return type and parameter back to ABTestModel when implementing A/B testing feature
+  Future<dynamic> updateABTest(dynamic test);
 
   /// Start an A/B test
   Future<void> startABTest(String testId);
@@ -98,10 +103,12 @@ abstract class AdminRemoteDataSource {
   Future<void> completeABTest(String testId);
 
   /// Get A/B test results
-  Future<ABTestResultModel> getABTestResults(String testId);
+  // TODO: Change return type back to ABTestResultModel when implementing A/B testing feature
+  Future<dynamic> getABTestResults(String testId);
 
   /// Assign a user to a variant
-  Future<ABTestAssignmentModel> assignUserToVariant({
+  // TODO: Change return type back to ABTestAssignmentModel when implementing A/B testing feature
+  Future<dynamic> assignUserToVariant({
     required String testId,
     required String userId,
   });
@@ -115,12 +122,34 @@ abstract class AdminRemoteDataSource {
   });
 
   /// Calculate and update A/B test statistics
-  Future<ABTestResultModel> calculateABTestStats(String testId);
+  // TODO: Change return type back to ABTestResultModel when implementing A/B testing feature
+  Future<dynamic> calculateABTestStats(String testId);
 
   /// Rollout winner to 100%
   Future<void> rolloutWinner({
     required String testId,
     required String winnerVariantId,
+  });
+
+  /// Create a system-wide announcement
+  Future<String> createAnnouncement({
+    required String title,
+    required String message,
+    String priority = 'medium',
+    String targetAudience = 'all',
+    DateTime? expiresAt,
+  });
+
+  /// Get announcements
+  Future<List<Map<String, dynamic>>> getAnnouncements({
+    String? targetAudience,
+    bool activeOnly = true,
+  });
+
+  /// Stream announcements (real-time updates)
+  Stream<List<Map<String, dynamic>>> streamAnnouncements({
+    String? targetAudience,
+    bool activeOnly = true,
   });
 }
 
@@ -1013,10 +1042,158 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
     }
   }
 
+  // Announcement Management Implementation
+
+  @override
+  Future<String> createAnnouncement({
+    required String title,
+    required String message,
+    String priority = 'medium',
+    String targetAudience = 'all',
+    DateTime? expiresAt,
+  }) async {
+    try {
+      logger.i('Creating announcement: $title');
+
+      final docRef = firestore.collection('announcements').doc();
+      final announcementData = {
+        'id': docRef.id,
+        'title': title,
+        'message': message,
+        'priority': priority,
+        'targetAudience': targetAudience,
+        'isActive': true,
+        'createdAt': FieldValue.serverTimestamp(),
+        'expiresAt': expiresAt != null ? Timestamp.fromDate(expiresAt) : null,
+        'createdBy': 'admin', // Could be enhanced to track specific admin
+      };
+
+      await docRef.set(announcementData);
+
+      logger.i('Successfully created announcement: ${docRef.id}');
+      return docRef.id;
+    } catch (e, stackTrace) {
+      logger.e('Error creating announcement: $e', stackTrace: stackTrace);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getAnnouncements({
+    String? targetAudience,
+    bool activeOnly = true,
+  }) async {
+    try {
+      logger.i('Fetching announcements');
+
+      Query query = firestore
+          .collection('announcements')
+          .orderBy('createdAt', descending: true);
+
+      if (activeOnly) {
+        query = query.where('isActive', isEqualTo: true);
+      }
+
+      if (targetAudience != null && targetAudience != 'all') {
+        query = query.where('targetAudience', isEqualTo: targetAudience);
+      }
+
+      final snapshot = await query.get();
+      final now = DateTime.now();
+
+      return snapshot.docs
+          .map((doc) {
+            final data = doc.data() as Map<String, dynamic>?;
+            if (data == null) return null;
+
+            final expiresAt = data['expiresAt'] as Timestamp?;
+
+            // Filter out expired announcements
+            if (expiresAt != null && expiresAt.toDate().isBefore(now)) {
+              return null;
+            }
+
+            return {
+              'id': doc.id,
+              ...data,
+              'createdAt': (data['createdAt'] as Timestamp?)?.toDate(),
+              'expiresAt': expiresAt?.toDate(),
+            };
+          })
+          .whereType<Map<String, dynamic>>()
+          .toList();
+    } catch (e, stackTrace) {
+      logger.e('Error fetching announcements: $e', stackTrace: stackTrace);
+      return [];
+    }
+  }
+
+  @override
+  Stream<List<Map<String, dynamic>>> streamAnnouncements({
+    String? targetAudience,
+    bool activeOnly = true,
+  }) {
+    try {
+      logger.i('Streaming announcements');
+
+      Query query = firestore
+          .collection('announcements')
+          .orderBy('createdAt', descending: true);
+
+      if (activeOnly) {
+        query = query.where('isActive', isEqualTo: true);
+      }
+
+      if (targetAudience != null && targetAudience != 'all') {
+        query = query.where('targetAudience', isEqualTo: targetAudience);
+      }
+
+      return query
+          .snapshots()
+          .map((snapshot) {
+            final now = DateTime.now();
+            return snapshot.docs
+                .map((doc) {
+                  final data = doc.data() as Map<String, dynamic>?;
+                  if (data == null) return null;
+
+                  final expiresAt = data['expiresAt'] as Timestamp?;
+
+                  // Filter out expired announcements
+                  if (expiresAt != null && expiresAt.toDate().isBefore(now)) {
+                    return null;
+                  }
+
+                  return {
+                    'id': doc.id,
+                    ...data,
+                    'createdAt': (data['createdAt'] as Timestamp?)?.toDate(),
+                    'expiresAt': expiresAt?.toDate(),
+                  };
+                })
+                .whereType<Map<String, dynamic>>()
+                .toList();
+          })
+          .handleError((error) {
+            logger.e('Error streaming announcements: $error');
+            return <Map<String, dynamic>>[];
+          });
+    } catch (e, stackTrace) {
+      logger.e(
+        'Error setting up announcement stream: $e',
+        stackTrace: stackTrace,
+      );
+      return Stream.value(<Map<String, dynamic>>[]);
+    }
+  }
+
   // A/B Test Management Implementation
 
   @override
-  Future<ABTestModel> createABTest(ABTestModel test) async {
+  Future<dynamic> createABTest(dynamic test) async {
+    // TODO: Implement A/B testing feature in the future
+    throw UnimplementedError('A/B testing feature is not yet implemented');
+    /*
     try {
       logger.i('Creating A/B test: ${test.name}');
 
@@ -1046,10 +1223,14 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
       logger.e('Error creating A/B test: $e', stackTrace: stackTrace);
       rethrow;
     }
+    */
   }
 
   @override
-  Future<List<ABTestModel>> getABTests({String? status, int? limit}) async {
+  Future<List<dynamic>> getABTests({String? status, int? limit}) async {
+    // TODO: Implement A/B testing feature in the future
+    throw UnimplementedError('A/B testing feature is not yet implemented');
+    /*
     try {
       logger.i('Fetching A/B tests');
 
@@ -1073,10 +1254,14 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
       logger.e('Error fetching A/B tests: $e', stackTrace: stackTrace);
       rethrow;
     }
+    */
   }
 
   @override
-  Future<ABTestModel> getABTest(String testId) async {
+  Future<dynamic> getABTest(String testId) async {
+    // TODO: Implement A/B testing feature in the future
+    throw UnimplementedError('A/B testing feature is not yet implemented');
+    /*
     try {
       logger.i('Fetching A/B test: $testId');
 
@@ -1091,10 +1276,14 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
       logger.e('Error fetching A/B test: $e', stackTrace: stackTrace);
       rethrow;
     }
+    */
   }
 
   @override
-  Future<ABTestModel> updateABTest(ABTestModel test) async {
+  Future<dynamic> updateABTest(dynamic test) async {
+    // TODO: Implement A/B testing feature in the future
+    throw UnimplementedError('A/B testing feature is not yet implemented');
+    /*
     try {
       logger.i('Updating A/B test: ${test.id}');
 
@@ -1110,6 +1299,7 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
       logger.e('Error updating A/B test: $e', stackTrace: stackTrace);
       rethrow;
     }
+    */
   }
 
   @override
@@ -1118,7 +1308,7 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
       logger.i('Starting A/B test: $testId');
 
       await firestore.collection('ab_tests').doc(testId).update({
-        'status': ABTestStatus.running.name,
+        'status': 'running',
         'startDate': Timestamp.fromDate(DateTime.now()),
         'updatedAt': Timestamp.fromDate(DateTime.now()),
       });
@@ -1136,7 +1326,7 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
       logger.i('Pausing A/B test: $testId');
 
       await firestore.collection('ab_tests').doc(testId).update({
-        'status': ABTestStatus.paused.name,
+        'status': 'paused',
         'updatedAt': Timestamp.fromDate(DateTime.now()),
       });
 
@@ -1153,7 +1343,7 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
       logger.i('Completing A/B test: $testId');
 
       await firestore.collection('ab_tests').doc(testId).update({
-        'status': ABTestStatus.completed.name,
+        'status': 'completed',
         'endDate': Timestamp.fromDate(DateTime.now()),
         'updatedAt': Timestamp.fromDate(DateTime.now()),
       });
@@ -1166,7 +1356,7 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
   }
 
   @override
-  Future<ABTestResultModel> getABTestResults(String testId) async {
+  Future<dynamic> getABTestResults(String testId) async {
     try {
       logger.i('Fetching A/B test results: $testId');
 
@@ -1180,7 +1370,13 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
         return await calculateABTestStats(testId);
       }
 
-      return ABTestResultModel.fromFirestore(doc);
+      // TODO: Implement A/B testing feature in the future
+      // return ABTestResultModel.fromFirestore(doc);
+      final data = doc.data() as Map<String, dynamic>?;
+      if (data == null) {
+        return await calculateABTestStats(testId);
+      }
+      return {'id': doc.id, ...data};
     } catch (e, stackTrace) {
       logger.e('Error fetching A/B test results: $e', stackTrace: stackTrace);
       rethrow;
@@ -1188,10 +1384,13 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
   }
 
   @override
-  Future<ABTestAssignmentModel> assignUserToVariant({
+  Future<dynamic> assignUserToVariant({
     required String testId,
     required String userId,
   }) async {
+    // TODO: Implement A/B testing feature in the future
+    throw UnimplementedError('A/B testing feature is not yet implemented');
+    /*
     try {
       logger.i('Assigning user $userId to variant in test $testId');
 
@@ -1236,6 +1435,7 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
       logger.e('Error assigning user to variant: $e', stackTrace: stackTrace);
       rethrow;
     }
+    */
   }
 
   @override
@@ -1263,15 +1463,19 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
         return;
       }
 
-      final assignment = ABTestAssignmentModel.fromFirestore(
-        assignmentQuery.docs.first,
-      );
+      // TODO: Implement A/B testing feature in the future
+      // final assignment = ABTestAssignmentModel.fromFirestore(
+      //   assignmentQuery.docs.first,
+      // );
+      final assignmentData =
+          assignmentQuery.docs.first.data() as Map<String, dynamic>;
+      final variantId = assignmentData['variantId'] as String? ?? '';
 
       // Record event
       await firestore.collection('ab_test_events').add({
         'testId': testId,
         'userId': userId,
-        'variantId': assignment.variantId,
+        'variantId': variantId,
         'eventType': eventType,
         'eventData': eventData ?? {},
         'timestamp': Timestamp.fromDate(DateTime.now()),
@@ -1280,7 +1484,7 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
       // Update assignment last seen
       await firestore
           .collection('ab_test_assignments')
-          .doc(assignment.id)
+          .doc(assignmentQuery.docs.first.id)
           .update({'lastSeenAt': Timestamp.fromDate(DateTime.now())});
 
       logger.i('Successfully tracked A/B test event');
@@ -1291,7 +1495,7 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
   }
 
   @override
-  Future<ABTestResultModel> calculateABTestStats(String testId) async {
+  Future<dynamic> calculateABTestStats(String testId) async {
     try {
       logger.i('Calculating A/B test statistics: $testId');
 
@@ -1304,9 +1508,18 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
           .where('testId', isEqualTo: testId)
           .get();
 
-      final assignments = assignmentsSnapshot.docs
-          .map((doc) => ABTestAssignmentModel.fromFirestore(doc))
-          .toList();
+      // TODO: Implement A/B testing feature in the future
+      // final assignments = assignmentsSnapshot.docs
+      //     .map((doc) => ABTestAssignmentModel.fromFirestore(doc))
+      //     .toList();
+      final assignments = assignmentsSnapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return {
+          'id': doc.id,
+          'variantId': data['variantId'] as String? ?? '',
+          ...data,
+        };
+      }).toList();
 
       // Get all events
       final eventsSnapshot = await firestore
@@ -1317,11 +1530,18 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
       final events = eventsSnapshot.docs.map((doc) => doc.data()).toList();
 
       // Calculate metrics for each variant
+      // TODO: Implement A/B testing feature in the future
+      // final controlAssignments = assignments
+      //     .where((a) => a.variantId == test.control.id)
+      //     .toList();
+      // final treatmentAssignments = assignments
+      //     .where((a) => a.variantId == test.treatment.id)
+      //     .toList();
       final controlAssignments = assignments
-          .where((a) => a.variantId == test.control.id)
+          .where((a) => (a['variantId'] as String?) == test.control.id)
           .toList();
       final treatmentAssignments = assignments
-          .where((a) => a.variantId == test.treatment.id)
+          .where((a) => (a['variantId'] as String?) == test.treatment.id)
           .toList();
 
       // Count events by variant
@@ -1352,23 +1572,41 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
       final controlMetricValue = controlConversionRate;
       final treatmentMetricValue = treatmentConversionRate;
 
-      final controlMetrics = ABTestVariantMetricsModel(
-        variantId: test.control.id,
-        metricValue: controlMetricValue,
-        participants: controlAssignments.length,
-        events: controlEventCount,
-        impressions: controlImpressions,
-        conversionRate: controlConversionRate,
-      );
+      // TODO: Implement A/B testing feature in the future
+      // final controlMetrics = ABTestVariantMetricsModel(
+      //   variantId: test.control.id,
+      //   metricValue: controlMetricValue,
+      //   participants: controlAssignments.length,
+      //   events: controlEventCount,
+      //   impressions: controlImpressions,
+      //   conversionRate: controlConversionRate,
+      // );
+      final controlMetrics = <String, dynamic>{
+        'variantId': test.control.id,
+        'metricValue': controlMetricValue,
+        'participants': controlAssignments.length,
+        'events': controlEventCount,
+        'impressions': controlImpressions,
+        'conversionRate': controlConversionRate,
+      };
 
-      final treatmentMetrics = ABTestVariantMetricsModel(
-        variantId: test.treatment.id,
-        metricValue: treatmentMetricValue,
-        participants: treatmentAssignments.length,
-        events: treatmentEventCount,
-        impressions: treatmentImpressions,
-        conversionRate: treatmentConversionRate,
-      );
+      // TODO: Implement A/B testing feature in the future
+      // final treatmentMetrics = ABTestVariantMetricsModel(
+      //   variantId: test.treatment.id,
+      //   metricValue: treatmentMetricValue,
+      //   participants: treatmentAssignments.length,
+      //   events: treatmentEventCount,
+      //   impressions: treatmentImpressions,
+      //   conversionRate: treatmentConversionRate,
+      // );
+      final treatmentMetrics = <String, dynamic>{
+        'variantId': test.treatment.id,
+        'metricValue': treatmentMetricValue,
+        'participants': treatmentAssignments.length,
+        'events': treatmentEventCount,
+        'impressions': treatmentImpressions,
+        'conversionRate': treatmentConversionRate,
+      };
 
       // Calculate improvement
       final improvement = controlMetricValue > 0
@@ -1392,25 +1630,36 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
             : test.control.id;
       }
 
-      final result = ABTestResultModel(
-        testId: testId,
-        controlMetrics: controlMetrics,
-        treatmentMetrics: treatmentMetrics,
-        improvement: improvement,
-        confidence: confidence,
-        isSignificant: isSignificant,
-        winner: winner,
-        calculatedAt: DateTime.now(),
-        totalParticipants: assignments.length,
-        controlParticipants: controlAssignments.length,
-        treatmentParticipants: treatmentAssignments.length,
-      );
+      // TODO: Implement A/B testing feature in the future
+      // final result = ABTestResultModel(
+      //   testId: testId,
+      //   controlMetrics: controlMetrics,
+      //   treatmentMetrics: treatmentMetrics,
+      //   improvement: improvement,
+      //   confidence: confidence,
+      //   isSignificant: isSignificant,
+      //   winner: winner,
+      //   calculatedAt: DateTime.now(),
+      //   totalParticipants: assignments.length,
+      //   controlParticipants: controlAssignments.length,
+      //   treatmentParticipants: treatmentAssignments.length,
+      // );
+      final result = <String, dynamic>{
+        'testId': testId,
+        'controlMetrics': controlMetrics,
+        'treatmentMetrics': treatmentMetrics,
+        'improvement': improvement,
+        'confidence': confidence,
+        'isSignificant': isSignificant,
+        'winner': winner,
+        'calculatedAt': Timestamp.fromDate(DateTime.now()),
+        'totalParticipants': assignments.length,
+        'controlParticipants': controlAssignments.length,
+        'treatmentParticipants': treatmentAssignments.length,
+      };
 
       // Save results
-      await firestore
-          .collection('ab_test_results')
-          .doc(testId)
-          .set(result.toFirestore());
+      await firestore.collection('ab_test_results').doc(testId).set(result);
 
       logger.i('Successfully calculated A/B test statistics');
       return result;
