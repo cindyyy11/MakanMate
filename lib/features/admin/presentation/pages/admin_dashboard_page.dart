@@ -1375,12 +1375,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     Icons.history_rounded,
                     'Recent actions',
                   ),
-                  _buildEnhancedTab(
-                    3,
-                    'Live',
-                    Icons.sensors_rounded,
-                    'Real-time',
-                  ),
+                  // _buildEnhancedTab(
+                  //   3,
+                  //   'Live',
+                  //   Icons.sensors_rounded,
+                  //   'Real-time',
+                  // ),
                   _buildEnhancedTab(
                     4,
                     'Fairness',
@@ -1422,14 +1422,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     'Recent actions',
                   ),
                 ),
-                Expanded(
-                  child: _buildEnhancedTab(
-                    3,
-                    'Live',
-                    Icons.sensors_rounded,
-                    'Real-time',
-                  ),
-                ),
+                // Expanded(
+                //   child: _buildEnhancedTab(
+                //     3,
+                //     'Live',
+                //     Icons.sensors_rounded,
+                //     'Real-time',
+                //   ),
+                // ),
                 Expanded(
                   child: _buildEnhancedTab(
                     4,
@@ -1697,7 +1697,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: UIConstants.spacingMd,
+                    horizontal: UIConstants.spacingSm,
                     vertical: UIConstants.spacingSm,
                   ),
                   decoration: BoxDecoration(
@@ -1715,15 +1715,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                         size: 16,
                         color: AppColors.primary,
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Load More',
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: UIConstants.fontSizeSm,
-                        ),
-                      ),
+                      // Text(
+                      //   'Load More',
+                      //   style: TextStyle(
+                      //     color: AppColors.primary,
+                      //     fontWeight: FontWeight.w600,
+                      //     fontSize: UIConstants.fontSizeSm,
+                      //   ),
+                      // ),
                     ],
                   ),
                 ),
