@@ -158,7 +158,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildWelcomeSection(ThemeData theme) {
     // Keep orange branding but still look fine in dark mode
     final primary = theme.colorScheme.primary;
-    print('Color $primary');
 
     return Container(
       padding: const EdgeInsets.all(20),
