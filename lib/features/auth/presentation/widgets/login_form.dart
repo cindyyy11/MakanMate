@@ -34,9 +34,40 @@ class _LoginFormState extends State<LoginForm> {
       listener: (context, state) {
         if (state is AuthError) {
           if (!mounted) return;
+          setState(() => _isLoading = false);
+          
+          // Show error with better styling
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message)),
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      state.message,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.red.shade600,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              margin: const EdgeInsets.all(16),
+              duration: const Duration(seconds: 4),
+            ),
           );
+        } else if (state is Authenticated) {
+          if (!mounted) return;
+          setState(() => _isLoading = false);
+        } else if (state is AuthLoading) {
+          setState(() => _isLoading = true);
         }
       },
       child: Form(
@@ -253,38 +284,36 @@ class _LoginFormState extends State<LoginForm> {
           password: _passwordController.text,
         ),
       );
-      // Navigation handled by auth state changes
-      print("Login successful ");
+      // Loading state and error handling managed by BlocListener
     } catch (e) {
-      String message = 'An error occurred';
-
-      if (e.toString().contains('user-not-found')) {
-        message = 'No user found with this email';
-      } else if (e.toString().contains('wrong-password')) {
-        message = 'Incorrect password';
-      } else if (e.toString().contains('invalid-email')) {
-        message = 'Invalid email address';
-      } else if (e.toString().contains('user-disabled')) {
-        message = 'This account has been disabled';
-      } else {
-        message = 'Login failed. Please try again.';
-      }
-
       if (mounted) {
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(message),
-            backgroundColor: Colors.red.shade400,
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'An unexpected error occurred. Please try again.',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.red.shade600,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
             ),
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 4),
           ),
         );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
       }
     }
   }

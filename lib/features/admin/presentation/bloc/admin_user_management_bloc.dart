@@ -21,6 +21,7 @@ class AdminUserManagementBloc
     on<RefreshUsers>(_onRefreshUsers);
     on<LoadBansAndWarnings>(_onLoadBansAndWarnings);
     on<LiftBanOrWarning>(_onLiftBanOrWarning);
+    on<CreateAdminRequested>(_onCreateAdmin);
   }
 
   Future<void> _onLoadUsers(
@@ -186,6 +187,22 @@ class AdminUserManagementBloc
     result.fold(
       (failure) => emit(AdminUserManagementError(failure.message)),
       (_) => emit(const UserOperationSuccess('Ban/Warning lifted successfully')),
+    );
+  }
+
+  Future<void> _onCreateAdmin(
+    CreateAdminRequested event,
+    Emitter<AdminUserManagementState> emit,
+  ) async {
+    emit(const AdminUserManagementLoading());
+    final result = await repository.createAdmin(
+      email: event.email,
+      password: event.password,
+      displayName: event.displayName,
+    );
+    result.fold(
+      (failure) => emit(AdminUserManagementError(failure.message)),
+      (adminId) => emit(AdminCreated(adminId)),
     );
   }
 }

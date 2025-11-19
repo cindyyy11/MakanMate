@@ -159,22 +159,4 @@ class AuditLogService {
     );
   }
 
-  /// Log feature flag change
-  Future<void> logFeatureFlagChange({
-    required String featureId,
-    required bool enabled,
-    int? rolloutPercentage,
-  }) async {
-    await logAction(
-      action: 'update_feature_flag',
-      entityType: 'feature_flag',
-      entityId: featureId,
-      details: {
-        'enabled': enabled,
-        'rolloutPercentage': rolloutPercentage,
-      },
-
-      reason: 'Feature flag updated',
-    );
-  }
 }

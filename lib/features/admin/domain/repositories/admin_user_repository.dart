@@ -62,6 +62,13 @@ abstract class AdminUserRepository {
     required String banId,
     required String reason,
   });
+  
+  /// Create a new admin account
+  Future<Either<Failure, String>> createAdmin({
+    required String email,
+    required String password,
+    required String displayName,
+  });
 }
 
 

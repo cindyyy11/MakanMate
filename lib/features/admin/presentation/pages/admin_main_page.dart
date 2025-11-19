@@ -4,17 +4,10 @@ import 'package:makan_mate/core/theme/app_colors.dart';
 import 'package:makan_mate/core/theme/app_theme.dart';
 import 'package:makan_mate/features/admin/presentation/pages/admin_dashboard_page.dart';
 import 'package:makan_mate/features/admin/presentation/pages/audit_log_viewer_page.dart';
-import 'package:makan_mate/features/admin/presentation/pages/system_config_page.dart';
 import 'package:makan_mate/features/admin/presentation/pages/vendor_management_page.dart';
 import 'package:makan_mate/features/admin/presentation/pages/user_management_page.dart';
-import 'package:makan_mate/features/admin/presentation/pages/content_taxonomy_page.dart';
-import 'package:makan_mate/features/admin/presentation/pages/multilingual_term_bank_page.dart';
-import 'package:makan_mate/features/admin/presentation/pages/report_builder_page.dart';
-import 'package:makan_mate/features/admin/presentation/pages/predictive_analytics_page.dart';
-import 'package:makan_mate/features/admin/presentation/pages/geographic_heatmap_page.dart';
-import 'package:makan_mate/features/admin/presentation/pages/performance_monitoring_page.dart';
-import 'package:makan_mate/features/admin/presentation/pages/feature_flag_page.dart';
-import 'package:makan_mate/features/admin/presentation/pages/backup_restore_page.dart';
+import 'package:makan_mate/features/admin/presentation/pages/create_admin_page.dart';
+import 'package:makan_mate/features/admin/presentation/pages/create_announcement_page.dart';
 import 'package:makan_mate/features/admin/presentation/widgets/creative_bottom_nav_bar.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_event.dart';
@@ -79,60 +72,6 @@ class _AdminMainPageState extends State<AdminMainPage> {
       page: const AuditLogViewerPage(),
       category: 'System',
     ),
-    AdminNavItem(
-      title: 'System Configuration',
-      icon: Icons.settings_rounded,
-      page: const SystemConfigPage(),
-      category: 'System',
-    ),
-    AdminNavItem(
-      title: 'Content Taxonomy',
-      icon: Icons.category_rounded,
-      page: const ContentTaxonomyPage(),
-      category: 'System',
-    ),
-    AdminNavItem(
-      title: 'Multilingual Term Bank',
-      icon: Icons.translate_rounded,
-      page: const MultilingualTermBankPage(),
-      category: 'System',
-    ),
-    AdminNavItem(
-      title: 'Report Builder',
-      icon: Icons.assessment_rounded,
-      page: const ReportBuilderPage(),
-      category: 'System',
-    ),
-    AdminNavItem(
-      title: 'Predictive Analytics',
-      icon: Icons.insights_rounded,
-      page: const PredictiveAnalyticsPage(),
-      category: 'System',
-    ),
-    AdminNavItem(
-      title: 'Geographic Heatmaps',
-      icon: Icons.map_rounded,
-      page: const GeographicHeatmapPage(),
-      category: 'System',
-    ),
-    AdminNavItem(
-      title: 'Performance Monitoring',
-      icon: Icons.speed_rounded,
-      page: const PerformanceMonitoringPage(),
-      category: 'System',
-    ),
-    AdminNavItem(
-      title: 'Feature Flags',
-      icon: Icons.flag_rounded,
-      page: const FeatureFlagPage(),
-      category: 'System',
-    ),
-    AdminNavItem(
-      title: 'Backup & Restore',
-      icon: Icons.backup_rounded,
-      page: const BackupRestorePage(),
-      category: 'System',
-    ),
     // Category 2: Admin-Vendor Interaction
     AdminNavItem(
       title: 'Vendor Management',
@@ -146,6 +85,18 @@ class _AdminMainPageState extends State<AdminMainPage> {
       icon: Icons.people_rounded,
       page: const UserManagementPage(),
       category: 'Users',
+    ),
+    AdminNavItem(
+      title: 'Create Admin',
+      icon: Icons.person_add_rounded,
+      page: const CreateAdminPage(),
+      category: 'Users',
+    ),
+    AdminNavItem(
+      title: 'Create Announcement',
+      icon: Icons.campaign_rounded,
+      page: const CreateAnnouncementPage(),
+      category: 'System',
     ),
   ];
 
@@ -529,11 +480,12 @@ class _AdminMainPageState extends State<AdminMainPage> {
   }
 
   Widget _buildBottomNavBar(bool isDark) {
-    // Show main categories + All Features button on mobile
+    // Show most useful functions that are always used
     final mainItems = [
       _navItems[0], // Dashboard
-      _navItems[11], // Vendor Management
-      _navItems[12], // User Management
+      _navItems[2], // Vendor Management
+      _navItems[3], // User Management
+      _navItems[5], // Create Announcement
     ];
 
     final navBarItems = mainItems.map((item) {
@@ -544,7 +496,7 @@ class _AdminMainPageState extends State<AdminMainPage> {
       );
     }).toList();
 
-    // Add "All Features" as the 4th item
+    // Add "All Features" as the 5th item
     navBarItems.add(
       const BottomNavItem(
         icon: Icons.apps_rounded,
@@ -558,7 +510,7 @@ class _AdminMainPageState extends State<AdminMainPage> {
     );
     final currentIndex = currentMainIndex >= 0
         ? currentMainIndex
-        : 3; // Default to "More" if not found
+        : 4; // Default to "More" if not found
 
     return CreativeBottomNavBar(
       currentIndex: currentIndex,

@@ -57,7 +57,10 @@ class _SignUpFormState extends State<SignUpForm> {
           }
         } else if (state is AuthError) {
           if (mounted) {
-            _showSnackBar(state.message, isError: true);
+            _showSnackBar(
+              state.message,
+              isError: true,
+            );
           }
         }
       },
@@ -491,10 +494,31 @@ class _SignUpFormState extends State<SignUpForm> {
   void _showSnackBar(String message, {required bool isError}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? Colors.red.shade400 : Colors.green.shade400,
+        content: Row(
+          children: [
+            Icon(
+              isError ? Icons.error_outline : Icons.check_circle_outline,
+              color: Colors.white,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: isError ? Colors.red.shade600 : Colors.green.shade600,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        margin: const EdgeInsets.all(16),
+        duration: Duration(seconds: isError ? 4 : 3),
       ),
     );
   }

@@ -8,7 +8,6 @@ class SystemConfig extends Equatable {
   final int maxMenuItems; // Max items per vendor
   final int photoMaxSizeMB; // Max photo size
   final int reviewMinLength; // Min review length in chars
-  final Map<String, bool> featureFlags; // Feature on/off flags
   final Map<String, dynamic> apiKeys; // API key management
   final Map<String, dynamic> performanceSettings; // Performance tuning
   final DateTime lastUpdated;
@@ -21,7 +20,6 @@ class SystemConfig extends Equatable {
     this.maxMenuItems = 100,
     this.photoMaxSizeMB = 5,
     this.reviewMinLength = 10,
-    this.featureFlags = const {},
     this.apiKeys = const {},
     this.performanceSettings = const {},
     required this.lastUpdated,
@@ -36,7 +34,6 @@ class SystemConfig extends Equatable {
         maxMenuItems,
         photoMaxSizeMB,
         reviewMinLength,
-        featureFlags,
         apiKeys,
         performanceSettings,
         lastUpdated,

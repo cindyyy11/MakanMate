@@ -464,14 +464,16 @@ class DataQualityDashboardWidget extends StatelessWidget {
                 ),
           ),
           const SizedBox(height: 2),
-          Text(
-            subtitle,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColorsExtension.getTextSecondary(context),
-                  fontSize: UIConstants.fontSizeXs,
-                ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+          Flexible(
+            child: Text(
+              subtitle,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColorsExtension.getTextSecondary(context),
+                    fontSize: UIConstants.fontSizeXs,
+                  ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),
@@ -771,19 +773,27 @@ class DataQualityDashboardWidget extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  issue.vendorName,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppColorsExtension.getTextPrimary(context),
-                      ),
+                Flexible(
+                  child: Text(
+                    issue.vendorName,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppColorsExtension.getTextPrimary(context),
+                        ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  issue.description,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColorsExtension.getTextSecondary(context),
-                      ),
+                Flexible(
+                  child: Text(
+                    issue.description,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColorsExtension.getTextSecondary(context),
+                        ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
@@ -912,14 +922,21 @@ class DataQualityDashboardWidget extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppColorsExtension.getTextSecondary(context),
                 ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
-        Text(
-          value,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColorsExtension.getTextPrimary(context),
-              ),
+        Flexible(
+          child: Text(
+            value,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColorsExtension.getTextPrimary(context),
+                ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.right,
+          ),
         ),
       ],
     );

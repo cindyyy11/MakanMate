@@ -233,5 +233,29 @@ class AdminUserRepositoryImpl implements AdminUserRepository {
       return Left(ServerFailure('Failed to lift ban/warning: $e'));
     }
   }
+
+  @override
+  Future<Either<Failure, String>> createAdmin({
+    required String email,
+    required String password,
+    required String displayName,
+  }) async {
+    if (!await networkInfo.isConnected) {
+      return const Left(NetworkFailure('No internet connection'));
+    }
+
+    try {
+      final adminId = await remoteDataSource.createAdmin(
+        email: email,
+        password: password,
+        displayName: displayName,
+      );
+      return Right(adminId);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Failed to create admin: $e'));
+    }
+  }
 }
 

@@ -1,4 +1,4 @@
-import {pubsub} from "firebase-functions/v1";
+import {pubsub, firestore, EventContext} from "firebase-functions/v1";
 import * as admin from "firebase-admin";
 
 if (!admin.apps.length) {
@@ -111,14 +111,6 @@ export const autoUnbanUsers = pubsub
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
 
-        // Optional: clean up ban fields if desired
-        // batch.update(userRef, {
-        //   banReason: admin.firestore.FieldValue.delete(),
-        //   bannedAt: admin.firestore.FieldValue.delete(),
-        //   bannedUntil: admin.firestore.FieldValue.delete(),
-        //   bannedBy: admin.firestore.FieldValue.delete(),
-        // });
-
         db.collection("audit_logs").add({
           action: "auto_unban_user",
           entityType: "user",
@@ -142,5 +134,136 @@ export const autoUnbanUsers = pubsub
     } catch (error) {
       console.error("Error in autoUnbanUsers:", error);
       throw error;
+    }
+  });
+
+/**
+ * Cloud Function: Send push notification when announcement is created
+ *
+ * Triggers: When a new document is created in the 'announcements' collection
+ * Purpose: Send push notifications to target audience based on settings
+ */
+export const sendAnnouncementNotification = firestore
+  .document("announcements/{announcementId}")
+  .onCreate(async (snap, context: EventContext) => {
+    const announcement = snap.data();
+    const announcementId = context.params.announcementId;
+
+    console.log(`New announcement created: ${announcementId}`);
+
+    // Skip if not active
+    if (!announcement.isActive) {
+      console.log("Announcement is not active, skipping notification");
+      return null;
+    }
+
+    // Check if expired
+    const expiresAt = announcement.expiresAt;
+    if (expiresAt) {
+      const expiryDate = expiresAt.toDate();
+      const now = new Date();
+      if (expiryDate < now) {
+        console.log("Announcement is already expired, skipping notification");
+        return null;
+      }
+    }
+
+    const {title, message, priority, targetAudience} = announcement;
+
+    // Determine FCM topic based on target audience
+    let topic: string;
+    switch (targetAudience) {
+    case "users":
+      topic = "all_users";
+      break;
+    case "vendors":
+      topic = "all_vendors";
+      break;
+    case "admins":
+      topic = "all_admins";
+      break;
+    case "all":
+    default:
+      topic = "all_users"; // Default to all users
+      break;
+    }
+
+    // Prepare notification payload
+    const notificationPayload: admin.messaging.Message = {
+      notification: {
+        title: title || "New Announcement",
+        body: message || "You have a new announcement",
+      },
+      data: {
+        type: "announcement",
+        announcementId: announcementId,
+        priority: priority || "medium",
+        targetAudience: targetAudience || "all",
+        title: title || "",
+        message: message || "",
+      },
+      topic: topic,
+      android: {
+        priority: priority === "urgent" || priority === "high" ?
+          "high" as const : "normal" as const,
+        notification: {
+          channelId: priority === "urgent" ? "urgent_announcements" :
+            "announcements",
+          sound: priority === "urgent" ? "default" : "default",
+          priority: priority === "urgent" || priority === "high" ?
+            "high" as const : "default" as const,
+        },
+      },
+      apns: {
+        payload: {
+          aps: {
+            sound: priority === "urgent" ? "default" : "default",
+            badge: 1,
+            alert: {
+              title: title || "New Announcement",
+              body: message || "You have a new announcement",
+            },
+          },
+        },
+      },
+    };
+
+    try {
+      // Send notification to topic
+      const response = await admin.messaging().send(notificationPayload);
+      console.log(
+        `Successfully sent announcement notification to topic '${topic}':`,
+        response,
+      );
+
+      // Log the notification send event
+      await admin.firestore().collection("audit_logs").add({
+        action: "announcement_notification_sent",
+        entityType: "announcement",
+        entityId: announcementId,
+        reason: `Notification sent to topic: ${topic}`,
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        performedBy: "system",
+        targetAudience: targetAudience,
+        priority: priority,
+      });
+
+      return null;
+    } catch (error) {
+      console.error("Error sending announcement notification:", error);
+
+      // Log the error
+      await admin.firestore().collection("audit_logs").add({
+        action: "announcement_notification_failed",
+        entityType: "announcement",
+        entityId: announcementId,
+        reason: `Failed to send notification: ${error}`,
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        performedBy: "system",
+        error: String(error),
+      });
+
+      // Don't throw error - we don't want to fail the announcement creation
+      return null;
     }
   });

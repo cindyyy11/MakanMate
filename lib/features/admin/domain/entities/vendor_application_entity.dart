@@ -294,53 +294,6 @@ enum SuspensionDuration {
   permanent,
 }
 
-/// Vendor compliance alert
-class VendorComplianceAlert extends Equatable {
-  final String id;
-  final String vendorId;
-  final String vendorName;
-  final ComplianceIssueType issueType;
-  final String message;
-  final DateTime? dueDate;
-  final AlertPriority priority;
-  final bool isResolved;
-  final DateTime createdAt;
-
-  const VendorComplianceAlert({
-    required this.id,
-    required this.vendorId,
-    required this.vendorName,
-    required this.issueType,
-    required this.message,
-    this.dueDate,
-    this.priority = AlertPriority.medium,
-    this.isResolved = false,
-    required this.createdAt,
-  });
-
-  @override
-  List<Object?> get props => [
-        id,
-        vendorId,
-        vendorName,
-        issueType,
-        message,
-        dueDate,
-        priority,
-        isResolved,
-        createdAt,
-      ];
-}
-
-enum ComplianceIssueType {
-  halalCertExpiring,
-  staleMenuData,
-  lowResponseRate,
-  photoQuality,
-  locationInaccuracy,
-  other,
-}
-
 enum AlertPriority {
   low,
   medium,

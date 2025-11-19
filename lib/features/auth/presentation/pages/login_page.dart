@@ -385,8 +385,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   Future<void> _handleGuestSignIn() async {
     try {
-      _showErrorDialog('Guest Sign-In', 'Guest sign-in is not available yet.');
-      // await _authService.signInAsGuest();
+      final authBloc = context.read<AuthBloc>();
+      authBloc.add(GuestSignInRequested());
       // Navigation handled by auth state changes
     } catch (e) {
       if (mounted) {

@@ -4,13 +4,11 @@ import 'package:logger/logger.dart';
 import 'package:makan_mate/features/admin/domain/entities/activity_log_entity.dart';
 import 'package:makan_mate/features/admin/domain/entities/admin_notification_entity.dart';
 import 'package:makan_mate/features/admin/domain/entities/metric_trend_entity.dart';
-import 'package:makan_mate/features/admin/domain/entities/system_metrics_entity.dart';
 import 'package:makan_mate/features/admin/domain/usecases/export_metrics_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_activity_logs_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_metric_trend_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_notifications_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_platform_metrics_usecase.dart';
-import 'package:makan_mate/features/admin/domain/usecases/stream_system_metrics_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_fairness_metrics_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_seasonal_trends_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_data_quality_metrics_usecase.dart';
@@ -25,14 +23,11 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
   final GetActivityLogsUseCase getActivityLogs;
   final GetNotificationsUseCase getNotifications;
   final ExportMetricsUseCase exportMetrics;
-  final StreamSystemMetricsUseCase streamSystemMetrics;
   final GetFairnessMetricsUseCase getFairnessMetrics;
   final GetSeasonalTrendsUseCase getSeasonalTrends;
   final GetDataQualityMetricsUseCase getDataQualityMetrics;
   final AdminRepository adminRepository;
   final Logger logger;
-
-  StreamSubscription<SystemMetrics>? _systemMetricsSubscription;
 
   AdminBloc({
     required this.getPlatformMetrics,
@@ -40,7 +35,6 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     required this.getActivityLogs,
     required this.getNotifications,
     required this.exportMetrics,
-    required this.streamSystemMetrics,
     required this.getFairnessMetrics,
     required this.getSeasonalTrends,
     required this.getDataQualityMetrics,
@@ -54,8 +48,6 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     on<LoadNotifications>(_onLoadNotifications);
     on<MarkNotificationAsRead>(_onMarkNotificationAsRead);
     on<ExportMetrics>(_onExportMetrics);
-    on<StartStreamingSystemMetrics>(_onStartStreamingSystemMetrics);
-    on<StopStreamingSystemMetrics>(_onStopStreamingSystemMetrics);
     on<LoadFairnessMetrics>(_onLoadFairnessMetrics);
     on<RefreshFairnessMetrics>(_onRefreshFairnessMetrics);
     on<LoadSeasonalTrends>(_onLoadSeasonalTrends);
@@ -66,7 +58,6 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
 
   @override
   Future<void> close() {
-    _systemMetricsSubscription?.cancel();
     return super.close();
   }
 
@@ -410,68 +401,6 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     }
   }
 
-  Future<void> _onStartStreamingSystemMetrics(
-    StartStreamingSystemMetrics event,
-    Emitter<AdminState> emit,
-  ) async {
-    try {
-      logger.i('Starting real-time system metrics stream');
-
-      // Cancel existing subscription if any
-      await _systemMetricsSubscription?.cancel();
-
-      // Store subscription properly
-      _systemMetricsSubscription = streamSystemMetrics()
-          .map((either) => either.fold((l) => null, (r) => r))
-          .where((metrics) => metrics != null)
-          .cast<SystemMetrics>()
-          .listen(
-            (systemMetrics) {
-              logger.d('Received system metrics update');
-              if (state is AdminLoaded) {
-                final currentState = state as AdminLoaded;
-                if (!emit.isDone) {
-                  emit(
-                    AdminLoaded(
-                      currentState.metrics,
-                      userTrend: currentState.userTrend,
-                      vendorTrend: currentState.vendorTrend,
-                      activityLogs: currentState.activityLogs,
-                      notifications: currentState.notifications,
-                      systemMetrics: systemMetrics,
-                    ),
-                  );
-                }
-              }
-            },
-            onError: (error) {
-              logger.e('System metrics stream error: $error');
-            },
-          );
-    } catch (e, stackTrace) {
-      logger.e(
-        'Error starting system metrics stream: $e',
-        stackTrace: stackTrace,
-      );
-    }
-  }
-
-  Future<void> _onStopStreamingSystemMetrics(
-    StopStreamingSystemMetrics event,
-    Emitter<AdminState> emit,
-  ) async {
-    try {
-      logger.i('Stopping real-time system metrics stream');
-      await _systemMetricsSubscription?.cancel();
-      _systemMetricsSubscription = null;
-    } catch (e, stackTrace) {
-      logger.e(
-        'Error stopping system metrics stream: $e',
-        stackTrace: stackTrace,
-      );
-    }
-  }
-
   Future<void> _onLoadFairnessMetrics(
     LoadFairnessMetrics event,
     Emitter<AdminState> emit,
@@ -577,9 +506,11 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
       result.fold(
         (failure) {
           logger.e('Failed to load seasonal trends: ${failure.message}');
+          // Don't show mock data - just log the error
+          // The UI will handle empty state gracefully
         },
         (trends) {
-          logger.i('Successfully loaded seasonal trends');
+          logger.i('Successfully loaded seasonal trends from real data');
           if (state is AdminLoaded) {
             final currentState = state as AdminLoaded;
             emit(
@@ -599,6 +530,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
       );
     } catch (e, stackTrace) {
       logger.e('Error loading seasonal trends: $e', stackTrace: stackTrace);
+      // Don't show mock data on error - let UI handle empty state
     }
   }
 
