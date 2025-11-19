@@ -65,20 +65,15 @@ class StorageService {
         throw Exception('User not authenticated');
       }
 
-      // Generate unique filename
       final String fileName = '${_uuid.v4()}.jpg';
       final String path = 'vendors/${user.uid}/promotions/$fileName';
 
-      // Create reference
       final Reference ref = _storage.ref().child(path);
 
-      // Upload file
       final UploadTask uploadTask = ref.putFile(imageFile);
 
-      // Wait for upload to complete
       final TaskSnapshot snapshot = await uploadTask;
 
-      // Get download URL
       final String downloadUrl = await snapshot.ref.getDownloadURL();
 
       return downloadUrl;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:makan_mate/core/theme/theme_bloc.dart';
 import 'package:makan_mate/features/vendor/presentation/pages/change_password_page.dart';
 
 
@@ -174,6 +175,23 @@ class VendorSettingsPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
+
+                ListTile(
+                  leading: const Icon(Icons.dark_mode),
+                  title: const Text("Dark Mode"),
+                  trailing: BlocBuilder<ThemeBloc, ThemeState>(
+                    builder: (context, state) {
+                      return Switch(
+                        value: state.themeMode == ThemeMode.dark,
+                        onChanged: (isDark) {
+                          context.read<ThemeBloc>().add(
+                                ThemeChanged(isDark ? ThemeMode.dark : ThemeMode.light),
+                              );
+                        },
+                      );
+                    },
+                  ),
+                ),
 
                 ListTile(
                   leading: const Icon(Icons.help_outline),
