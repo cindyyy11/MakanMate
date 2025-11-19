@@ -12,6 +12,9 @@ class ThemeWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<ThemeBloc, ThemeState>(
       builder: (context, state) {
+        print("THEMEMEMEMEEMEMEMEME {$state.themeMode}");
+        print(state.themeMode == ThemeMode.dark);
+        print(AppTheme.lightTheme.primaryColor);
         return Theme(
           data: state.themeMode == ThemeMode.dark
               ? AppTheme.darkTheme
