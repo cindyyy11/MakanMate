@@ -34,10 +34,9 @@ class VendorRemoteDataSourceImpl implements VendorRemoteDataSource {
         .collection('vendors')
         .doc(vendorId)
         .collection('menus')
-        .doc(); // auto-ID
-
+        .doc();
+        
     final model = item.copyWith(id: docRef.id);
-
     await docRef.set(model.toMap());
   }
 
