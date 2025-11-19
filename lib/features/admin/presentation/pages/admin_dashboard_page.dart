@@ -16,9 +16,12 @@ import 'package:makan_mate/core/widgets/date_range_filter.dart';
 import 'package:makan_mate/core/widgets/loading_animation.dart';
 import 'package:makan_mate/core/theme/theme_bloc.dart';
 import 'package:makan_mate/features/admin/presentation/widgets/notification_badge.dart';
-import 'package:makan_mate/features/admin/presentation/widgets/realtime_monitoring_widget.dart';
-import 'package:makan_mate/features/admin/presentation/widgets/fairness_dashboard_widget.dart';
-import 'package:makan_mate/features/admin/presentation/widgets/data_quality_dashboard_widget.dart';
+// TODO: Uncomment when implementing real-time monitoring in the future
+// import 'package:makan_mate/features/admin/presentation/widgets/realtime_monitoring_widget.dart';
+// TODO: Uncomment when implementing fairness metrics in the future
+// import 'package:makan_mate/features/admin/presentation/widgets/fairness_dashboard_widget.dart';
+// TODO: Uncomment when implementing data quality metrics in the future
+// import 'package:makan_mate/features/admin/presentation/widgets/data_quality_dashboard_widget.dart';
 import 'package:makan_mate/features/admin/presentation/widgets/metric_trend_indicator.dart';
 import 'package:makan_mate/features/admin/presentation/widgets/animated_background.dart';
 import 'package:makan_mate/features/admin/presentation/widgets/seasonal_insights_widget.dart';
@@ -62,8 +65,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   @override
   void dispose() {
     _refreshTimer?.cancel();
+    // TODO: Implement system metrics streaming in the future
     // Stop streaming when disposing
-    context.read<AdminBloc>().add(const StopStreamingSystemMetrics());
+    // context.read<AdminBloc>().add(const StopStreamingSystemMetrics());
     super.dispose();
   }
 
@@ -1462,11 +1466,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
-          final previousTab = _selectedTab;
           setState(() => _selectedTab = index);
           HapticFeedback.selectionClick();
 
+          // TODO: Implement system metrics streaming in the future
           // Start/stop streaming based on tab selection
+          /*
+          final previousTab = _selectedTab;
           if (index == 3 && previousTab != 3) {
             // Starting real-time monitoring
             context.read<AdminBloc>().add(const StartStreamingSystemMetrics());
@@ -1474,6 +1480,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             // Stopping real-time monitoring
             context.read<AdminBloc>().add(const StopStreamingSystemMetrics());
           }
+          */
         },
         borderRadius: UIConstants.borderRadiusMd,
         child: AnimatedContainer(
@@ -1816,21 +1823,95 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   }
 
   Widget _buildDataQualityTab(AdminLoaded? loadedState) {
+    // TODO: Implement data quality metrics in the future
+    // This feature is commented out for future implementation
+    /*
     // Load data quality metrics if not already loaded
     if (loadedState?.dataQualityMetrics == null) {
       context.read<AdminBloc>().add(const LoadDataQualityMetrics());
     }
 
     return const DataQualityDashboardWidget();
+    */
+
+    // Placeholder widget for future implementation
+    return Center(
+      child: Padding(
+        padding: UIConstants.paddingXl,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.verified_user_rounded,
+              size: 64,
+              color: AppColorsExtension.getGrey600(context),
+            ),
+            const SizedBox(height: UIConstants.spacingMd),
+            Text(
+              'Data Quality Dashboard',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColorsExtension.getTextPrimary(context),
+              ),
+            ),
+            const SizedBox(height: UIConstants.spacingSm),
+            Text(
+              'This feature will be implemented in the future',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColorsExtension.getTextSecondary(context),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildFairnessTab(AdminLoaded? loadedState) {
+    // TODO: Implement fairness metrics in the future
+    // This feature is commented out for future implementation
+    /*
     // Load fairness metrics if not already loaded
     if (loadedState?.fairnessMetrics == null) {
       context.read<AdminBloc>().add(const LoadFairnessMetrics());
     }
 
     return const FairnessDashboardWidget();
+    */
+
+    // Placeholder widget for future implementation
+    return Center(
+      child: Padding(
+        padding: UIConstants.paddingXl,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.balance_rounded,
+              size: 64,
+              color: AppColorsExtension.getGrey600(context),
+            ),
+            const SizedBox(height: UIConstants.spacingMd),
+            Text(
+              'AI Recommendation Fairness',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColorsExtension.getTextPrimary(context),
+              ),
+            ),
+            const SizedBox(height: UIConstants.spacingSm),
+            Text(
+              'This feature will be implemented in the future',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColorsExtension.getTextSecondary(context),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildRealtimeTab(AdminLoaded? loadedState) {
@@ -1849,7 +1930,39 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           ),
         ),
         const SizedBox(height: UIConstants.spacingXl),
-        RealtimeMonitoringWidget(systemMetrics: loadedState?.systemMetrics),
+        // TODO: Implement real-time monitoring widget in the future
+        // RealtimeMonitoringWidget(systemMetrics: loadedState?.systemMetrics),
+        Center(
+          child: Padding(
+            padding: UIConstants.paddingXl,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.sensors_rounded,
+                  size: 64,
+                  color: AppColorsExtension.getGrey600(context),
+                ),
+                const SizedBox(height: UIConstants.spacingMd),
+                Text(
+                  'Real-Time Monitoring',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColorsExtension.getTextPrimary(context),
+                  ),
+                ),
+                const SizedBox(height: UIConstants.spacingSm),
+                Text(
+                  'This feature will be implemented in the future',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColorsExtension.getTextSecondary(context),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
         const SizedBox(height: UIConstants.spacingXl),
       ],
     );
