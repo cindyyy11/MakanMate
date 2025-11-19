@@ -51,12 +51,16 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
       selectedOutlet = vendor!.outlets.first;
     }
 
-    setState(() => loading = false);
+    if (mounted) {
+      setState(() => loading = false);
+    }
   }
 
   Future<VendorProfileEntity> _loadVendor(String vendorId) async {
-    final doc =
-        await FirebaseFirestore.instance.collection('vendors').doc(vendorId).get();
+    final doc = await FirebaseFirestore.instance
+        .collection('vendors')
+        .doc(vendorId)
+        .get();
 
     final data = doc.data() ?? {};
 
@@ -205,9 +209,9 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
   }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> _watchReviews(
-      String vendorId,
-      String sortBy,
-      ) {
+    String vendorId,
+    String sortBy,
+  ) {
     Query<Map<String, dynamic>> query = FirebaseFirestore.instance
         .collection('reviews')
         .where('vendorId', isEqualTo: vendorId);
@@ -218,15 +222,21 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
         break;
 
       case "highest":
-        query = query.orderBy('rating', descending: true).orderBy('createdAt', descending: true);
+        query = query
+            .orderBy('rating', descending: true)
+            .orderBy('createdAt', descending: true);
         break;
 
       case "lowest":
-        query = query.orderBy('rating', descending: false).orderBy('createdAt', descending: true);
+        query = query
+            .orderBy('rating', descending: false)
+            .orderBy('createdAt', descending: true);
         break;
 
       case "helpful":
-        query = query.orderBy('helpfulCount', descending: true).orderBy('createdAt', descending: true);
+        query = query
+            .orderBy('helpfulCount', descending: true)
+            .orderBy('createdAt', descending: true);
         break;
 
       case "newest":
@@ -263,86 +273,89 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
   @override
   Widget build(BuildContext context) {
     if (loading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0.5,
-        foregroundColor: Colors.black,
         title: Text(vendor!.businessName),
-          actions: [
-            StreamBuilder<DocumentSnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('favorites')
-                  .doc(FirebaseAuth.instance.currentUser?.uid)
-                  .collection('items')
-                  .doc(vendor!.id)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                final isFavorited = snapshot.data?.exists ?? false;
+        centerTitle: false,
+        actions: [
+          StreamBuilder<DocumentSnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('favorites')
+                .doc(FirebaseAuth.instance.currentUser?.uid)
+                .collection('items')
+                .doc(vendor!.id)
+                .snapshots(),
+            builder: (context, snapshot) {
+              final isFavorited = snapshot.data?.exists ?? false;
 
-                return IconButton(
-                  icon: Icon(
-                    isFavorited ? Icons.favorite : Icons.favorite_border,
-                    color: isFavorited ? Colors.red : Colors.black,
-                  ),
-                  onPressed: () async {
-                    final user = FirebaseAuth.instance.currentUser;
-                    if (user == null) return;
+              return IconButton(
+                icon: Icon(
+                  isFavorited ? Icons.favorite : Icons.favorite_border,
+                  color: isFavorited
+                      ? theme.colorScheme.error
+                      : theme.iconTheme.color,
+                ),
+                onPressed: () async {
+                  final user = FirebaseAuth.instance.currentUser;
+                  if (user == null) return;
 
-                    final ref = FirebaseFirestore.instance
-                        .collection('favorites')
-                        .doc(user.uid)
-                        .collection('items')
-                        .doc(vendor!.id);
+                  final ref = FirebaseFirestore.instance
+                      .collection('favorites')
+                      .doc(user.uid)
+                      .collection('items')
+                      .doc(vendor!.id);
 
-                    if (isFavorited) {
-                      await ref.delete();
-                    } else {
-                      await ref.set({
-                        'id': vendor!.id,
-                        'name': vendor!.businessName,
-                        'cuisineType': vendor!.cuisineType,
-                        'rating': vendor!.ratingAverage,
-                        'priceRange': vendor!.priceRange,
-                        'image': vendor!.businessLogoUrl,
-                        'description': vendor!.shortDescription,
-                      });
-                    }
-                  },
-                );
-              },
-            ),
-
-            IconButton(
-              icon: const Icon(Icons.share),
-              onPressed: _shareRestaurant,
-            ),
-          ],
+                  if (isFavorited) {
+                    await ref.delete();
+                  } else {
+                    await ref.set({
+                      'id': vendor!.id,
+                      'name': vendor!.businessName,
+                      'cuisineType': vendor!.cuisineType,
+                      'rating': vendor!.ratingAverage,
+                      'priceRange': vendor!.priceRange,
+                      'image': vendor!.businessLogoUrl,
+                      'description': vendor!.shortDescription,
+                    });
+                  }
+                },
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.share),
+            onPressed: _shareRestaurant,
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _banner(),
+          _banner(context),
           const SizedBox(height: 16),
-          _header(),
+          _header(context),
           const SizedBox(height: 12),
-          _ratingSummary(),
+          _ratingSummary(context),
           const SizedBox(height: 16),
-          _tags(),
+          _tags(context),
           const SizedBox(height: 16),
-          _rateButton(),
+          _rateButton(context),
           const SizedBox(height: 24),
-          _menuSection(),
+          _menuSection(context),
           const SizedBox(height: 24),
-          _operatingHoursSection(),
+          _operatingHoursSection(context),
           const SizedBox(height: 24),
-          _directionsSection(),
+          _directionsSection(context),
           const SizedBox(height: 32),
-          _reviewsSection(),
+          _reviewsSection(context),
         ],
       ),
     );
@@ -355,13 +368,15 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
     final String shareUrl =
         "https://makanmate.com/restaurant?vendorId=$vendorId";
 
-    final message = 
+    final message =
         "Check out this restaurant on MakanMate:\n$vendorName\n\n$shareUrl";
 
     Share.share(message);
   }
 
-  Widget _banner() {
+  Widget _banner(BuildContext context) {
+    final theme = Theme.of(context);
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: Image.network(
@@ -370,12 +385,14 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
         width: double.infinity,
         fit: BoxFit.cover,
         errorBuilder: (_, __, ___) =>
-            Container(height: 200, color: Colors.grey[300]),
+            Container(height: 200, color: theme.dividerColor),
       ),
     );
   }
 
-  Widget _header() {
+  Widget _header(BuildContext context) {
+    final theme = Theme.of(context);
+
     return StreamBuilder<Map<String, dynamic>>(
       stream: _watchRatingSummary(vendor!.id),
       builder: (context, snapshot) {
@@ -392,32 +409,23 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
           children: [
             Text(
               vendor!.businessName,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+              style: theme.textTheme.titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-
             Row(
               children: [
                 const Icon(Icons.star, size: 18, color: Colors.amber),
                 const SizedBox(width: 4),
-
                 Text(
                   avg > 0 ? avg.toStringAsFixed(1) : "-",
-                  style: const TextStyle(fontSize: 16),
+                  style: theme.textTheme.bodyMedium,
                 ),
-
                 const SizedBox(width: 6),
-
                 if (count > 0)
                   Text(
                     "($count reviews)",
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 13,
-                    ),
+                    style: theme.textTheme.bodySmall,
                   ),
               ],
             ),
@@ -427,7 +435,10 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
     );
   }
 
-  Widget _ratingSummary() {
+  Widget _ratingSummary(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return StreamBuilder<Map<String, dynamic>>(
       stream: _watchRatingSummary(vendor!.id),
       builder: (context, snapshot) {
@@ -444,12 +455,15 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
         return Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: theme.cardColor,
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.08),
+                color: isDark
+                    ? Colors.black.withOpacity(0.5)
+                    : Colors.black.withOpacity(0.08),
                 blurRadius: 6,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
@@ -460,17 +474,17 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                 children: [
                   Text(
                     avg.toStringAsFixed(1),
-                    style: const TextStyle(
-                      fontSize: 30,
+                    style: theme.textTheme.displaySmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(width: 6),
                   const Icon(Icons.star, color: Colors.amber, size: 24),
                   const SizedBox(width: 8),
-                  Text("$count reviews",
-                      style:
-                          TextStyle(color: Colors.grey[700], fontSize: 14)),
+                  Text(
+                    "$count reviews",
+                    style: theme.textTheme.bodyMedium,
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -485,14 +499,14 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                         width: 40,
                         child: Text(
                           "$star★",
-                          style: const TextStyle(fontSize: 13),
+                          style: theme.textTheme.bodySmall,
                         ),
                       ),
                       Expanded(
                         child: LinearProgressIndicator(
                           value: ratio,
-                          backgroundColor: Colors.grey[300],
-                          color: Colors.amber,
+                          backgroundColor: theme.dividerColor,
+                          color: theme.colorScheme.primary,
                           minHeight: 6,
                         ),
                       ),
@@ -502,7 +516,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                         child: Text(
                           "$starCount",
                           textAlign: TextAlign.right,
-                          style: const TextStyle(fontSize: 12),
+                          style: theme.textTheme.bodySmall,
                         ),
                       ),
                     ],
@@ -516,28 +530,35 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
     );
   }
 
-  Widget _tags() {
+  Widget _tags(BuildContext context) {
     return Wrap(
       spacing: 10,
       children: [
-        if (vendor!.cuisineType != null) _tag(vendor!.cuisineType!),
-        if (vendor!.priceRange != null) _tag(vendor!.priceRange!),
+        if (vendor!.cuisineType != null) _tag(context, vendor!.cuisineType!),
+        if (vendor!.priceRange != null) _tag(context, vendor!.priceRange!),
       ],
     );
   }
 
-  Widget _tag(String text) {
+  Widget _tag(BuildContext context, String text) {
+    final theme = Theme.of(context);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.grey[200],
+        color: theme.colorScheme.primary.withOpacity(0.08),
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Text(text),
+      child: Text(
+        text,
+        style: theme.textTheme.bodyMedium,
+      ),
     );
   }
 
-  Widget _rateButton() {
+  Widget _rateButton(BuildContext context) {
+    final theme = Theme.of(context);
+
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
@@ -549,9 +570,8 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                 create: (_) => ReviewBloc(
                   SubmitUserReviewUseCase(
                     UserReviewRepositoryImpl(
-                      remoteDataSource: UserReviewRemoteDataSourceImpl(
-                        FirebaseFirestore.instance,
-                      ),
+                      remoteDataSource:
+                          UserReviewRemoteDataSourceImpl(FirebaseFirestore.instance),
                       networkInfo: NetworkInfoImpl(Connectivity()),
                     ),
                   ),
@@ -564,120 +584,132 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
           );
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.black,
-          foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 14),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
         ),
-        child: const Text(
+        child: Text(
           "Rate This Restaurant",
-          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+          style: theme.textTheme.labelLarge
+              ?.copyWith(fontWeight: FontWeight.w600),
         ),
       ),
     );
   }
 
-  Widget _menuSection() {
-  final limitedMenu = menuItems.take(4).toList();
+  Widget _menuSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final limitedMenu = menuItems.take(4).toList();
 
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Text(
-            "Menu",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-
-          if (menuItems.length > 4)
-            TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => AllMenuItemsPage(
-                      vendorName: vendor!.businessName,
-                      items: menuItems,
-                    ),
-                  ),
-                );
-              },
-              child: const Text("See All"),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "Menu",
+              style: theme.textTheme.titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
-        ],
-      ),
-      const SizedBox(height: 12),
-
-      if (menuItems.isEmpty)
-        const Text("No items available."),
-
-      if (menuItems.isNotEmpty)
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: limitedMenu.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 0.9,
-          ),
-          itemBuilder: (context, index) {
-            final m = limitedMenu[index];
-            return _menuCard(m);
-          },
+            if (menuItems.length > 4)
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AllMenuItemsPage(
+                        vendorName: vendor!.businessName,
+                        items: menuItems,
+                      ),
+                    ),
+                  );
+                },
+                child: const Text("See All"),
+              ),
+          ],
         ),
-    ],
-  );
-}
+        const SizedBox(height: 12),
+        if (menuItems.isEmpty)
+          Text(
+            "No items available.",
+            style: theme.textTheme.bodyMedium,
+          ),
+        if (menuItems.isNotEmpty)
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: limitedMenu.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 0.9,
+            ),
+            itemBuilder: (context, index) {
+              final m = limitedMenu[index];
+              return _menuCard(context, m);
+            },
+          ),
+      ],
+    );
+  }
 
-  Widget _menuCard(MenuItemEntity m) {
+  Widget _menuCard(BuildContext context, MenuItemEntity m) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: isDark
+                ? Colors.black.withOpacity(0.5)
+                : Colors.black.withOpacity(0.08),
             blurRadius: 6,
-          )
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       child: Column(
         children: [
           ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(12)),
             child: Image.network(
               m.imageUrl,
               height: 100,
               width: double.infinity,
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) =>
-                  Container(height: 100, color: Colors.grey[300]),
+                  Container(height: 100, color: theme.dividerColor),
             ),
           ),
           Padding(
             padding: const EdgeInsets.all(8),
             child: Text(
               m.name,
-              style: const TextStyle(fontWeight: FontWeight.w600),
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(fontWeight: FontWeight.w600),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
           ),
           Text(
             "RM ${m.price.toStringAsFixed(2)}",
-            style: const TextStyle(color: Colors.grey),
+            style: theme.textTheme.bodySmall
+                ?.copyWith(color: theme.hintColor),
           ),
         ],
       ),
     );
   }
 
-  Widget _operatingHoursSection() {
+  Widget _operatingHoursSection(BuildContext context) {
+    final theme = Theme.of(context);
     final hours = selectedOutlet?.operatingHours ?? vendor!.operatingHours;
 
     final List<String> weekdayOrder = [
@@ -692,24 +724,29 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
 
     final sortedEntries = hours.entries.toList()
       ..sort(
-            (a, b) =>
+        (a, b) =>
             weekdayOrder.indexOf(a.key).compareTo(weekdayOrder.indexOf(b.key)),
       );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           "Operating Hours",
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleLarge
+              ?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
-        if (hours.isEmpty) const Text("Operating hours not available."),
+        if (hours.isEmpty)
+          Text(
+            "Operating hours not available.",
+            style: theme.textTheme.bodyMedium,
+          ),
         if (hours.isNotEmpty)
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: theme.cardColor,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -720,11 +757,12 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(e.key),
+                      Text(e.key, style: theme.textTheme.bodyMedium),
                       Text(
                         oh.isClosed
                             ? "Closed"
                             : "${oh.openTime ?? '-'} - ${oh.closeTime ?? '-'}",
+                        style: theme.textTheme.bodyMedium,
                       ),
                     ],
                   ),
@@ -736,25 +774,30 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
     );
   }
 
-  Widget _directionsSection() {
+  Widget _directionsSection(BuildContext context) {
+    final theme = Theme.of(context);
     final address = selectedOutlet?.address ?? vendor!.businessAddress;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           "Directions",
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleLarge
+              ?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: theme.cardColor,
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.15),
+                color: isDark
+                    ? Colors.black.withOpacity(0.5)
+                    : Colors.black.withOpacity(0.08),
                 blurRadius: 8,
                 offset: const Offset(0, 3),
               ),
@@ -765,7 +808,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
             children: [
               Text(
                 address,
-                style: const TextStyle(fontSize: 15, color: Colors.black87),
+                style: theme.textTheme.bodyMedium,
               ),
               const SizedBox(height: 14),
               SizedBox(
@@ -773,13 +816,12 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                 child: ElevatedButton.icon(
                   onPressed: () => _openGoogleMapsWithAddress(address),
                   icon: const Icon(Icons.directions, size: 20),
-                  label: const Text(
+                  label: Text(
                     "Get Directions",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    style: theme.textTheme.labelLarge
+                        ?.copyWith(fontWeight: FontWeight.w600),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
@@ -794,18 +836,20 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
     );
   }
 
-  Widget _reviewsSection() {
+  Widget _reviewsSection(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               "Reviews",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
-
             TextButton(
               onPressed: () {
                 Navigator.push(
@@ -823,14 +867,16 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
           ],
         ),
         const SizedBox(height: 8),
-        _sortingBar(),
+        _sortingBar(context),
         const SizedBox(height: 8),
-        _reviewsList(),
+        _reviewsList(context),
       ],
     );
   }
 
-  Widget _sortingBar() {
+  Widget _sortingBar(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
@@ -870,7 +916,10 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
     );
   }
 
-  Widget _reviewsList() {
+  Widget _reviewsList(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: _watchReviews(vendor!.id, selectedSort),
       builder: (context, snapshot) {
@@ -884,9 +933,12 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
         final docs = snapshot.data!.docs;
 
         if (docs.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Text("No reviews yet."),
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Text(
+              "No reviews yet.",
+              style: theme.textTheme.bodyMedium,
+            ),
           );
         }
 
@@ -908,13 +960,16 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
               margin: const EdgeInsets.only(bottom: 16),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: theme.cardColor,
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.08),
+                    color: isDark
+                        ? Colors.black.withOpacity(0.5)
+                        : Colors.black.withOpacity(0.08),
                     blurRadius: 6,
-                  )
+                    offset: const Offset(0, 2),
+                  ),
                 ],
               ),
               child: Column(
@@ -926,36 +981,46 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                       const Icon(Icons.star,
                           color: Colors.amber, size: 18),
                       const SizedBox(width: 4),
-                      Text(rating.toStringAsFixed(1)),
+                      Text(
+                        rating.toStringAsFixed(1),
+                        style: theme.textTheme.bodyMedium,
+                      ),
                       const Spacer(),
                       Text(
                         dateStr,
-                        style:
-                            TextStyle(color: Colors.grey[600], fontSize: 12),
+                        style: theme.textTheme.bodySmall,
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Text(
                     comment,
-                    style: const TextStyle(fontSize: 14),
+                    style: theme.textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 8),
                   if (tags.isNotEmpty)
                     Wrap(
                       spacing: 6,
                       children: tags
-                          .map((t) => Chip(
-                                label: Text(t.toString()),
-                                backgroundColor: Colors.grey[200],
-                                visualDensity: VisualDensity.compact,
-                              ))
+                          .map(
+                            (t) => Chip(
+                              label: Text(
+                                t.toString(),
+                                style: theme.textTheme.bodySmall,
+                              ),
+                              backgroundColor: theme.colorScheme.primary
+                                  .withOpacity(0.08),
+                              visualDensity: VisualDensity.compact,
+                            ),
+                          )
                           .toList(),
                     ),
                   if (tags.isNotEmpty) const SizedBox(height: 8),
                   if (imageUrls.isNotEmpty)
                     _reviewImages(
-                        imageUrls.map((e) => e.toString()).toList()),
+                      context,
+                      imageUrls.map((e) => e.toString()).toList(),
+                    ),
                   if (imageUrls.isNotEmpty) const SizedBox(height: 8),
                   GestureDetector(
                     onTap: () => _markHelpful(doc.id),
@@ -968,7 +1033,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                           helpfulCount == 0
                               ? "Helpful?"
                               : "$helpfulCount found this helpful",
-                          style: const TextStyle(fontSize: 13),
+                          style: theme.textTheme.bodySmall,
                         ),
                       ],
                     ),
@@ -982,7 +1047,9 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
     );
   }
 
-  Widget _reviewImages(List<String> urls) {
+  Widget _reviewImages(BuildContext context, List<String> urls) {
+    final theme = Theme.of(context);
+
     return SizedBox(
       height: 80,
       child: ListView(
@@ -1002,7 +1069,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                   errorBuilder: (_, __, ___) => Container(
                     width: 80,
                     height: 80,
-                    color: Colors.grey[300],
+                    color: theme.dividerColor,
                   ),
                 ),
               ),

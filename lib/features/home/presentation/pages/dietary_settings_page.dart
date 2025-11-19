@@ -13,22 +13,35 @@ class _DietarySettingsPageState extends State<DietarySettingsPage> {
   bool halalOnly = false;
   bool vegetarian = false;
 
-  String spiceTolerance = "None";   
+  String spiceTolerance = "None";
   List<String> cuisinePreferences = [];
   List<String> dietaryRestrictions = [];
   List<String> behaviourPatterns = [];
 
   final List<String> cuisineOptions = [
-    "Malay", "Chinese", "Indian", "Japanese", "Korean",
-    "Thai", "Western", "Italian"
+    "Malay",
+    "Chinese",
+    "Indian",
+    "Japanese",
+    "Korean",
+    "Thai",
+    "Western",
+    "Italian"
   ];
 
   final List<String> dietaryOptions = [
-    "Gluten-free", "Lactose-free", "Vegan", "Low-carb", "Keto"
+    "Gluten-free",
+    "Lactose-free",
+    "Vegan",
+    "Low-carb",
+    "Keto"
   ];
 
   final List<String> behaviourOptions = [
-    "Budget eater", "Healthy eater", "Late-night eater", "Fast-food lover"
+    "Budget eater",
+    "Healthy eater",
+    "Late-night eater",
+    "Fast-food lover"
   ];
 
   @override
@@ -39,19 +52,23 @@ class _DietarySettingsPageState extends State<DietarySettingsPage> {
 
   Future<void> _loadPreferences() async {
     final uid = FirebaseAuth.instance.currentUser!.uid;
-    final doc = await FirebaseFirestore.instance.collection("users").doc(uid).get();
+    final doc =
+        await FirebaseFirestore.instance.collection("users").doc(uid).get();
 
-    final prefs = (doc.data()?["dietaryPreferences"] ?? {}) as Map<String, dynamic>;
+    final prefs =
+        (doc.data()?["dietaryPreferences"] ?? {}) as Map<String, dynamic>;
 
     setState(() {
       halalOnly = prefs["halalOnly"] ?? false;
       vegetarian = prefs["vegetarian"] ?? false;
-
       spiceTolerance = prefs["spiceTolerance"] ?? "None";
 
-      cuisinePreferences = List<String>.from(prefs["cuisinePreferences"] ?? []);
-      dietaryRestrictions = List<String>.from(prefs["dietaryRestrictions"] ?? []);
-      behaviourPatterns = List<String>.from(prefs["behaviourPatterns"] ?? []);
+      cuisinePreferences =
+          List<String>.from(prefs["cuisinePreferences"] ?? []);
+      dietaryRestrictions =
+          List<String>.from(prefs["dietaryRestrictions"] ?? []);
+      behaviourPatterns =
+          List<String>.from(prefs["behaviourPatterns"] ?? []);
     });
   }
 
@@ -72,15 +89,24 @@ class _DietarySettingsPageState extends State<DietarySettingsPage> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text("Updated Successfully"),
-        content: const Text("Your dietary preferences have been saved."),
+        backgroundColor: Theme.of(context).cardColor,
+        title: Text("Updated Successfully",
+            style: Theme.of(context).textTheme.titleLarge),
+        content: Text(
+          "Your dietary preferences have been saved.",
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context);  
-              Navigator.pop(context);  
+              Navigator.pop(context);
+              Navigator.pop(context);
             },
-            child: const Text("OK"),
+            child: Text(
+              "OK",
+              style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary),
+            ),
           ),
         ],
       ),
@@ -92,16 +118,23 @@ class _DietarySettingsPageState extends State<DietarySettingsPage> {
     required List<String> selectedValues,
     required Function(String) onSelected,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Wrap(
       spacing: 10,
       children: options.map((option) {
         final selected = selectedValues.contains(option);
 
         return FilterChip(
-          label: Text(option),
+          label: Text(
+            option,
+            style: theme.textTheme.bodyMedium,
+          ),
           selected: selected,
-          selectedColor: Colors.orange.shade200,
-          checkmarkColor: Colors.black,
+          selectedColor: theme.colorScheme.primary.withOpacity(0.3),
+          checkmarkColor: isDark ? Colors.white : Colors.black,
+          backgroundColor: theme.cardColor,
           onSelected: (_) => onSelected(option),
         );
       }).toList(),
@@ -110,34 +143,48 @@ class _DietarySettingsPageState extends State<DietarySettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+
       appBar: AppBar(
         title: const Text("Dietary Preferences"),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        centerTitle: true,
       ),
+
       body: ListView(
         padding: const EdgeInsets.all(16),
+
         children: [
+          // Switches are automatically theme-aware
           SwitchListTile(
-            title: const Text("Halal Only"),
+            title: Text("Halal Only", style: theme.textTheme.bodyLarge),
             value: halalOnly,
+            activeColor: theme.colorScheme.primary,
             onChanged: (v) => setState(() => halalOnly = v),
           ),
+
           SwitchListTile(
-            title: const Text("Vegetarian"),
+            title: Text("Vegetarian", style: theme.textTheme.bodyLarge),
             value: vegetarian,
+            activeColor: theme.colorScheme.primary,
             onChanged: (v) => setState(() => vegetarian = v),
           ),
 
           const SizedBox(height: 25),
 
-          const Text("Spice Tolerance",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(
+            "Spice Tolerance",
+            style: theme.textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 10),
 
           DropdownButtonFormField(
             value: spiceTolerance,
+            decoration: const InputDecoration(),
+            dropdownColor: theme.cardColor,
             items: const [
               DropdownMenuItem(value: "None", child: Text("None")),
               DropdownMenuItem(value: "Mild", child: Text("Mild")),
@@ -150,8 +197,11 @@ class _DietarySettingsPageState extends State<DietarySettingsPage> {
 
           const SizedBox(height: 25),
 
-          const Text("Cuisine Preferences",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(
+            "Cuisine Preferences",
+            style: theme.textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 10),
 
           _chipSelector(
@@ -170,8 +220,11 @@ class _DietarySettingsPageState extends State<DietarySettingsPage> {
 
           const SizedBox(height: 25),
 
-          const Text("Dietary Restrictions",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(
+            "Dietary Restrictions",
+            style: theme.textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 10),
 
           _chipSelector(
@@ -190,8 +243,11 @@ class _DietarySettingsPageState extends State<DietarySettingsPage> {
 
           const SizedBox(height: 25),
 
-          const Text("Eating Behaviour",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(
+            "Eating Behaviour",
+            style: theme.textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 10),
 
           _chipSelector(
@@ -211,15 +267,11 @@ class _DietarySettingsPageState extends State<DietarySettingsPage> {
           const SizedBox(height: 35),
 
           Center(
-            child: ElevatedButton(
-              onPressed: _save,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 14),
-              ),
-              child: const Text(
-                "Save Preferences",
-                style: TextStyle(fontSize: 16, color: Colors.white),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _save,
+                child: const Text("Save Preferences"),
               ),
             ),
           ),

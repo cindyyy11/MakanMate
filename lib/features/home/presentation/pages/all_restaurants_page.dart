@@ -10,7 +10,6 @@ class AllRestaurantsPage extends StatelessWidget {
   const AllRestaurantsPage({Key? key, required this.restaurants})
       : super(key: key);
 
-
   Stream<double> _watchVendorRating(String vendorId) {
     return FirebaseFirestore.instance
         .collection('reviews')
@@ -21,32 +20,34 @@ class AllRestaurantsPage extends StatelessWidget {
 
       double total = 0;
       for (var doc in snap.docs) {
-        final r = (doc['rating'] as num?)?.toDouble() ?? 0.0;
-        total += r;
+        final rating = (doc['rating'] as num?)?.toDouble() ?? 0.0;
+        total += rating;
       }
-
       return total / snap.docs.length;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: theme.scaffoldBackgroundColor,
+
       appBar: AppBar(
-        title: const Text(
-          "All Restaurants",
-          style: TextStyle(color: Colors.black),
-        ),
-        backgroundColor: Colors.orange[300],
-        iconTheme: const IconThemeData(color: Colors.black),
+        title: const Text("All Restaurants"),
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: Colors.white,
         elevation: 0.5,
       ),
+
       body: restaurants.isEmpty
-          ? const Center(
+          ? Center(
               child: Text(
                 "No restaurants available.",
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                style: theme.textTheme.bodyMedium
+                    ?.copyWith(color: theme.hintColor),
               ),
             )
           : ListView.builder(
@@ -74,8 +75,8 @@ class AllRestaurantsPage extends StatelessWidget {
         return IconButton(
           icon: Icon(
             isFavorited ? Icons.favorite : Icons.favorite_border,
-            color: isFavorited ? Colors.red : Colors.grey,
           ),
+          color: isFavorited ? Colors.red : Colors.grey,
           onPressed: () async {
             final user = FirebaseAuth.instance.currentUser;
 
@@ -112,25 +113,28 @@ class AllRestaurantsPage extends StatelessWidget {
   }
 
   Widget _buildRestaurantCard(BuildContext context, RestaurantEntity r) {
-    final vendor = r.vendor;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-    final String? imageUrl = vendor.businessLogoUrl;
-    final rating =
-        vendor.ratingAverage != null ? vendor.ratingAverage!.toStringAsFixed(1) : '-';
+    final vendor = r.vendor;
+    final imageUrl = vendor.businessLogoUrl;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: isDark
+                ? Colors.black.withOpacity(0.6)
+                : Colors.black.withOpacity(0.08),
             blurRadius: 8,
             offset: const Offset(0, 2),
-          )
+          ),
         ],
       ),
+
       child: InkWell(
         onTap: () {
           Navigator.push(
@@ -140,10 +144,12 @@ class AllRestaurantsPage extends StatelessWidget {
             ),
           );
         },
+
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
+              /// IMAGE
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: (imageUrl != null && imageUrl.isNotEmpty)
@@ -152,32 +158,31 @@ class AllRestaurantsPage extends StatelessWidget {
                         width: 80,
                         height: 80,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Image.asset(
-                            'assets/images/logos/image-not-found.png',
-                            width: 80,
-                            height: 80,
-                            fit: BoxFit.cover,
-                          );
-                        },
+                        errorBuilder: (_, __, ___) => Container(
+                          width: 80,
+                          height: 80,
+                          color: theme.dividerColor.withOpacity(0.3),
+                          child: const Icon(Icons.image_not_supported),
+                        ),
                       )
-                    : Image.asset(
-                        'assets/images/logos/image-not-found.png',
+                    : Container(
                         width: 80,
                         height: 80,
-                        fit: BoxFit.cover,
+                        color: theme.dividerColor.withOpacity(0.3),
+                        child: const Icon(Icons.image_not_supported),
                       ),
               ),
 
               const SizedBox(width: 12),
 
+              /// DETAILS
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       vendor.businessName,
-                      style: const TextStyle(
+                      style: theme.textTheme.bodyLarge?.copyWith(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
@@ -187,34 +192,35 @@ class AllRestaurantsPage extends StatelessWidget {
 
                     Text(
                       vendor.shortDescription,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color:
+                            theme.textTheme.bodySmall?.color?.withOpacity(0.7),
+                      ),
                     ),
 
                     const SizedBox(height: 8),
 
                     Row(
                       children: [
-                        const Icon(Icons.star, color: Colors.amber, size: 16),
+                        const Icon(Icons.star,
+                            size: 16, color: Colors.amber),
                         const SizedBox(width: 4),
+
                         StreamBuilder<double>(
                           stream: _watchVendorRating(vendor.id),
-                          builder: (context, snapshot) {
-                            if (!snapshot.hasData) {
-                              return const Text("-");
+                          builder: (context, snap) {
+                            if (!snap.hasData) {
+                              return Text(
+                                "-",
+                                style: theme.textTheme.bodyMedium,
+                              );
                             }
-
-                            final avg = snapshot.data!;
+                            final avg = snap.data!;
                             return Text(
                               avg > 0 ? avg.toStringAsFixed(1) : "-",
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: theme.textTheme.bodyMedium,
                             );
                           },
                         ),
@@ -222,14 +228,15 @@ class AllRestaurantsPage extends StatelessWidget {
                         const Spacer(),
 
                         Text(
-                          vendor.priceRange ?? '-',
-                          style: const TextStyle(
-                            fontSize: 16,
+                          vendor.priceRange ?? "-",
+                          style: theme.textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: Colors.orange,
+                            color: theme.colorScheme.primary,
                           ),
                         ),
-                        const SizedBox(width: 8),
+
+                        const SizedBox(width: 4),
+
                         _buildFavoriteButton(r),
                       ],
                     ),

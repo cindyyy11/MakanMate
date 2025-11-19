@@ -17,7 +17,6 @@ class AllMenuItemsPage extends StatefulWidget {
 
 class _AllMenuItemsPageState extends State<AllMenuItemsPage>
     with SingleTickerProviderStateMixin {
-
   late TabController _tabController;
 
   late List<MenuItemEntity> foodItems;
@@ -56,39 +55,47 @@ class _AllMenuItemsPageState extends State<AllMenuItemsPage>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: theme.scaffoldBackgroundColor,
+
       appBar: AppBar(
         title: Text("Menu • ${widget.vendorName}"),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0.5,
+        centerTitle: true,
+
         bottom: TabBar(
           controller: _tabController,
-          labelColor: Colors.black,
-          indicatorColor: Colors.black,
+          labelColor: theme.appBarTheme.foregroundColor,
+          unselectedLabelColor:
+              theme.appBarTheme.foregroundColor?.withOpacity(0.6),
+          indicatorColor: theme.appBarTheme.foregroundColor,
           tabs: const [
             Tab(text: "Food"),
             Tab(text: "Drinks"),
           ],
         ),
       ),
+
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildMenuGrid(foodItems),
-          _buildMenuGrid(drinkItems),
+          _buildMenuGrid(context, foodItems),
+          _buildMenuGrid(context, drinkItems),
         ],
       ),
     );
   }
 
-  Widget _buildMenuGrid(List<MenuItemEntity> list) {
+  Widget _buildMenuGrid(BuildContext context, List<MenuItemEntity> list) {
+    final theme = Theme.of(context);
+
     if (list.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
           "No items available.",
-          style: TextStyle(fontSize: 16),
+          style: theme.textTheme.bodyLarge,
         ),
       );
     }
@@ -104,48 +111,63 @@ class _AllMenuItemsPageState extends State<AllMenuItemsPage>
       ),
       itemBuilder: (context, index) {
         final m = list[index];
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.12),
-                blurRadius: 6,
-              )
-            ],
-          ),
-          child: Column(
-            children: [
-              ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(12)),
-                child: Image.network(
-                  m.imageUrl,
-                  height: 110,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) =>
-                      Container(height: 110, color: Colors.grey[300]),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: Text(
-                  m.name,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              Text(
-                "RM ${m.price.toStringAsFixed(2)}",
-                style: const TextStyle(color: Colors.grey),
-              ),
-            ],
-          ),
-        );
+        return _menuCard(context, m);
       },
+    );
+  }
+
+  Widget _menuCard(BuildContext context, MenuItemEntity m) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withOpacity(0.5)
+                : Colors.black.withOpacity(0.08),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          )
+        ],
+      ),
+
+      child: Column(
+        children: [
+          ClipRRect(
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(12)),
+            child: Image.network(
+              m.imageUrl,
+              height: 110,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) =>
+                  Container(height: 110, color: theme.dividerColor),
+            ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Text(
+              m.name,
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(fontWeight: FontWeight.w600),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+
+          Text(
+            "RM ${m.price.toStringAsFixed(2)}",
+            style: theme.textTheme.bodySmall
+                ?.copyWith(color: theme.hintColor),
+          ),
+        ],
+      ),
     );
   }
 }

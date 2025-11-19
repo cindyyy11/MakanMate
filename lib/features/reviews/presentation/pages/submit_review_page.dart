@@ -46,37 +46,36 @@ class _SubmitReviewPageState extends State<SubmitReviewPage> {
   }
 
   Future<void> pickImages() async {
-    final ImagePicker picker = ImagePicker();
+    final picker = ImagePicker();
     final images = await picker.pickMultiImage();
-
     if (images != null) {
-      setState(() {
-        pickedImages = images;
-      });
+      setState(() => pickedImages = images);
     }
   }
 
   Future<List<String>> uploadImages(String reviewId) async {
     List<String> urls = [];
-
     for (int i = 0; i < pickedImages.length; i++) {
-      final img = pickedImages[i];
-      final ref =
-          FirebaseStorage.instance.ref().child("reviews/$reviewId/img_$i.jpg");
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child("reviews/$reviewId/img_$i.jpg");
 
-      await ref.putFile(File(img.path));
+      await ref.putFile(File(pickedImages[i].path));
       urls.add(await ref.getDownloadURL());
     }
-
     return urls;
   }
 
   Future<void> _showPopup(String title, String message) async {
+    final theme = Theme.of(context);
     await showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        content: Text(message),
+        backgroundColor: theme.cardColor,
+        title: Text(title,
+            style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold)),
+        content: Text(message, style: theme.textTheme.bodyMedium),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -89,15 +88,15 @@ class _SubmitReviewPageState extends State<SubmitReviewPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text("Write a Review"),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0.5,
       ),
+
       body: BlocConsumer<ReviewBloc, ReviewState>(
         listener: (context, state) async {
           if (state is ReviewSuccess) {
@@ -107,21 +106,22 @@ class _SubmitReviewPageState extends State<SubmitReviewPage> {
             await _showPopup("Error", state.message);
           }
         },
+
         builder: (context, state) {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              _ratingSection(),
+              _ratingSection(theme),
               const SizedBox(height: 20),
-              _aspectRatings(),
+              _aspectRatings(theme),
               const SizedBox(height: 20),
-              _commentBox(),
+              _commentBox(theme),
               const SizedBox(height: 20),
-              _tagSelector(),
+              _tagSelector(theme),
               const SizedBox(height: 20),
-              _imagePickerUI(),
+              _imagePickerUI(theme),
               const SizedBox(height: 30),
-              _submitButton(user),
+              _submitButton(theme, user),
             ],
           );
         },
@@ -129,24 +129,28 @@ class _SubmitReviewPageState extends State<SubmitReviewPage> {
     );
   }
 
-  // ---------------------------
-  // UI Components
-  // ---------------------------
+  Widget _ratingSection(ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
 
-  Widget _ratingSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Overall Rating",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        Text("Overall Rating",
+            style: theme.textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 10),
         Row(
-          children: List.generate(5, (index) {
-            final value = (index + 1).toDouble();
+          children: List.generate(5, (i) {
+            final value = i + 1.0;
             return IconButton(
               onPressed: () => setState(() => rating = value),
-              icon: Icon(Icons.star,
-                  size: 32, color: rating >= value ? Colors.amber : Colors.grey),
+              icon: Icon(
+                Icons.star,
+                size: 32,
+                color: rating >= value
+                    ? Colors.amber
+                    : (isDark ? Colors.white24 : Colors.grey),
+              ),
             );
           }),
         ),
@@ -154,22 +158,32 @@ class _SubmitReviewPageState extends State<SubmitReviewPage> {
     );
   }
 
-  Widget _aspectRatings() {
+  Widget _aspectRatings(ThemeData theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _aspectRow("Taste", (v) => taste = v, taste),
-        _aspectRow("Service", (v) => service = v, service),
-        _aspectRow("Ambiance", (v) => ambiance = v, ambiance),
-        _aspectRow("Value", (v) => value = v, value),
+        _aspectRow("Taste", (v) => taste = v, taste, theme),
+        _aspectRow("Service", (v) => service = v, service, theme),
+        _aspectRow("Ambiance", (v) => ambiance = v, ambiance, theme),
+        _aspectRow("Value", (v) => value = v, value, theme),
       ],
     );
   }
 
-  Widget _aspectRow(String label, Function(double) onChanged, double current) {
+  Widget _aspectRow(
+      String label,
+      Function(double) onChanged,
+      double current,
+      ThemeData theme,
+      ) {
     return Row(
       children: [
-        SizedBox(width: 90, child: Text(label)),
+        SizedBox(
+          width: 90,
+          child: Text(label,
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(fontWeight: FontWeight.w600)),
+        ),
         Expanded(
           child: Slider(
             value: current,
@@ -177,45 +191,57 @@ class _SubmitReviewPageState extends State<SubmitReviewPage> {
             max: 5,
             divisions: 5,
             label: current.toString(),
-            onChanged: (val) => setState(() => onChanged(val)),
+            onChanged: (v) => setState(() => onChanged(v)),
           ),
         ),
       ],
     );
   }
 
-  Widget _commentBox() {
+  Widget _commentBox(ThemeData theme) {
     return TextField(
       controller: commentController,
       maxLines: 4,
-      decoration: const InputDecoration(
+      decoration: InputDecoration(
         labelText: "Write your review...",
-        border: OutlineInputBorder(),
+        filled: true,
+        fillColor: theme.inputDecorationTheme.fillColor,
+        border: theme.inputDecorationTheme.border,
       ),
     );
   }
 
-  Widget _tagSelector() {
+  Widget _tagSelector(ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Tags (optional)",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        Text("Tags (optional)",
+            style: theme.textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 10),
+
         Wrap(
           spacing: 8,
           children: commonTags.map((tag) {
-            final isSelected = selectedTags.contains(tag);
+            final selected = selectedTags.contains(tag);
             return ChoiceChip(
               label: Text(tag),
-              selected: isSelected,
-              selectedColor: Colors.black,
-              backgroundColor: Colors.grey[300],
-              labelStyle:
-                  TextStyle(color: isSelected ? Colors.white : Colors.black),
-              onSelected: (val) {
+              selected: selected,
+              labelStyle: TextStyle(
+                color: selected
+                    ? Colors.white
+                    : theme.textTheme.bodyMedium?.color,
+              ),
+              selectedColor: theme.colorScheme.primary,
+              backgroundColor:
+                  isDark ? Colors.white10 : Colors.grey.shade300,
+              onSelected: (value) {
                 setState(() {
-                  val ? selectedTags.add(tag) : selectedTags.remove(tag);
+                  value
+                      ? selectedTags.add(tag)
+                      : selectedTags.remove(tag);
                 });
               },
             );
@@ -225,15 +251,19 @@ class _SubmitReviewPageState extends State<SubmitReviewPage> {
     );
   }
 
-  Widget _imagePickerUI() {
+  Widget _imagePickerUI(ThemeData theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Photos (optional)",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        Text("Photos (optional)",
+            style: theme.textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 10),
 
-        ElevatedButton(onPressed: pickImages, child: const Text("Add Images")),
+        ElevatedButton(
+          onPressed: pickImages,
+          child: const Text("Add Images"),
+        ),
 
         const SizedBox(height: 10),
 
@@ -247,8 +277,12 @@ class _SubmitReviewPageState extends State<SubmitReviewPage> {
                   margin: const EdgeInsets.only(right: 10),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: Image.file(File(img.path),
-                        width: 90, height: 90, fit: BoxFit.cover),
+                    child: Image.file(
+                      File(img.path),
+                      width: 90,
+                      height: 90,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 );
               }).toList(),
@@ -258,23 +292,25 @@ class _SubmitReviewPageState extends State<SubmitReviewPage> {
     );
   }
 
-  Widget _submitButton(User? user) {
+  Widget _submitButton(ThemeData theme, User? user) {
     return ElevatedButton(
       onPressed: () async {
         if (rating == 0) {
-          return _showPopup("Missing Rating", "Please give an overall rating.");
+          return _showPopup("Missing Rating",
+              "Please give an overall rating.");
         }
         if (commentController.text.trim().isEmpty) {
-          return _showPopup("Missing Comment", "Please write a short review.");
+          return _showPopup(
+              "Missing Comment", "Please write a short review.");
         }
 
-        final reviewId =
+        final id =
             FirebaseFirestore.instance.collection("reviews").doc().id;
 
-        final imageUrls = await uploadImages(reviewId);
+        final imageUrls = await uploadImages(id);
 
         final review = ReviewEntity(
-          id: reviewId,
+          id: id,
           userId: user?.uid ?? "",
           itemId: "",
           vendorId: widget.vendorId,
@@ -296,9 +332,9 @@ class _SubmitReviewPageState extends State<SubmitReviewPage> {
         context.read<ReviewBloc>().add(SubmitReviewEvent(review));
       },
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 14),
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: theme.colorScheme.onPrimary,
       ),
       child: const Text("Submit Review"),
     );

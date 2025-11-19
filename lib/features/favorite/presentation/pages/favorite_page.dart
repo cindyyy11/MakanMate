@@ -28,9 +28,7 @@ class FavoritePage extends StatelessWidget {
 
   Stream<QuerySnapshot<Map<String, dynamic>>> _favoritesStream() {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      return const Stream.empty();
-    }
+    if (user == null) return const Stream.empty();
 
     return FirebaseFirestore.instance
         .collection('favorites')
@@ -46,7 +44,7 @@ class FavoritePage extends StatelessWidget {
 
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (_) => AlertDialog(
         title: const Text('Remove Favorite'),
         content: Text('Remove $name from favorites?'),
         actions: [
@@ -73,22 +71,21 @@ class FavoritePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+
       appBar: AppBar(
         title: const Text('My Favorites'),
-        backgroundColor: Colors.orange[300],
+        centerTitle: true,
       ),
 
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: _favoritesStream(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
 
-          final docs = snapshot.data?.docs ?? [];
+          final docs = snapshot.data!.docs;
           if (docs.isEmpty) {
             return const Center(child: Text('No favorites added yet.'));
           }
@@ -100,37 +97,38 @@ class FavoritePage extends StatelessWidget {
               final fav = docs[index].data();
               final docId = docs[index].id;
 
-              return GestureDetector(
+              final vendor = VendorProfileEntity(
+                id: fav['id'] ?? '',
+                businessName: fav['name'] ?? '',
+                cuisineType: fav['cuisineType'],
+                businessAddress: '',
+                contactNumber: '',
+                emailAddress: '',
+                shortDescription: fav['description'] ?? '',
+                businessLogoUrl: fav['image'],
+                bannerImageUrl: null,
+                priceRange: fav['priceRange'],
+                ratingAverage: null,
+                approvalStatus: 'verified',
+                operatingHours: const {},
+                outlets: const [],
+                certifications: const [],
+                menuItems: const [],
+                createdAt: DateTime.now(),
+                updatedAt: DateTime.now(),
+              );
+
+              final restaurant = RestaurantEntity(
+                vendor: vendor,
+                menuItems: const [],
+                cuisineType: fav['cuisineType'],
+                priceRange: fav['priceRange'],
+                ratingAverage: null,
+              );
+
+              return InkWell(
+                borderRadius: BorderRadius.circular(16),
                 onTap: () {
-                  final vendor = VendorProfileEntity(
-                    id: fav['id'] ?? '',
-                    businessName: fav['name'] ?? '',
-                    cuisineType: fav['cuisineType'],
-                    businessAddress: '',
-                    contactNumber: '',
-                    emailAddress: '',
-                    shortDescription: fav['description'] ?? '',
-                    businessLogoUrl: fav['image'],
-                    bannerImageUrl: null,
-                    priceRange: fav['priceRange'],
-                    ratingAverage: null,
-                    approvalStatus: 'verified',
-                    operatingHours: const {},
-                    outlets: const [],
-                    certifications: const [],
-                    menuItems: const [],
-                    createdAt: DateTime.now(),
-                    updatedAt: DateTime.now(),
-                  );
-
-                  final restaurant = RestaurantEntity(
-                    vendor: vendor,
-                    menuItems: const [],
-                    cuisineType: fav['cuisineType'],
-                    priceRange: fav['priceRange'],
-                    ratingAverage: null,
-                  );
-
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -141,100 +139,98 @@ class FavoritePage extends StatelessWidget {
                   );
                 },
 
-                child: Container(
+                child: Card(
+                  elevation: 2,
                   margin: const EdgeInsets.only(bottom: 16),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
+                  shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
                   ),
-                  child: Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.network(
-                          fav['image'] ?? "",
-                          width: 80,
-                          height: 80,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
+
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            fav['image'] ?? "",
                             width: 80,
                             height: 80,
-                            color: Colors.grey[200],
-                            child: const Icon(Icons.image_not_supported),
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              width: 80,
+                              height: 80,
+                              color: Theme.of(context).cardColor,
+                              child: const Icon(Icons.image_not_supported),
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
 
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              fav['name'] ?? '-',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                        const SizedBox(width: 12),
+
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                fav['name'] ?? '-',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.bold),
                               ),
-                            ),
 
-                            const SizedBox(height: 4),
+                              const SizedBox(height: 4),
 
-                            Row(
-                              children: [
-                                const Icon(Icons.star,
-                                    color: Colors.amber, size: 16),
-                                const SizedBox(width: 4),
+                              Row(
+                                children: [
+                                  const Icon(Icons.star,
+                                      color: Colors.amber, size: 16),
+                                  const SizedBox(width: 4),
 
-                                StreamBuilder<double>(
-                                  stream: _watchVendorRating(fav['id']),
-                                  builder: (context, snap) {
-                                    if (!snap.hasData) {
-                                      return const Text("-");
-                                    }
-
-                                    final avg = snap.data!;
-                                    return Text(
-                                      avg > 0 ? avg.toStringAsFixed(1) : "-",
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    );
-                                  },
-                                ),
-
-                                const Spacer(),
-
-                                Text(
-                                  fav['priceRange'] ?? '-',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.orange,
+                                  StreamBuilder<double>(
+                                    stream:
+                                        _watchVendorRating(fav['id'] ?? ""),
+                                    builder: (_, snap) {
+                                      if (!snap.hasData ||
+                                          snap.data! == 0.0) {
+                                        return const Text("-");
+                                      }
+                                      return Text(
+                                        snap.data!.toStringAsFixed(1),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium,
+                                      );
+                                    },
                                   ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
 
-                      IconButton(
-                        icon: const Icon(Icons.delete_outline,
-                            color: Colors.grey),
-                        onPressed: () =>
-                            _confirmAndDelete(context, docId, fav['name']),
-                      ),
-                    ],
+                                  const Spacer(),
+
+                                  Text(
+                                    fav['priceRange'] ?? '-',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline),
+                          color: Theme.of(context).iconTheme.color,
+                          onPressed: () => _confirmAndDelete(
+                              context, docId, fav['name']),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );

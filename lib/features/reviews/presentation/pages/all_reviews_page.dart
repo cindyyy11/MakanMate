@@ -21,13 +21,9 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
   @override
   void initState() {
     super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      setState(() {});
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {});
   }
 
-  /// 🔥 EXACT SAME REVIEW QUERY LOGIC AS RestaurantDetailPage
   Stream<QuerySnapshot<Map<String, dynamic>>> _watchReviews(
       String vendorId, String sortBy) {
     Query<Map<String, dynamic>> query = FirebaseFirestore.instance
@@ -63,14 +59,17 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: theme.scaffoldBackgroundColor,
+
       appBar: AppBar(
         title: Text("All Reviews • ${widget.vendorName}"),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0.5,
+        centerTitle: true,
       ),
+
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -78,14 +77,16 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
             padding: const EdgeInsets.only(left: 16, top: 12, bottom: 4),
             child: Row(
               children: [
-                const Text(
+                Text(
                   "Sort by:",
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  style: theme.textTheme.bodyLarge
+                      ?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(width: 12),
                 DropdownButton<String>(
                   value: selectedSort,
                   underline: Container(height: 0),
+                  dropdownColor: theme.cardColor,
                   items: const [
                     DropdownMenuItem(value: "newest", child: Text("Newest")),
                     DropdownMenuItem(value: "oldest", child: Text("Oldest")),
@@ -110,10 +111,10 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
                 final docs = snapshot.data!.docs;
 
                 if (docs.isEmpty) {
-                  return const Center(
+                  return Center(
                     child: Text(
                       "No reviews yet.",
-                      style: TextStyle(fontSize: 16),
+                      style: theme.textTheme.bodyLarge,
                     ),
                   );
                 }
@@ -139,20 +140,22 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
                       padding: const EdgeInsets.all(14),
                       margin: const EdgeInsets.only(bottom: 18),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: theme.cardColor,
                         borderRadius: BorderRadius.circular(14),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.grey.withOpacity(0.12),
+                            color: isDark
+                                ? Colors.black.withOpacity(0.5)
+                                : Colors.black.withOpacity(0.08),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
-                          )
+                          ),
                         ],
                       ),
+
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          /// ⭐ Star + Date Row (bigger, cleaner)
                           Row(
                             children: [
                               const Icon(Icons.star,
@@ -160,16 +163,14 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
                               const SizedBox(width: 6),
                               Text(
                                 rating.toStringAsFixed(1),
-                                style: const TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.w600),
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                               const Spacer(),
                               Text(
                                 dateStr,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[600],
-                                ),
+                                style: theme.textTheme.bodySmall,
                               ),
                             ],
                           ),
@@ -178,8 +179,7 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
 
                           Text(
                             comment,
-                            style: const TextStyle(
-                              fontSize: 15,
+                            style: theme.textTheme.bodyMedium?.copyWith(
                               height: 1.4,
                             ),
                           ),
@@ -190,22 +190,21 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
                             Wrap(
                               spacing: 8,
                               runSpacing: 4,
-                              children: tags
-                                  .map(
-                                    (t) => Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 10, vertical: 6),
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey[200],
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Text(
-                                        t.toString(),
-                                        style: const TextStyle(fontSize: 13),
-                                      ),
-                                    ),
-                                  )
-                                  .toList(),
+                              children: tags.map((t) {
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primary
+                                        .withOpacity(0.08),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    t.toString(),
+                                    style: theme.textTheme.bodySmall,
+                                  ),
+                                );
+                              }).toList(),
                             ),
 
                           if (tags.isNotEmpty) const SizedBox(height: 12),
@@ -225,11 +224,12 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
                                         width: 90,
                                         height: 90,
                                         fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) => Container(
-                                          width: 90,
-                                          height: 90,
-                                          color: Colors.grey[300],
-                                        ),
+                                        errorBuilder: (_, __, ___) =>
+                                            Container(
+                                              width: 90,
+                                              height: 90,
+                                              color: theme.dividerColor,
+                                            ),
                                       ),
                                     ),
                                   );

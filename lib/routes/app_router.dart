@@ -7,6 +7,7 @@ import 'package:makan_mate/features/auth/presentation/pages/signup_page.dart';
 import 'package:makan_mate/features/home/domain/entities/restaurant_entity.dart';
 import 'package:makan_mate/features/home/presentation/pages/change_password_page.dart';
 import 'package:makan_mate/features/home/presentation/pages/home_page.dart';
+import 'package:makan_mate/features/home/presentation/pages/restaurant_detail_page.dart';
 import 'package:makan_mate/features/home/presentation/pages/restaurant_detail_screen.dart';
 import 'package:makan_mate/features/recommendations/presentation/pages/recommendations_page.dart';
 import 'package:makan_mate/features/recommendations/presentation/bloc/recommendation_bloc.dart';
@@ -88,7 +89,7 @@ class AppRouter {
       case '/restaurantDetail':
         final restaurant = settings.arguments as RestaurantEntity;
         return MaterialPageRoute(
-          builder: (_) => RestaurantDetailScreen(restaurant: restaurant),
+          builder: (_) => RestaurantDetailPage(restaurant: restaurant),
           settings: settings,
         );
 

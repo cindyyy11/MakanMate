@@ -259,9 +259,13 @@ class _NearbyNotificationsPageState extends State<NearbyNotificationsPage>
     showDialog(
       context: context,
       builder: (_) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+
         return Dialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          backgroundColor: Theme.of(context).cardColor,
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,7 +279,7 @@ class _NearbyNotificationsPageState extends State<NearbyNotificationsPage>
                     width: double.infinity,
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) =>
-                        Container(height: 220, color: Colors.grey[300]),
+                        Container(height: 220, color: Theme.of(context).dividerColor),
                   ),
                 ),
 
@@ -286,21 +290,17 @@ class _NearbyNotificationsPageState extends State<NearbyNotificationsPage>
                     children: [
                       Text(
                         post["title"] ?? "Announcement",
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleLarge
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
 
                       const SizedBox(height: 10),
 
                       Text(
                         post["content"] ?? "",
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: Colors.grey[800],
-                          height: 1.35,
-                        ),
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
 
                       const SizedBox(height: 20),
@@ -309,11 +309,10 @@ class _NearbyNotificationsPageState extends State<NearbyNotificationsPage>
                         alignment: Alignment.centerRight,
                         child: TextButton(
                           onPressed: () => Navigator.pop(context),
-                          child: const Text(
+                          child: Text(
                             "Close",
                             style: TextStyle(
-                              color: Colors.orange,
-                              fontSize: 16,
+                              color: Theme.of(context).colorScheme.primary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -332,46 +331,46 @@ class _NearbyNotificationsPageState extends State<NearbyNotificationsPage>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: theme.scaffoldBackgroundColor,
+
       appBar: AppBar(
         title: const Text("Notifications"),
-        backgroundColor: Colors.orange.shade300,
-        elevation: 0,
+        centerTitle: true,
+
+        // TabBar theme-aware
         bottom: TabBar(
           controller: _tabController,
-          labelColor: Colors.black,
-          indicatorColor: Colors.white,
+          labelColor: theme.colorScheme.onPrimary,
+          unselectedLabelColor: theme.colorScheme.onPrimary.withOpacity(0.7),
+          indicatorColor: theme.colorScheme.onPrimary,
           tabs: const [
             Tab(text: "Nearby"),
             Tab(text: "Announcements"),
           ],
         ),
       ),
+
       body: Column(
         children: [
           const SizedBox(height: 12),
+
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _notificationToggleTile(),
+            child: _notificationToggleTile(context),
           ),
+
           const SizedBox(height: 8),
+
           Expanded(
             child: TabBarView(
               controller: _tabController,
               children: [
-                // Nearby tab
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: _buildNearbyRestaurantsTab(),
-                ),
-                // Announcements tab
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: _buildAdminAnnouncementsTab(),
-                ),
+                _buildNearbyRestaurantsTab(context),
+                _buildAdminAnnouncementsTab(context),
               ],
             ),
           ),
@@ -380,34 +379,43 @@ class _NearbyNotificationsPageState extends State<NearbyNotificationsPage>
     );
   }
 
-  Widget _notificationToggleTile() {
+  Widget _notificationToggleTile(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
             blurRadius: 6,
-            color: Colors.black.withOpacity(0.06),
+            color: isDark
+                ? Colors.black.withOpacity(0.5)
+                : Colors.black.withOpacity(0.06),
             offset: const Offset(0, 2),
           )
         ],
       ),
       child: Row(
         children: [
-          const Icon(Icons.notifications_active,
-              color: Colors.orange, size: 28),
+          Icon(
+            Icons.notifications_active,
+            color: theme.colorScheme.primary,
+            size: 28,
+          ),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Text(
               "Enable Nearby & Admin Alerts",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              style: theme.textTheme.bodyLarge
+                  ?.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
           Switch(
             value: alertsEnabled,
-            activeColor: Colors.orange,
+            activeColor: theme.colorScheme.primary,
             onChanged: _toggleAlerts,
           ),
         ],
@@ -415,10 +423,13 @@ class _NearbyNotificationsPageState extends State<NearbyNotificationsPage>
     );
   }
 
-  Widget _buildNearbyRestaurantsTab() {
+  Widget _buildNearbyRestaurantsTab(BuildContext context) {
     if (nearbyRestaurants.isEmpty) {
-      return _emptyState("No nearby restaurants detected.");
+      return _emptyState(context, "No nearby restaurants detected.");
     }
+
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return ListView.builder(
       itemCount: nearbyRestaurants.length,
@@ -429,12 +440,14 @@ class _NearbyNotificationsPageState extends State<NearbyNotificationsPage>
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: theme.cardColor,
             borderRadius: BorderRadius.circular(14),
             boxShadow: [
               BoxShadow(
                 blurRadius: 6,
-                color: Colors.black.withOpacity(0.06),
+                color: isDark
+                    ? Colors.black.withOpacity(0.5)
+                    : Colors.black.withOpacity(0.06),
                 offset: const Offset(0, 2),
               )
             ],
@@ -447,26 +460,35 @@ class _NearbyNotificationsPageState extends State<NearbyNotificationsPage>
                 height: 50,
                 width: 50,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) =>
-                    Container(height: 50, width: 50, color: Colors.grey[300]),
+                errorBuilder: (_, __, ___) => Container(
+                  height: 50,
+                  width: 50,
+                  color: theme.dividerColor,
+                ),
               ),
             ),
             title: Text(
               v.businessName,
-              style: const TextStyle(fontWeight: FontWeight.w600),
+              style: theme.textTheme.bodyLarge
+                  ?.copyWith(fontWeight: FontWeight.w600),
             ),
-            subtitle:
-                Text(v.cuisineType ?? "-", style: TextStyle(color: Colors.grey[700])),
+            subtitle: Text(
+              v.cuisineType ?? "-",
+              style: theme.textTheme.bodyMedium,
+            ),
           ),
         );
       },
     );
   }
 
-  Widget _buildAdminAnnouncementsTab() {
+  Widget _buildAdminAnnouncementsTab(BuildContext context) {
     if (adminPosts.isEmpty) {
-      return _emptyState("No announcements available.");
+      return _emptyState(context, "No announcements available.");
     }
+
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return ListView.builder(
       itemCount: adminPosts.length,
@@ -480,13 +502,15 @@ class _NearbyNotificationsPageState extends State<NearbyNotificationsPage>
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: theme.cardColor,
               borderRadius: BorderRadius.circular(14),
               boxShadow: [
                 BoxShadow(
                   blurRadius: 6,
+                  color: isDark
+                      ? Colors.black.withOpacity(0.5)
+                      : Colors.black.withOpacity(0.06),
                   offset: const Offset(0, 2),
-                  color: Colors.black.withOpacity(0.06),
                 )
               ],
             ),
@@ -499,8 +523,11 @@ class _NearbyNotificationsPageState extends State<NearbyNotificationsPage>
                     width: 60,
                     height: 60,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) =>
-                        Container(width: 60, height: 60, color: Colors.grey[300]),
+                    errorBuilder: (_, __, ___) => Container(
+                      width: 60,
+                      height: 60,
+                      color: theme.dividerColor,
+                    ),
                   ),
                 ),
 
@@ -514,11 +541,9 @@ class _NearbyNotificationsPageState extends State<NearbyNotificationsPage>
                         post["title"] ?? "Announcement",
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 15,
+                        style: theme.textTheme.bodyLarge?.copyWith(
                           fontWeight:
                               isRead ? FontWeight.w500 : FontWeight.bold,
-                          color: isRead ? Colors.grey[700] : Colors.black,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -526,9 +551,11 @@ class _NearbyNotificationsPageState extends State<NearbyNotificationsPage>
                         post["content"] ?? "",
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: isRead ? Colors.grey[500] : Colors.grey[700],
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: isRead
+                              ? theme.textTheme.bodyMedium!.color!
+                                  .withOpacity(0.6)
+                              : theme.textTheme.bodyMedium!.color!,
                         ),
                       ),
                     ],
@@ -541,14 +568,14 @@ class _NearbyNotificationsPageState extends State<NearbyNotificationsPage>
                   Container(
                     width: 10,
                     height: 10,
-                    margin: const EdgeInsets.only(right: 4),
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.error,
                       shape: BoxShape.circle,
                     ),
                   ),
 
-                Icon(Icons.chevron_right, color: Colors.grey[500]),
+                Icon(Icons.chevron_right,
+                    color: theme.iconTheme.color?.withOpacity(0.6)),
               ],
             ),
           ),
@@ -557,11 +584,14 @@ class _NearbyNotificationsPageState extends State<NearbyNotificationsPage>
     );
   }
 
-  Widget _emptyState(String message) {
+  Widget _emptyState(BuildContext context, String message) {
     return Center(
       child: Text(
         message,
-        style: TextStyle(color: Colors.grey[600], fontSize: 14),
+        style: Theme.of(context)
+            .textTheme
+            .bodyMedium
+            ?.copyWith(color: Theme.of(context).hintColor),
       ),
     );
   }

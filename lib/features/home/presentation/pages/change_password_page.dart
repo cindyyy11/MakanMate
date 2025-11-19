@@ -48,12 +48,12 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
       await showDialog(
         context: context,
-        builder: (_) => AlertDialog(
+        builder: (context) => AlertDialog(
           title: const Text("Success!"),
           content: const Text("Your password has been updated successfully."),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context, true),
+              onPressed: () => Navigator.pop(context),
               child: const Text("OK"),
             ),
           ],
@@ -61,7 +61,6 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       );
 
       Navigator.pop(context);
-
     } catch (e) {
       setState(() => _loading = false);
 
@@ -71,7 +70,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
           e.toString().contains("invalid-credential")) {
         msg = "Your current password is incorrect.";
       } else if (e.toString().contains("requires-recent-login")) {
-        msg = "For security reasons, please log in again to change your password.";
+        msg =
+            "For security reasons, please log in again to change your password.";
       }
 
       _showMessage(msg);
@@ -102,28 +102,33 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Change Password"),
-        backgroundColor: Colors.orange[300],
+        centerTitle: true,
       ),
+
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            _input("Current Password", _currentController),
+            _inputField("Current Password", _currentController),
             const SizedBox(height: 15),
-            _input("New Password", _newController),
+            _inputField("New Password", _newController),
             const SizedBox(height: 15),
-            _input("Confirm New Password", _confirmController),
+            _inputField("Confirm New Password", _confirmController),
             const SizedBox(height: 25),
+
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: _loading ? null : _changePassword,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
                 child: _loading
-                    ? const CircularProgressIndicator(color: Colors.white)
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child:
+                            CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
                     : const Text("Update Password"),
               ),
             ),
@@ -133,15 +138,12 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     );
   }
 
-  Widget _input(String label, TextEditingController controller) {
+  Widget _inputField(String label, TextEditingController controller) {
     return TextField(
       controller: controller,
       obscureText: true,
       decoration: InputDecoration(
         labelText: label,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
       ),
     );
   }

@@ -29,14 +29,13 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Future<void> _navigateToRestaurant(String vendorId) async {
-    // Load full real RestaurantEntity from Firestore
     final RestaurantEntity fullRestaurant =
         await loader.loadRestaurant(vendorId);
 
     Navigator.pushNamed(
       context,
       '/restaurantDetail',
-      arguments: fullRestaurant, // Router expects RestaurantEntity
+      arguments: fullRestaurant,
     );
   }
 
@@ -47,41 +46,45 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: theme.scaffoldBackgroundColor,
+
       appBar: AppBar(
-        backgroundColor: Colors.white,
         elevation: 0.5,
-        iconTheme: const IconThemeData(color: Colors.black),
+        backgroundColor: theme.appBarTheme.backgroundColor,
+        iconTheme: theme.appBarTheme.iconTheme,
         title: TextField(
           controller: _controller,
           autofocus: true,
           textInputAction: TextInputAction.search,
-          decoration: const InputDecoration(
+          style: theme.textTheme.bodyLarge,
+          decoration: InputDecoration(
             hintText: 'Search restaurants or menu items',
+            hintStyle: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.hintColor,
+            ),
             border: InputBorder.none,
           ),
           onSubmitted: _onSubmitted,
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search),
+            icon: Icon(Icons.search, color: theme.iconTheme.color),
             onPressed: () => _onSubmitted(_controller.text),
           ),
         ],
       ),
 
-      // ======================== BODY ========================
       body: BlocBuilder<SearchBloc, SearchState>(
         builder: (context, state) {
           if (state.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // show search history
-          if ((state.currentQuery == null || state.currentQuery!.isEmpty) &&
-              state.history.isNotEmpty) {
+          final noQuery = state.currentQuery == null || state.currentQuery!.isEmpty;
+          if (noQuery && state.history.isNotEmpty) {
             return Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -89,34 +92,34 @@ class _SearchPageState extends State<SearchPage> {
                 children: [
                   Text(
                     'Recent searches',
-                    style: theme.textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w600),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 8),
+
                   Wrap(
-                    children: state.history
-                        .map(
-                          (h) => SearchSuggestionChip(
-                            label: h.query,
-                            onTap: () {
-                              _controller.text = h.query;
-                              context
-                                  .read<SearchBloc>()
-                                  .add(SearchSuggestionTapped(h.query));
-                            },
-                          ),
-                        )
-                        .toList(),
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: state.history.map((h) {
+                      return SearchSuggestionChip(
+                        label: h.query,
+                        onTap: () {
+                          _controller.text = h.query;
+                          context.read<SearchBloc>().add(
+                                SearchSuggestionTapped(h.query),
+                              );
+                        },
+                      );
+                    }).toList(),
                   ),
                 ],
               ),
             );
           }
 
-          // no results
-          if (state.restaurants.isEmpty &&
-              state.foods.isEmpty &&
-              (state.currentQuery?.isNotEmpty ?? false)) {
+          final hasQuery = state.currentQuery?.isNotEmpty ?? false;
+          if (hasQuery && state.restaurants.isEmpty && state.foods.isEmpty) {
             return Center(
               child: Text(
                 'No results found for "${state.currentQuery}".',
@@ -125,16 +128,15 @@ class _SearchPageState extends State<SearchPage> {
             );
           }
 
-          // ======================== RESULTS =========================
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              // -- Restaurants --
               if (state.restaurants.isNotEmpty) ...[
                 Text(
                   'Restaurants',
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 8),
 
@@ -148,12 +150,12 @@ class _SearchPageState extends State<SearchPage> {
                 const SizedBox(height: 24),
               ],
 
-              // -- Menu Items --
               if (state.foods.isNotEmpty) ...[
                 Text(
                   'Menu items',
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 8),
 

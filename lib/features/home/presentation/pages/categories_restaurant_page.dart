@@ -12,7 +12,6 @@ class CategoryRestaurantPage extends StatelessWidget {
   const CategoryRestaurantPage({Key? key, required this.categoryName})
       : super(key: key);
 
-  /// ⭐ SAME rating stream as RestaurantDetailPage
   Stream<double> _watchVendorRating(String vendorId) {
     return FirebaseFirestore.instance
         .collection('reviews')
@@ -23,26 +22,32 @@ class CategoryRestaurantPage extends StatelessWidget {
 
       double total = 0;
       for (var doc in snap.docs) {
-        final r = (doc['rating'] as num?)?.toDouble() ?? 0.0;
-        total += r;
+        final rating = (doc['rating'] as num?)?.toDouble() ?? 0.0;
+        total += rating;
       }
+
       return total / snap.docs.length;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: theme.scaffoldBackgroundColor,
+
       appBar: AppBar(
         title: Text('$categoryName Restaurants'),
-        backgroundColor: Colors.orange[300],
       ),
+
       body: BlocBuilder<HomeBloc, HomeState>(
         builder: (context, state) {
           if (state is HomeLoading) {
             return const Center(child: CircularProgressIndicator());
-          } else if (state is HomeLoaded) {
+          }
+
+          if (state is HomeLoaded) {
             final filteredList = state.restaurants
                 .where((r) =>
                     (r.vendor.cuisineType ?? '').toLowerCase() ==
@@ -53,7 +58,9 @@ class CategoryRestaurantPage extends StatelessWidget {
               return Center(
                 child: Text(
                   'No $categoryName restaurants found.',
-                  style: const TextStyle(fontSize: 16, color: Colors.grey),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.hintColor,
+                  ),
                 ),
               );
             }
@@ -64,28 +71,31 @@ class CategoryRestaurantPage extends StatelessWidget {
               itemBuilder: (context, index) =>
                   _buildRestaurantCard(context, filteredList[index]),
             );
-          } else if (state is HomeError) {
-            return Center(child: Text(state.message));
           }
+
           return const SizedBox();
         },
       ),
     );
   }
 
-  Widget _buildRestaurantCard(BuildContext context, RestaurantEntity r) {
-    final vendor = r.vendor;
+  Widget _buildRestaurantCard(BuildContext context, RestaurantEntity restaurant) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final vendor = restaurant.vendor;
 
     final imageUrl = vendor.businessLogoUrl;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: isDark
+                ? Colors.black.withOpacity(0.6)
+                : Colors.black.withOpacity(0.08),
             blurRadius: 8,
             offset: const Offset(0, 2),
           )
@@ -96,15 +106,16 @@ class CategoryRestaurantPage extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => RestaurantDetailPage(restaurant: r),
+              builder: (_) => RestaurantDetailPage(restaurant: restaurant),
             ),
           );
         },
+
         child: Padding(
           padding: const EdgeInsets.all(12),
+
           child: Row(
             children: [
-              /// IMAGE
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: (imageUrl != null && imageUrl.isNotEmpty)
@@ -113,47 +124,49 @@ class CategoryRestaurantPage extends StatelessWidget {
                         width: 80,
                         height: 80,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Image.asset(
-                          'assets/images/logos/image-not-found.png',
+                        errorBuilder: (_, __, ___) => Container(
                           width: 80,
                           height: 80,
-                          fit: BoxFit.cover,
+                          color: theme.dividerColor.withOpacity(0.3),
+                          child: const Icon(Icons.image_not_supported),
                         ),
                       )
-                    : Image.asset(
-                        'assets/images/logos/image-not-found.png',
+                    : Container(
                         width: 80,
                         height: 80,
-                        fit: BoxFit.cover,
+                        color: theme.dividerColor.withOpacity(0.3),
+                        child: const Icon(Icons.image_not_supported),
                       ),
               ),
 
               const SizedBox(width: 12),
 
-              /// DETAILS
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       vendor.businessName,
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold),
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
 
                     const SizedBox(height: 4),
 
                     Text(
                       vendor.shortDescription,
-                      style:
-                          TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color:
+                            theme.textTheme.bodySmall?.color?.withOpacity(0.75),
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
 
                     const SizedBox(height: 8),
 
-                    /// ⭐ LIVE RATING STREAM
                     Row(
                       children: [
                         const Icon(Icons.star,
@@ -163,10 +176,11 @@ class CategoryRestaurantPage extends StatelessWidget {
                         StreamBuilder<double>(
                           stream: _watchVendorRating(vendor.id),
                           builder: (context, snap) {
-                            if (!snap.hasData) return const Text("-");
+                            if (!snap.hasData) return Text("-", style: theme.textTheme.bodyMedium);
                             final avg = snap.data!;
                             return Text(
                               avg > 0 ? avg.toStringAsFixed(1) : "-",
+                              style: theme.textTheme.bodyMedium,
                             );
                           },
                         ),
@@ -175,10 +189,9 @@ class CategoryRestaurantPage extends StatelessWidget {
 
                         Text(
                           vendor.priceRange ?? '-',
-                          style: const TextStyle(
-                            fontSize: 16,
+                          style: theme.textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: Colors.orange,
+                            color: theme.colorScheme.primary,
                           ),
                         ),
                       ],

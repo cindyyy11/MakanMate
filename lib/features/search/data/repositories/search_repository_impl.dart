@@ -56,7 +56,6 @@ class SearchRepositoryImpl implements SearchRepository {
   @override
   Future<Either<Failure, List<SearchHistoryEntity>>> getSearchHistory() async {
     if (!await networkInfo.isConnected) {
-      // history still needs network, but you can change this if stored locally
       return Left(NetworkFailure());
     }
 

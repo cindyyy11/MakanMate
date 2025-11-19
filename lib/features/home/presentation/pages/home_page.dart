@@ -11,11 +11,8 @@ import 'package:makan_mate/features/home/presentation/pages/categories_restauran
 import 'package:makan_mate/features/home/presentation/pages/restaurant_detail_page.dart';
 import 'package:makan_mate/features/map/presentation/bloc/map_bloc.dart';
 import 'package:makan_mate/features/map/presentation/pages/map_page.dart';
-import 'package:makan_mate/features/map/presentation/bloc/map_event.dart'
-    as map;
-import 'package:makan_mate/features/home/presentation/widgets/ai_recommendations_section.dart';
+import 'package:makan_mate/features/map/presentation/bloc/map_event.dart' as map;
 import 'package:makan_mate/core/widgets/announcements_banner.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -35,15 +32,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: _buildAppBar(),
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: _buildAppBar(theme),
       body: BlocBuilder<HomeBloc, HomeState>(
         builder: (context, state) {
           if (state is HomeLoading) {
             return const Center(child: CircularProgressIndicator());
           } else if (state is HomeLoaded) {
             return _buildBody(
+              theme: theme,
               allRestaurants: state.allRestaurants,
               categories: state.categories,
               recommendations: state.recommendations,
@@ -64,90 +64,89 @@ class _HomeScreenState extends State<HomeScreen> {
         .where('vendorId', isEqualTo: vendorId)
         .snapshots()
         .map((snap) {
-          if (snap.docs.isEmpty) return 0.0;
+      if (snap.docs.isEmpty) return 0.0;
 
-          double total = 0;
-          for (var doc in snap.docs) {
-            final r = (doc['rating'] as num?)?.toDouble() ?? 0.0;
-            total += r;
-          }
+      double total = 0;
+      for (var doc in snap.docs) {
+        final r = (doc['rating'] as num?)?.toDouble() ?? 0.0;
+        total += r;
+      }
 
-          return total / snap.docs.length;
-        });
+      return total / snap.docs.length;
+    });
   }
 
-  PreferredSizeWidget _buildAppBar() {
+  PreferredSizeWidget _buildAppBar(ThemeData theme) {
+    final primary = theme.colorScheme.primary;
+    final iconColor = theme.appBarTheme.iconTheme?.color ??
+        theme.colorScheme.onPrimary;
+
     return AppBar(
       elevation: 0,
-      backgroundColor: Colors.white,
+      centerTitle: false,
+      titleSpacing: 16,
       title: Row(
         children: [
-          const Icon(Icons.restaurant_menu, color: Colors.orange, size: 28),
+          Icon(Icons.restaurant_menu, color: primary, size: 28),
           const SizedBox(width: 8),
-          const Text(
+          Text(
             'MakanMate',
-            style: TextStyle(
-              color: Colors.black87,
+            style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
-              fontSize: 24,
             ),
           ),
         ],
       ),
+      iconTheme: IconThemeData(color: iconColor),
     );
   }
 
   Widget _buildBody({
+    required ThemeData theme,
     required List<RestaurantEntity> allRestaurants,
     required List<RestaurantEntity> categories,
     required List<RestaurantEntity> recommendations,
     required bool isPersonalized,
   }) {
-    // Get user role for announcements
     final user = FirebaseAuth.instance.currentUser;
     String? userRole;
     if (user != null) {
-      // You may need to fetch user role from Firestore
-      // For now, we'll use 'all' to show all announcements
-      userRole = 'all';
+      userRole = 'all'; // adjust when you have role logic
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Announcements Banner
         AnnouncementsBanner(userRole: userRole),
         Expanded(
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              _buildWelcomeSection(),
+              _buildWelcomeSection(theme),
               const SizedBox(height: 20),
-              _buildSearchBar(),
+              _buildSearchBar(theme),
               const SizedBox(height: 24),
 
-              const Text(
+              Text(
                 'Nearby Restaurants',
-                style: TextStyle(
+                style: theme.textTheme.titleMedium?.copyWith(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
                 ),
               ),
 
-              _buildMapSection(),
+              _buildMapSection(theme),
               const SizedBox(height: 24),
 
-              _buildCategoriesSection(categories),
+              _buildCategoriesSection(theme, categories),
               const SizedBox(height: 24),
 
               _buildRecommendationsSection(
+                theme,
                 allRestaurants,
                 recommendations,
                 isPersonalized,
               ),
-              // const SizedBox(height: 24),
-              // const AIRecommendationsSection(),
             ],
           ),
         ),
@@ -155,12 +154,18 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildWelcomeSection() {
+  Widget _buildWelcomeSection(ThemeData theme) {
+    // Keep orange branding but still look fine in dark mode
+    final primary = theme.colorScheme.primary;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.orange.shade400, Colors.orange.shade600],
+          colors: [
+            primary.withOpacity(0.85),
+            primary,
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -171,19 +176,20 @@ class _HomeScreenState extends State<HomeScreen> {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
-                  'Hello, Foodie! 👋',
-                  style: TextStyle(
+                  'Hello, Foodie!',
+                  style: theme.textTheme.titleLarge?.copyWith(
                     color: Colors.white,
-                    fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Text(
                   'Discover amazing local food around you',
-                  style: TextStyle(color: Colors.white70, fontSize: 16),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: Colors.white70,
+                  ),
                 ),
               ],
             ),
@@ -194,7 +200,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildSearchBar() {
+  Widget _buildSearchBar(ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+
     return GestureDetector(
       onTap: () {
         Navigator.pushNamed(context, '/search');
@@ -202,23 +210,27 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.cardColor,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: isDark
+                  ? Colors.black.withOpacity(0.6)
+                  : Colors.black.withOpacity(0.06),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Row(
-          children: const [
-            Icon(Icons.search, color: Colors.grey),
-            SizedBox(width: 12),
+          children: [
+            Icon(Icons.search, color: theme.hintColor),
+            const SizedBox(width: 12),
             Text(
               "Search for food, restaurants...",
-              style: TextStyle(color: Colors.grey),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.hintColor,
+              ),
             ),
           ],
         ),
@@ -226,14 +238,18 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildMapSection() {
+  Widget _buildMapSection(ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       height: 250,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: isDark
+                ? Colors.black.withOpacity(0.6)
+                : Colors.black.withOpacity(0.12),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -247,16 +263,21 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildCategoriesSection(List<RestaurantEntity> categories) {
+  Widget _buildCategoriesSection(
+    ThemeData theme,
+    List<RestaurantEntity> categories,
+  ) {
+    final primary = theme.colorScheme.primary;
+    final isDark = theme.brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Categories',
-          style: TextStyle(
+          style: theme.textTheme.titleMedium?.copyWith(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: Colors.black87,
           ),
         ),
         const SizedBox(height: 16),
@@ -292,17 +313,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         height: 60,
                         width: 60,
                         decoration: BoxDecoration(
-                          color: Colors.orange.withOpacity(0.1),
+                          color: primary.withOpacity(
+                              isDark ? 0.25 : 0.1), // subtle in both modes
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: const Icon(Icons.fastfood, color: Colors.orange),
+                        child: Icon(Icons.fastfood, color: primary),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         cuisineType,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 12,
+                        style: theme.textTheme.bodySmall?.copyWith(
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -318,6 +339,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildRecommendationsSection(
+    ThemeData theme,
     List<RestaurantEntity> allRestaurants,
     List<RestaurantEntity> recommendations,
     bool personalized,
@@ -330,10 +352,9 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Text(
               personalized ? 'Recommended for You' : 'Popular Restaurants',
-              style: const TextStyle(
+              style: theme.textTheme.titleMedium?.copyWith(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
               ),
             ),
             TextButton(
@@ -357,15 +378,16 @@ class _HomeScreenState extends State<HomeScreen> {
           itemCount: recommendations.length > 5 ? 5 : recommendations.length,
           itemBuilder: (context, index) {
             final food = recommendations[index];
-            return _buildFoodCard(food);
+            return _buildFoodCard(theme, food);
           },
         ),
       ],
     );
   }
 
-  Widget _buildFavoriteButton(RestaurantEntity food) {
+  Widget _buildFavoriteButton(ThemeData theme, RestaurantEntity food) {
     final vendor = food.vendor;
+    final isDark = theme.brightness == Brightness.dark;
 
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance
@@ -380,7 +402,11 @@ class _HomeScreenState extends State<HomeScreen> {
         return IconButton(
           icon: Icon(
             isFavorited ? Icons.favorite : Icons.favorite_border,
-            color: isFavorited ? Colors.red : Colors.grey,
+            color: isFavorited
+                ? Colors.red
+                : (isDark
+                    ? Colors.white70
+                    : theme.iconTheme.color ?? Colors.grey),
           ),
           onPressed: () async {
             final user = FirebaseAuth.instance.currentUser;
@@ -418,8 +444,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildFoodCard(RestaurantEntity food) {
+  Widget _buildFoodCard(ThemeData theme, RestaurantEntity food) {
     final vendor = food.vendor;
+    final isDark = theme.brightness == Brightness.dark;
+    final primary = theme.colorScheme.primary;
 
     final image = vendor.businessLogoUrl?.isNotEmpty == true
         ? vendor.businessLogoUrl!
@@ -437,11 +465,13 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.cardColor,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: isDark
+                  ? Colors.black.withOpacity(0.6)
+                  : Colors.black.withOpacity(0.08),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -461,68 +491,61 @@ class _HomeScreenState extends State<HomeScreen> {
                   errorBuilder: (_, __, ___) => Container(
                     width: 80,
                     height: 80,
-                    color: Colors.grey[200],
+                    color: theme.dividerColor.withOpacity(0.3),
                     child: const Icon(Icons.image_not_supported),
                   ),
                 ),
               ),
-
               const SizedBox(width: 12),
-
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       vendor.businessName,
-                      style: const TextStyle(
+                      style: theme.textTheme.bodyLarge?.copyWith(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-
                     const SizedBox(height: 4),
-
                     Text(
                       vendor.shortDescription,
-                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.textTheme.bodySmall?.color
+                            ?.withOpacity(0.75),
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-
                     const SizedBox(height: 8),
-
                     Row(
                       children: [
-                        const Icon(Icons.star, color: Colors.amber, size: 16),
+                        const Icon(Icons.star,
+                            color: Colors.amber, size: 16),
                         const SizedBox(width: 4),
-
                         StreamBuilder<double>(
                           stream: _watchVendorRating(vendor.id),
                           builder: (context, snap) {
                             if (!snap.hasData) {
                               return const Text("-");
                             }
-
                             final avg = snap.data!;
                             return Text(
                               avg > 0 ? avg.toStringAsFixed(1) : "-",
-                              style: const TextStyle(
-                                fontSize: 14,
+                              style: theme.textTheme.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
                             );
                           },
                         ),
-
                         const Spacer(),
-
                         Text(
                           vendor.priceRange ?? "-",
-                          style: const TextStyle(
+                          style: theme.textTheme.bodyMedium?.copyWith(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Colors.orange,
+                            color: primary,
                           ),
                         ),
                       ],
@@ -530,8 +553,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
-
-              _buildFavoriteButton(food),
+              _buildFavoriteButton(theme, food),
             ],
           ),
         ),

@@ -26,15 +26,14 @@ class _UserPromotionsPageState extends State<UserPromotionsPage> {
   void _showPromotionDetail(PromotionEntity promotion) {
     if (promotion.vendorId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Error: Promotion vendor information missing'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: const Text('Promotion vendor information missing'),
+          backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
       return;
     }
 
-    // Track click
     context.read<UserPromotionBloc>().add(
           UserPromotionClickEvent(
             vendorId: promotion.vendorId!,
@@ -42,11 +41,10 @@ class _UserPromotionsPageState extends State<UserPromotionsPage> {
           ),
         );
 
-    // Show detail page
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => PromotionDetailPage(
+        builder: (_) => PromotionDetailPage(
           promotion: promotion,
           vendorId: promotion.vendorId!,
         ),
@@ -56,90 +54,50 @@ class _UserPromotionsPageState extends State<UserPromotionsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+
       appBar: AppBar(
-        title: const Text(
+        backgroundColor: theme.appBarTheme.backgroundColor,
+        foregroundColor: theme.appBarTheme.foregroundColor,
+        elevation: 0.5,
+        title: Text(
           'Vouchers & Promotions',
-          style: TextStyle(
-            fontSize: 20,
+          style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
-            color: Colors.black,
           ),
         ),
-        backgroundColor: Colors.orange,
         centerTitle: true,
-        elevation: 0,
       ),
+
       body: BlocConsumer<UserPromotionBloc, UserPromotionState>(
         listener: (context, state) {
           if (state is UserPromotionError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('Error: ${state.message}'),
-                backgroundColor: Colors.red,
+                backgroundColor: theme.colorScheme.error,
               ),
             );
           }
         },
+
         builder: (context, state) {
           if (state is UserPromotionInitial || state is UserPromotionLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
           if (state is UserPromotionError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Error loading promotions',
-                    style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-                  ),
-                  const SizedBox(height: 8),
-                  ElevatedButton(
-                    onPressed: () {
-                      context.read<UserPromotionBloc>().add(LoadUserPromotionsEvent());
-                    },
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            );
+            return _errorState(theme);
           }
 
           if (state is UserPromotionLoaded) {
             final promotions = state.promotions;
 
             if (promotions.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.local_offer_outlined,
-                        size: 64, color: Colors.grey[400]),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No promotions available',
-                      style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Check back later for new vouchers and promotions',
-                      style: TextStyle(color: Colors.grey[500]),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        context.read<UserPromotionBloc>().add(LoadUserPromotionsEvent());
-                      },
-                      child: const Text('Refresh'),
-                    ),
-                  ],
-                ),
-              );
+              return _emptyState(theme);
             }
 
             return RefreshIndicator(
@@ -147,10 +105,11 @@ class _UserPromotionsPageState extends State<UserPromotionsPage> {
                 context.read<UserPromotionBloc>().add(LoadUserPromotionsEvent());
               },
               child: ListView.builder(
-                padding: const EdgeInsets.symmetric(vertical: 8),
+                padding: const EdgeInsets.symmetric(vertical: 10),
                 itemCount: promotions.length,
                 itemBuilder: (context, index) {
                   final promotion = promotions[index];
+
                   return UserPromotionCard(
                     promotion: promotion,
                     onTap: () => _showPromotionDetail(promotion),
@@ -165,5 +124,75 @@ class _UserPromotionsPageState extends State<UserPromotionsPage> {
       ),
     );
   }
-}
 
+  Widget _emptyState(ThemeData theme) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 28),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.local_offer_outlined,
+                size: 70, color: theme.colorScheme.outline),
+            const SizedBox(height: 20),
+            Text(
+              'No promotions available',
+              style: theme.textTheme.titleMedium
+                  ?.copyWith(color: theme.colorScheme.outline),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Check again later to discover new vouchers and deals!',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(color: theme.colorScheme.outline),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                context.read<UserPromotionBloc>().add(LoadUserPromotionsEvent());
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Refresh'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _errorState(ThemeData theme) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 28),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline,
+                size: 70, color: theme.colorScheme.error),
+            const SizedBox(height: 20),
+            Text(
+              'Error loading promotions',
+              style: theme.textTheme.titleMedium
+                  ?.copyWith(color: theme.colorScheme.error),
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton(
+              onPressed: () {
+                context.read<UserPromotionBloc>().add(LoadUserPromotionsEvent());
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
