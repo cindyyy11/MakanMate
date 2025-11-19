@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:makan_mate/core/widgets/announcements_banner.dart';
 import '../../../vendor/domain/entities/review_entity.dart' as vendor;
 import '../pages/menu_management_page.dart';
 import '../pages/vendor_reviews_page.dart';
@@ -58,9 +59,14 @@ class _VendorHomePageState extends State<VendorHomePage> {
     if (hour < 17) return "Good Afternoon";
     return "Good Evening";
   }
-  
+
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    String? userRole;
+    if (user != null) {
+      userRole = 'all'; // adjust when you have role logic
+    }
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -81,6 +87,7 @@ class _VendorHomePageState extends State<VendorHomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            AnnouncementsBanner(userRole: userRole),
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -334,8 +341,7 @@ class _VendorHomePageState extends State<VendorHomePage> {
       },
       child: BlocBuilder<VendorReviewBloc, VendorReviewState>(
         builder: (context, state) {
-          if (state is VendorReviewLoading ||
-              state is VendorReviewInitial) {
+          if (state is VendorReviewLoading || state is VendorReviewInitial) {
             return const Center(child: CircularProgressIndicator());
           }
 
@@ -384,8 +390,7 @@ class _VendorHomePageState extends State<VendorHomePage> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(r.comment,
-                      maxLines: 2, overflow: TextOverflow.ellipsis),
+                  Text(r.comment, maxLines: 2, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 4),
                   Text(
                     "Posted: ${r.createdAt}",
@@ -395,8 +400,10 @@ class _VendorHomePageState extends State<VendorHomePage> {
                   const SizedBox(height: 6),
                   if (!isReplied)
                     Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.orange,
                         borderRadius: BorderRadius.circular(8),
@@ -439,14 +446,14 @@ class _VendorHomePageState extends State<VendorHomePage> {
                   ? Container(
                       color: Colors.grey.shade300,
                       child: const Center(
-                        child: Icon(Icons.restaurant,
-                            size: 60, color: Colors.white70),
+                        child: Icon(
+                          Icons.restaurant,
+                          size: 60,
+                          color: Colors.white70,
+                        ),
                       ),
                     )
-                  : Image.network(
-                      image,
-                      fit: BoxFit.cover,
-                    ),
+                  : Image.network(image, fit: BoxFit.cover),
             ),
 
             // Gradient overlay
@@ -481,16 +488,14 @@ class _VendorHomePageState extends State<VendorHomePage> {
                   ),
                   Text(
                     "RM ${price.toStringAsFixed(2)}",
-                    style:
-                        const TextStyle(fontSize: 16, color: Colors.white70),
+                    style: const TextStyle(fontSize: 16, color: Colors.white70),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     description,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style:
-                        const TextStyle(fontSize: 12, color: Colors.white70),
+                    style: const TextStyle(fontSize: 12, color: Colors.white70),
                   ),
                 ],
               ),
