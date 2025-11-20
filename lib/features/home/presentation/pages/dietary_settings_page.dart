@@ -26,7 +26,9 @@ class _DietarySettingsPageState extends State<DietarySettingsPage> {
     "Korean",
     "Thai",
     "Western",
-    "Italian"
+    "Italian",
+    "Desserts",
+    "Vegetarian"
   ];
 
   final List<String> dietaryOptions = [
