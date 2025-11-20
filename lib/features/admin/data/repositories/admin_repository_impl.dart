@@ -6,7 +6,6 @@ import 'package:makan_mate/core/errors/failures.dart';
 import 'package:makan_mate/core/network/network_info.dart';
 import 'package:makan_mate/features/admin/data/datasources/admin_remote_datasource.dart';
 import 'package:makan_mate/features/admin/domain/entities/activity_log_entity.dart';
-import 'package:makan_mate/features/admin/domain/entities/admin_notification_entity.dart';
 import 'package:makan_mate/features/admin/domain/entities/metric_trend_entity.dart';
 import 'package:makan_mate/features/admin/domain/entities/platform_metrics_entity.dart';
 import 'package:makan_mate/features/admin/domain/entities/system_metrics_entity.dart';
@@ -95,46 +94,6 @@ class AdminRepositoryImpl implements AdminRepository {
       return Left(ServerFailure(e.message));
     } catch (e) {
       return Left(ServerFailure('Failed to fetch activity logs: $e'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, List<AdminNotification>>> getNotifications({
-    bool? unreadOnly,
-    int? limit,
-  }) async {
-    if (!await networkInfo.isConnected) {
-      return const Left(NetworkFailure('No internet connection'));
-    }
-
-    try {
-      final notifications = await remoteDataSource.getNotifications(
-        unreadOnly: unreadOnly,
-        limit: limit,
-      );
-      return Right(notifications.map((n) => n.toEntity()).toList());
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Failed to fetch notifications: $e'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> markNotificationAsRead(
-    String notificationId,
-  ) async {
-    if (!await networkInfo.isConnected) {
-      return const Left(NetworkFailure('No internet connection'));
-    }
-
-    try {
-      await remoteDataSource.markNotificationAsRead(notificationId);
-      return const Right(null);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Failed to mark notification as read: $e'));
     }
   }
 

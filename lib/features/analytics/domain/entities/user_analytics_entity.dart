@@ -15,10 +15,3 @@ class UserAnalytics {
     required this.userGrowthWeekly,
   });
 }
-
-
-
-
-
-
-

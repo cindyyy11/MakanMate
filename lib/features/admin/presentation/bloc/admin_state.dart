@@ -1,6 +1,5 @@
 import 'package:equatable/equatable.dart';
 import 'package:makan_mate/features/admin/domain/entities/activity_log_entity.dart';
-import 'package:makan_mate/features/admin/domain/entities/admin_notification_entity.dart';
 import 'package:makan_mate/features/admin/domain/entities/metric_trend_entity.dart';
 import 'package:makan_mate/features/admin/domain/entities/platform_metrics_entity.dart';
 import 'package:makan_mate/features/admin/domain/entities/system_metrics_entity.dart';
@@ -42,7 +41,6 @@ class AdminLoaded extends AdminState {
   final MetricTrend? userTrend;
   final MetricTrend? vendorTrend;
   final List<ActivityLog>? activityLogs;
-  final List<AdminNotification>? notifications;
   final SystemMetrics? systemMetrics;
   final FairnessMetrics? fairnessMetrics;
   final SeasonalTrendAnalysis? seasonalTrends;
@@ -53,7 +51,6 @@ class AdminLoaded extends AdminState {
     this.userTrend,
     this.vendorTrend,
     this.activityLogs,
-    this.notifications,
     this.systemMetrics,
     this.fairnessMetrics,
     this.seasonalTrends,
@@ -66,7 +63,6 @@ class AdminLoaded extends AdminState {
     userTrend,
     vendorTrend,
     activityLogs,
-    notifications,
     systemMetrics,
     fairnessMetrics,
     seasonalTrends,

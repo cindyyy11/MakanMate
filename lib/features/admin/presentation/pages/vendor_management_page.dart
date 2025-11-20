@@ -54,6 +54,7 @@ class DeactivationReasons {
   ];
 }
 
+/// Central hub for screening, activating, suspending, and rewarding vendors.
 class VendorManagementPage extends StatefulWidget {
   const VendorManagementPage({super.key});
 
@@ -251,6 +252,7 @@ class _VendorManagementPageState extends State<VendorManagementPage>
   }
 }
 
+// region: Tab 1 – review/approve new vendor applications
 class _VendorApplicationsTab extends StatefulWidget {
   const _VendorApplicationsTab();
 
@@ -290,6 +292,7 @@ class _VendorApplicationsTabState extends State<_VendorApplicationsTab> {
     super.dispose();
   }
 
+  // Keeps chip/badge state in sync with current filter selections.
   void _updateFilterState() {
     setState(() {
       _hasActiveFilters =
@@ -304,6 +307,7 @@ class _VendorApplicationsTabState extends State<_VendorApplicationsTab> {
     });
   }
 
+  // Fully resets applications filter dialog selections.
   void _clearFilters() {
     setState(() {
       _filterRisk = null;
@@ -319,6 +323,7 @@ class _VendorApplicationsTabState extends State<_VendorApplicationsTab> {
     });
   }
 
+  // Utility: build list for dropdown from currently loaded applicants.
   List<String> get _availableCuisineTypes {
     final cuisines = _vendors
         .map((v) => v.cuisineType)
@@ -1603,6 +1608,7 @@ class _VendorApplicationsTabState extends State<_VendorApplicationsTab> {
   }
 }
 
+// region: Tab 2 – insights + controls for active/onboarding vendors
 class _ActiveVendorsTab extends StatefulWidget {
   const _ActiveVendorsTab();
 
@@ -3107,6 +3113,7 @@ class _ActiveVendorsTabState extends State<_ActiveVendorsTab> {
   }
 }
 
+// region: Tab 3 – suspension list with lift/extend tooling
 class _SuspendedVendorsTab extends StatefulWidget {
   const _SuspendedVendorsTab();
 
@@ -4149,6 +4156,7 @@ class _SuspendedVendorsTabState extends State<_SuspendedVendorsTab> {
   }
 }
 
+// region: Tab 4 – permanently removed vendors + audit trail
 class _DeactivatedVendorsTab extends StatefulWidget {
   const _DeactivatedVendorsTab();
 
@@ -4999,6 +5007,7 @@ class _DeactivatedVendorsTabState extends State<_DeactivatedVendorsTab> {
   }
 }
 
+// region: Tab 5 – vendor voucher/promo approval workflow
 class _VoucherApprovalsTab extends StatefulWidget {
   const _VoucherApprovalsTab();
 

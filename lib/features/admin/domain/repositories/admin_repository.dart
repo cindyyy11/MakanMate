@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:dartz/dartz.dart';
 import 'package:makan_mate/core/errors/failures.dart';
 import 'package:makan_mate/features/admin/domain/entities/activity_log_entity.dart';
-import 'package:makan_mate/features/admin/domain/entities/admin_notification_entity.dart';
 import 'package:makan_mate/features/admin/domain/entities/metric_trend_entity.dart';
 import 'package:makan_mate/features/admin/domain/entities/platform_metrics_entity.dart';
 import 'package:makan_mate/features/admin/domain/entities/system_metrics_entity.dart';
@@ -31,15 +30,6 @@ abstract class AdminRepository {
     String? userId,
     int? limit,
   });
-
-  /// Get admin notifications
-  Future<Either<Failure, List<AdminNotification>>> getNotifications({
-    bool? unreadOnly,
-    int? limit,
-  });
-
-  /// Mark notification as read
-  Future<Either<Failure, void>> markNotificationAsRead(String notificationId);
 
   /// Export metrics to CSV
   Future<Either<Failure, String>> exportMetricsToCSV({

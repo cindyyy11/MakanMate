@@ -11,10 +11,3 @@ class GetUserAnalyticsUseCase {
     return repository.getUserAnalytics();
   }
 }
-
-
-
-
-
-
-

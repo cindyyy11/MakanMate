@@ -15,7 +15,6 @@ import 'package:makan_mate/features/admin/presentation/widgets/animated_metric_c
 import 'package:makan_mate/core/widgets/date_range_filter.dart';
 import 'package:makan_mate/core/widgets/loading_animation.dart';
 import 'package:makan_mate/core/theme/theme_bloc.dart';
-import 'package:makan_mate/features/admin/presentation/widgets/notification_badge.dart';
 // TODO: Uncomment when implementing real-time monitoring in the future
 // import 'package:makan_mate/features/admin/presentation/widgets/realtime_monitoring_widget.dart';
 // TODO: Uncomment when implementing fairness metrics in the future
@@ -32,6 +31,7 @@ import 'package:open_filex/open_filex.dart';
 import 'package:share_plus/share_plus.dart';
 
 /// Admin dashboard page showing platform analytics
+/// Top-level admin analytics screen with tabs, exports, etc.
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({Key? key}) : super(key: key);
 
@@ -40,6 +40,7 @@ class AdminDashboardPage extends StatefulWidget {
 }
 
 class _AdminDashboardPageState extends State<AdminDashboardPage> {
+  // region: local state used for filters/tab switching/refresh
   Timer? _refreshTimer;
   DateTime? _startDate;
   DateTime? _endDate;
@@ -49,7 +50,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   @override
   void initState() {
     super.initState();
-    // Load initial data
+    // region: bootstrapping – fetch dashboard data and set auto-refresh
     context.read<AdminBloc>().add(const LoadPlatformMetrics());
 
     // Auto-refresh every 30 seconds
@@ -73,8 +74,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
   @override
   Widget build(BuildContext context) {
+    // region: scaffold skeleton – gradient header + tabbed content
     return Scaffold(
-      endDrawer: _buildAlertsDrawer(context),
       body: AnimatedBackground(
         child: SafeArea(
           child: Column(
@@ -90,6 +91,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   }
 
   Widget _buildGreeting(BuildContext context, bool isSmallScreen) {
+    // region: header greeting – personalize with FirebaseAuth user
     final user = FirebaseAuth.instance.currentUser;
     final userName =
         user?.displayName ?? user?.email?.split('@').first ?? 'Admin';
@@ -120,11 +122,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     );
   }
 
+  //App Bar
   Widget _buildEnhancedAppBar(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 600;
 
+    // region: fancy header – gradient bg + greeting + quick status + actions
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: isSmallScreen
@@ -204,6 +208,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     ],
                   ],
                 ),
+
                 if (!isSmallScreen) ...[
                   const SizedBox(height: 4),
                   Row(
@@ -248,36 +253,15 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   Widget _buildAppBarActions(BuildContext context, bool isSmallScreen) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    // region: header actions – logout, profile, overflow menu
     return BlocBuilder<AdminBloc, AdminState>(
       builder: (context, state) {
-        final unreadCount = state is AdminLoaded && state.notifications != null
-            ? state.notifications!.where((n) => !n.isRead).length
-            : 0;
-
         if (isSmallScreen) {
-          // On small screens, show notifications + logout + profile + menu
+          // On small screens, show logout + profile + menu
           final user = FirebaseAuth.instance.currentUser;
           return Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Notifications button
-              if (unreadCount > 0)
-                _buildActionButton(
-                  context: context,
-                  icon: Icons.notifications_rounded,
-                  tooltip: 'Notifications',
-                  badge: unreadCount,
-                  onTap: () {
-                    showModalBottomSheet(
-                      context: context,
-                      backgroundColor: Colors.transparent,
-                      isScrollControlled: true,
-                      builder: (context) =>
-                          _buildAlertsBottomSheet(context, state),
-                    );
-                  },
-                ),
-              if (unreadCount > 0) const SizedBox(width: UIConstants.spacingXs),
               // Logout Button (Visible)
               IconButton(
                 icon: Icon(
@@ -427,30 +411,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Notifications button (visible if there are notifications)
-            if (unreadCount > 0) ...[
-              _buildActionButton(
-                context: context,
-                icon: Icons.notifications_rounded,
-                tooltip: 'Alerts & Notifications',
-                badge: unreadCount,
-                onTap: () {
-                  final screenWidth = MediaQuery.of(context).size.width;
-                  if (screenWidth > 600) {
-                    Scaffold.of(context).openEndDrawer();
-                  } else {
-                    showModalBottomSheet(
-                      context: context,
-                      backgroundColor: Colors.transparent,
-                      isScrollControlled: true,
-                      builder: (context) =>
-                          _buildAlertsBottomSheet(context, state),
-                    );
-                  }
-                },
-              ),
-              const SizedBox(width: UIConstants.spacingXs),
-            ],
             // Logout Button (Visible and prominent)
             OutlinedButton.icon(
               onPressed: () => AdminUtils.showLogoutDialog(context),
@@ -601,459 +561,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     );
   }
 
-  Widget _buildActionButton({
-    required BuildContext context,
-    required IconData icon,
-    required String tooltip,
-    VoidCallback? onTap,
-    int? badge,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
-        child: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.1)
-                : AppColors.grey100,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.1)
-                  : AppColors.grey300,
-              width: 1,
-            ),
-          ),
-          child: badge != null
-              ? Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Icon(
-                      icon,
-                      size: 20,
-                      color: AppColorsExtension.getTextPrimary(context),
-                    ),
-                    Positioned(
-                      right: -4,
-                      top: -4,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: AppColors.error,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: isDark
-                                ? const Color(0xFF121212)
-                                : Colors.white,
-                            width: 2,
-                          ),
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 18,
-                          minHeight: 18,
-                        ),
-                        child: Text(
-                          badge > 9 ? '9+' : badge.toString(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                            height: 1,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                  ],
-                )
-              : Icon(
-                  icon,
-                  size: 20,
-                  color: AppColorsExtension.getTextPrimary(context),
-                ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAlertsDrawer(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final drawerWidth = screenWidth > 1200 ? 400.0 : 350.0;
-
-    return Drawer(
-      width: drawerWidth,
-      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-      child: BlocBuilder<AdminBloc, AdminState>(
-        builder: (context, state) {
-          final loadedState = state is AdminLoaded ? state : null;
-
-          return Column(
-            children: [
-              // Header
-              Container(
-                padding: const EdgeInsets.all(UIConstants.spacingLg),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: isDark
-                        ? [const Color(0xFF2C2C2C), const Color(0xFF1E1E1E)]
-                        : [
-                            AppColors.primary.withValues(alpha: 0.1),
-                            AppColors.primary.withValues(alpha: 0.05),
-                          ],
-                  ),
-                  border: Border(
-                    bottom: BorderSide(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.1)
-                          : AppColors.grey200,
-                      width: 1,
-                    ),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            gradient: AppColors.primaryGradient,
-                            borderRadius: BorderRadius.circular(10),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.primary.withValues(alpha: 0.3),
-                                blurRadius: 8,
-                                spreadRadius: 0,
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.notifications_rounded,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: UIConstants.spacingMd),
-                        Expanded(
-                          child: Text(
-                            'Alerts & Notifications',
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColorsExtension.getTextPrimary(
-                                    context,
-                                  ),
-                                ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close_rounded),
-                      onPressed: () => Navigator.of(context).pop(),
-                      color: AppColorsExtension.getTextPrimary(context),
-                    ),
-                  ],
-                ),
-              ),
-              // Refresh button
-              Padding(
-                padding: const EdgeInsets.all(UIConstants.spacingMd),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () {
-                      context.read<AdminBloc>().add(const LoadNotifications());
-                    },
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: UIConstants.spacingMd,
-                        vertical: UIConstants.spacingSm,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: AppColors.primary.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.refresh_rounded,
-                            size: 16,
-                            color: AppColors.primary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Refresh',
-                            style: TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: UIConstants.fontSizeSm,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              // Content
-              Expanded(
-                child:
-                    loadedState?.notifications != null &&
-                        loadedState!.notifications!.isNotEmpty
-                    ? ListView.builder(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: UIConstants.spacingLg,
-                        ),
-                        itemCount: loadedState.notifications!.length,
-                        itemBuilder: (context, index) {
-                          final notification =
-                              loadedState.notifications![index];
-                          return Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: UIConstants.spacingMd,
-                            ),
-                            child: NotificationBadge(
-                              notification: notification,
-                              onTap: () {
-                                if (!notification.isRead) {
-                                  context.read<AdminBloc>().add(
-                                    MarkNotificationAsRead(notification.id),
-                                  );
-                                }
-                                if (notification.actionUrl != null) {
-                                  // Navigate to action URL if needed
-                                }
-                              },
-                              onDismiss: () {
-                                context.read<AdminBloc>().add(
-                                  MarkNotificationAsRead(notification.id),
-                                );
-                              },
-                            ),
-                          );
-                        },
-                      )
-                    : Center(
-                        child: Padding(
-                          padding: UIConstants.paddingXl,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.notifications_none_rounded,
-                                size: 64,
-                                color: AppColorsExtension.getGrey600(context),
-                              ),
-                              const SizedBox(height: UIConstants.spacingMd),
-                              Text(
-                                'No notifications',
-                                style: TextStyle(
-                                  color: AppColorsExtension.getGrey600(context),
-                                  fontSize: UIConstants.fontSizeLg,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildAlertsBottomSheet(BuildContext context, AdminState state) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final loadedState = state is AdminLoaded ? state : null;
-
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.85,
-      ),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Handle bar
-          Container(
-            margin: const EdgeInsets.only(top: UIConstants.spacingMd),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppColorsExtension.getGrey600(context),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          // Header
-          Padding(
-            padding: const EdgeInsets.all(UIConstants.spacingLg),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        gradient: AppColors.primaryGradient,
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.3),
-                            blurRadius: 8,
-                            spreadRadius: 0,
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.notifications_rounded,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: UIConstants.spacingMd),
-                    Text(
-                      'Alerts & Notifications',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColorsExtension.getTextPrimary(context),
-                      ),
-                    ),
-                  ],
-                ),
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () {
-                      context.read<AdminBloc>().add(const LoadNotifications());
-                    },
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: UIConstants.spacingMd,
-                        vertical: UIConstants.spacingSm,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: AppColors.primary.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.refresh_rounded,
-                            size: 16,
-                            color: AppColors.primary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Refresh',
-                            style: TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: UIConstants.fontSizeSm,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Content
-          Flexible(
-            child:
-                loadedState?.notifications != null &&
-                    loadedState!.notifications!.isNotEmpty
-                ? ListView.builder(
-                    shrinkWrap: true,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: UIConstants.spacingLg,
-                    ),
-                    itemCount: loadedState.notifications!.length,
-                    itemBuilder: (context, index) {
-                      final notification = loadedState.notifications![index];
-                      return Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: UIConstants.spacingMd,
-                        ),
-                        child: NotificationBadge(
-                          notification: notification,
-                          onTap: () {
-                            if (!notification.isRead) {
-                              context.read<AdminBloc>().add(
-                                MarkNotificationAsRead(notification.id),
-                              );
-                            }
-                            if (notification.actionUrl != null) {
-                              // Navigate to action URL if needed
-                            }
-                          },
-                          onDismiss: () {
-                            context.read<AdminBloc>().add(
-                              MarkNotificationAsRead(notification.id),
-                            );
-                          },
-                        ),
-                      );
-                    },
-                  )
-                : Center(
-                    child: Padding(
-                      padding: UIConstants.paddingXl,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.notifications_none_rounded,
-                            size: 64,
-                            color: AppColorsExtension.getGrey600(context),
-                          ),
-                          const SizedBox(height: UIConstants.spacingMd),
-                          Text(
-                            'No notifications',
-                            style: TextStyle(
-                              color: AppColorsExtension.getGrey600(context),
-                              fontSize: UIConstants.fontSizeLg,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-          ),
-          const SizedBox(height: UIConstants.spacingLg),
-        ],
-      ),
-    );
-  }
-
   Widget _buildExportBottomSheet(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -1193,6 +700,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   }
 
   Widget _buildBody(BuildContext context) {
+    // region: data-driven content – react to AdminBloc states and show tabs/metrics
     return BlocBuilder<AdminBloc, AdminState>(
       builder: (context, state) {
         if (state is AdminLoading) {
@@ -1247,7 +755,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             },
             child: Column(
               children: [
-                // Date Range Filter with better spacing
+                // region: date filter toolbar – narrows metrics query range
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
                     UIConstants.spacingLg,
@@ -1279,7 +787,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ),
                 ),
 
-                // Enhanced Tab Bar
+                // region: tab bar – switch between Overview/Trends/Activity/etc.
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: UIConstants.spacingLg,
@@ -1289,7 +797,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
                 const SizedBox(height: UIConstants.spacingLg),
 
-                // Content based on selected tab
+                // region: tab content – scrollable dashboards per section
                 Expanded(
                   child: SingleChildScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
@@ -1317,6 +825,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 600;
 
+    // region: frosted tab bar – responsive layout for metric sections
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
@@ -1457,6 +966,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     IconData icon,
     String subtitle,
   ) {
+    // region: individual tab chip – handles selection glow + label/subtitle
     final isSelected = _selectedTab == index;
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 600;
@@ -1971,7 +1481,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Enhanced Header with last updated
+        // Header with last updated
         Container(
           padding: const EdgeInsets.all(UIConstants.spacingMd),
           decoration: BoxDecoration(

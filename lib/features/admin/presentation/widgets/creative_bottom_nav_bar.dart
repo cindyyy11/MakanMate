@@ -3,8 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:makan_mate/core/constants/ui_constants.dart';
 import 'package:makan_mate/core/theme/app_colors.dart';
 import 'package:makan_mate/core/theme/app_theme.dart';
-
-/// Creative bottom navigation bar with advanced animations and glassmorphism
 class CreativeBottomNavBar extends StatefulWidget {
   final int currentIndex;
   final Function(int) onTap;

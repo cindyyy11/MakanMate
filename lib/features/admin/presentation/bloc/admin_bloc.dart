@@ -2,17 +2,14 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logger/logger.dart';
 import 'package:makan_mate/features/admin/domain/entities/activity_log_entity.dart';
-import 'package:makan_mate/features/admin/domain/entities/admin_notification_entity.dart';
 import 'package:makan_mate/features/admin/domain/entities/metric_trend_entity.dart';
 import 'package:makan_mate/features/admin/domain/usecases/export_metrics_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_activity_logs_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_metric_trend_usecase.dart';
-import 'package:makan_mate/features/admin/domain/usecases/get_notifications_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_platform_metrics_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_fairness_metrics_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_seasonal_trends_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_data_quality_metrics_usecase.dart';
-import 'package:makan_mate/features/admin/domain/repositories/admin_repository.dart';
 import 'package:makan_mate/features/admin/presentation/bloc/admin_event.dart';
 import 'package:makan_mate/features/admin/presentation/bloc/admin_state.dart';
 
@@ -21,32 +18,26 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
   final GetPlatformMetricsUseCase getPlatformMetrics;
   final GetMetricTrendUseCase getMetricTrend;
   final GetActivityLogsUseCase getActivityLogs;
-  final GetNotificationsUseCase getNotifications;
   final ExportMetricsUseCase exportMetrics;
   final GetFairnessMetricsUseCase getFairnessMetrics;
   final GetSeasonalTrendsUseCase getSeasonalTrends;
   final GetDataQualityMetricsUseCase getDataQualityMetrics;
-  final AdminRepository adminRepository;
   final Logger logger;
 
   AdminBloc({
     required this.getPlatformMetrics,
     required this.getMetricTrend,
     required this.getActivityLogs,
-    required this.getNotifications,
     required this.exportMetrics,
     required this.getFairnessMetrics,
     required this.getSeasonalTrends,
     required this.getDataQualityMetrics,
-    required this.adminRepository,
     required this.logger,
   }) : super(const AdminInitial()) {
     on<LoadPlatformMetrics>(_onLoadPlatformMetrics);
     on<RefreshPlatformMetrics>(_onRefreshPlatformMetrics);
     on<LoadMetricTrend>(_onLoadMetricTrend);
     on<LoadActivityLogs>(_onLoadActivityLogs);
-    on<LoadNotifications>(_onLoadNotifications);
-    on<MarkNotificationAsRead>(_onMarkNotificationAsRead);
     on<ExportMetrics>(_onExportMetrics);
     on<LoadFairnessMetrics>(_onLoadFairnessMetrics);
     on<RefreshFairnessMetrics>(_onRefreshFairnessMetrics);
@@ -93,15 +84,11 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
               GetMetricTrendParams(metricName: 'totalVendors', days: 7),
             ),
             getActivityLogs(GetActivityLogsParams(limit: 50)),
-            getNotifications(
-              GetNotificationsParams(unreadOnly: true, limit: 10),
-            ),
           ]);
 
           MetricTrend? userTrend;
           MetricTrend? vendorTrend;
           List<ActivityLog>? activityLogs;
-          List<AdminNotification>? notifications;
 
           trendResults[0].fold(
             (_) {},
@@ -115,11 +102,6 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
             (_) {},
             (logs) => activityLogs = logs as List<ActivityLog>,
           );
-          trendResults[3].fold(
-            (_) {},
-            (notifs) => notifications = notifs as List<AdminNotification>,
-          );
-
           if (!emit.isDone) {
             emit(
               AdminLoaded(
@@ -127,7 +109,6 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
                 userTrend: userTrend,
                 vendorTrend: vendorTrend,
                 activityLogs: activityLogs,
-                notifications: notifications,
               ),
             );
           }
@@ -196,7 +177,6 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
                 userTrend: currentState?.userTrend,
                 vendorTrend: currentState?.vendorTrend,
                 activityLogs: currentState?.activityLogs,
-                notifications: currentState?.notifications,
               ),
             );
           }
@@ -237,7 +217,6 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
                     ? trend
                     : currentState.vendorTrend,
                 activityLogs: currentState.activityLogs,
-                notifications: currentState.notifications,
               ),
             );
           }
@@ -278,7 +257,6 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
                 userTrend: currentState.userTrend,
                 vendorTrend: currentState.vendorTrend,
                 activityLogs: logs,
-                notifications: currentState.notifications,
               ),
             );
           }
@@ -286,74 +264,6 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
       );
     } catch (e, stackTrace) {
       logger.e('Error loading activity logs: $e', stackTrace: stackTrace);
-    }
-  }
-
-  Future<void> _onLoadNotifications(
-    LoadNotifications event,
-    Emitter<AdminState> emit,
-  ) async {
-    try {
-      logger.i('Loading notifications');
-
-      final result = await getNotifications(
-        GetNotificationsParams(
-          unreadOnly: event.unreadOnly,
-          limit: event.limit,
-        ),
-      );
-
-      result.fold(
-        (failure) {
-          logger.e('Failed to load notifications: ${failure.message}');
-        },
-        (notifications) {
-          logger.i('Successfully loaded ${notifications.length} notifications');
-          if (state is AdminLoaded) {
-            final currentState = state as AdminLoaded;
-            emit(
-              AdminLoaded(
-                currentState.metrics,
-                userTrend: currentState.userTrend,
-                vendorTrend: currentState.vendorTrend,
-                activityLogs: currentState.activityLogs,
-                notifications: notifications,
-              ),
-            );
-          }
-        },
-      );
-    } catch (e, stackTrace) {
-      logger.e('Error loading notifications: $e', stackTrace: stackTrace);
-    }
-  }
-
-  Future<void> _onMarkNotificationAsRead(
-    MarkNotificationAsRead event,
-    Emitter<AdminState> emit,
-  ) async {
-    try {
-      logger.i('Marking notification as read: ${event.notificationId}');
-
-      final result = await adminRepository.markNotificationAsRead(
-        event.notificationId,
-      );
-
-      result.fold(
-        (failure) {
-          logger.e('Failed to mark notification as read: ${failure.message}');
-        },
-        (_) {
-          logger.i('Successfully marked notification as read');
-          // Reload notifications to update state
-          add(const LoadNotifications(unreadOnly: true, limit: 10));
-        },
-      );
-    } catch (e, stackTrace) {
-      logger.e(
-        'Error marking notification as read: $e',
-        stackTrace: stackTrace,
-      );
     }
   }
 
@@ -430,7 +340,6 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
                 userTrend: currentState.userTrend,
                 vendorTrend: currentState.vendorTrend,
                 activityLogs: currentState.activityLogs,
-                notifications: currentState.notifications,
                 systemMetrics: currentState.systemMetrics,
                 fairnessMetrics: metrics,
               ),
@@ -476,7 +385,6 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
                 userTrend: currentState.userTrend,
                 vendorTrend: currentState.vendorTrend,
                 activityLogs: currentState.activityLogs,
-                notifications: currentState.notifications,
                 systemMetrics: currentState.systemMetrics,
                 fairnessMetrics: metrics,
               ),
@@ -519,7 +427,6 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
                 userTrend: currentState.userTrend,
                 vendorTrend: currentState.vendorTrend,
                 activityLogs: currentState.activityLogs,
-                notifications: currentState.notifications,
                 systemMetrics: currentState.systemMetrics,
                 fairnessMetrics: currentState.fairnessMetrics,
                 seasonalTrends: trends,
@@ -562,7 +469,6 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
                 userTrend: currentState.userTrend,
                 vendorTrend: currentState.vendorTrend,
                 activityLogs: currentState.activityLogs,
-                notifications: currentState.notifications,
                 systemMetrics: currentState.systemMetrics,
                 fairnessMetrics: currentState.fairnessMetrics,
                 seasonalTrends: trends,
@@ -599,7 +505,6 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
                 userTrend: currentState.userTrend,
                 vendorTrend: currentState.vendorTrend,
                 activityLogs: currentState.activityLogs,
-                notifications: currentState.notifications,
                 systemMetrics: currentState.systemMetrics,
                 fairnessMetrics: currentState.fairnessMetrics,
                 seasonalTrends: currentState.seasonalTrends,
@@ -647,7 +552,6 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
                 userTrend: currentState.userTrend,
                 vendorTrend: currentState.vendorTrend,
                 activityLogs: currentState.activityLogs,
-                notifications: currentState.notifications,
                 systemMetrics: currentState.systemMetrics,
                 fairnessMetrics: currentState.fairnessMetrics,
                 seasonalTrends: currentState.seasonalTrends,

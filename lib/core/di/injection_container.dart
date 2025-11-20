@@ -80,7 +80,6 @@ import 'package:makan_mate/features/admin/domain/repositories/admin_repository.d
 import 'package:makan_mate/features/admin/domain/usecases/export_metrics_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_activity_logs_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_metric_trend_usecase.dart';
-import 'package:makan_mate/features/admin/domain/usecases/get_notifications_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_platform_metrics_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_fairness_metrics_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_seasonal_trends_usecase.dart';
@@ -386,7 +385,6 @@ void _initAuth() {
 //   sl.registerLazySingleton(() => GetPlatformMetricsUseCase(sl()));
 //   sl.registerLazySingleton(() => GetMetricTrendUseCase(sl()));
 //   sl.registerLazySingleton(() => GetActivityLogsUseCase(sl()));
-//   sl.registerLazySingleton(() => GetNotificationsUseCase(sl()));
 //   sl.registerLazySingleton(() => ExportMetricsUseCase(sl()));
 //   sl.registerLazySingleton(() => StreamSystemMetricsUseCase(sl()));
 
@@ -563,12 +561,10 @@ void _initAdmin() {
       getPlatformMetrics: sl(),
       getMetricTrend: sl(),
       getActivityLogs: sl(),
-      getNotifications: sl(),
       getDataQualityMetrics: sl(),
       getFairnessMetrics: sl(),
       getSeasonalTrends: sl(),
       exportMetrics: sl(),
-      adminRepository: sl(),
       logger: logger,
     ),
   );
@@ -602,7 +598,6 @@ void _initAdmin() {
   sl.registerLazySingleton(() => GetPlatformMetricsUseCase(sl()));
   sl.registerLazySingleton(() => GetMetricTrendUseCase(sl()));
   sl.registerLazySingleton(() => GetActivityLogsUseCase(sl()));
-  sl.registerLazySingleton(() => GetNotificationsUseCase(sl()));
   sl.registerLazySingleton(() => ExportMetricsUseCase(sl()));
   sl.registerLazySingleton(() => GetFairnessMetricsUseCase(sl()));
   sl.registerLazySingleton(() => GetSeasonalTrendsUseCase(sl()));

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:makan_mate/core/constants/app_constants.dart';
 import 'package:makan_mate/core/constants/ui_constants.dart';
 import 'package:makan_mate/core/theme/app_colors.dart';
 import 'package:makan_mate/core/theme/app_theme.dart';
@@ -22,10 +23,17 @@ class AdminUtils {
           ],
         ),
         content: const Text('Are you sure you want to logout?'),
+        // content: Container(
+        //   height: 100,
+        //   child: const Text('Are you sure you want to logout?'),
+        // ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const Text(
+              'Cancel',
+              // style: TextStyle(color: AppColors.background),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -33,7 +41,10 @@ class AdminUtils {
               context.read<AuthBloc>().add(SignOutRequested());
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Logout'),
+            child: const Text(
+              'Logout',
+              // style: TextStyle(color: AppColors.overlay),
+            ),
           ),
         ],
       ),
@@ -119,7 +130,9 @@ class AdminUtils {
         color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: UIConstants.borderRadiusMd,
         border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.1) : AppColors.grey200,
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.1)
+              : AppColors.grey200,
         ),
       ),
       child: Column(

@@ -26,6 +26,7 @@ import 'package:makan_mate/features/admin/presentation/bloc/admin_user_analytics
 import 'package:makan_mate/features/admin/presentation/bloc/admin_user_analytics_event.dart';
 import 'package:makan_mate/features/admin/presentation/bloc/admin_user_analytics_state.dart';
 
+/// High-level admin console for managing end users, reviews, bans, tickets, analytics.
 class UserManagementPage extends StatelessWidget {
   const UserManagementPage({super.key});
 
@@ -175,6 +176,7 @@ class UserManagementPage extends StatelessWidget {
   }
 }
 
+// region: Tab 1 – master user directory with search/filter/export
 class _AllUsersTab extends StatefulWidget {
   const _AllUsersTab();
 
@@ -216,6 +218,7 @@ class _AllUsersTabState extends State<_AllUsersTab>
     super.dispose();
   }
 
+  // Keeps pill indicator in sync so UI knows filters are active.
   void _updateFilterState() {
     setState(() {
       _hasActiveFilters =
@@ -227,6 +230,7 @@ class _AllUsersTabState extends State<_AllUsersTab>
     });
   }
 
+  // Resets every filter/search field and refreshes full list.
   void _clearFilters() {
     setState(() {
       _filterRole = null;
@@ -239,6 +243,7 @@ class _AllUsersTabState extends State<_AllUsersTab>
     });
   }
 
+  // Applies search + role + verification + date filters to cached users.
   List<UserEntity> get _filteredUsers {
     // Use _users if available, otherwise return empty list
     if (_users.isEmpty) return [];
@@ -289,6 +294,7 @@ class _AllUsersTabState extends State<_AllUsersTab>
     return filtered;
   }
 
+  // Launches modal with role/status/date controls; applies on save.
   void _showFilterDialog(BuildContext context) {
     String? tempFilterRole = _filterRole;
     bool? tempFilterVerificationStatus = _filterVerificationStatus;
@@ -1193,6 +1199,7 @@ class _AllUsersTabState extends State<_AllUsersTab>
   }
 }
 
+// region: Tab 2 – human-in-the-loop review moderation queue
 class _ReviewModerationTab extends StatefulWidget {
   const _ReviewModerationTab();
 
@@ -2332,6 +2339,7 @@ class _ReviewModerationTabState extends State<_ReviewModerationTab>
   }
 }
 
+// region: Tab 3 – ban history + warning issuance workflow
 class _BansWarningsTab extends StatefulWidget {
   const _BansWarningsTab();
 
@@ -3126,6 +3134,7 @@ class _BansWarningsTabState extends State<_BansWarningsTab>
   }
 }
 
+// region: Tab 4 – support ticket triage dashboard
 class _SupportTicketsTab extends StatefulWidget {
   const _SupportTicketsTab();
 
@@ -3908,6 +3917,7 @@ class _SupportTicketsTabState extends State<_SupportTicketsTab>
   }
 }
 
+// region: Tab 5 – user behavior analytics & funnel KPIs
 class _AnalyticsTab extends StatefulWidget {
   const _AnalyticsTab();
 
@@ -3917,7 +3927,6 @@ class _AnalyticsTab extends StatefulWidget {
 
 class _AnalyticsTabState extends State<_AnalyticsTab>
     with AutomaticKeepAliveClientMixin {
-  bool _isLoading = false;
 
   // Analytics data
   int _totalUsers = 0;

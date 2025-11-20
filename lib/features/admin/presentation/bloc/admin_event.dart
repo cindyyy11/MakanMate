@@ -59,27 +59,6 @@ class LoadActivityLogs extends AdminEvent {
   List<Object?> get props => [startDate, endDate, userId, limit];
 }
 
-/// Event to load notifications
-class LoadNotifications extends AdminEvent {
-  final bool? unreadOnly;
-  final int? limit;
-
-  const LoadNotifications({this.unreadOnly, this.limit});
-
-  @override
-  List<Object?> get props => [unreadOnly, limit];
-}
-
-/// Event to mark notification as read
-class MarkNotificationAsRead extends AdminEvent {
-  final String notificationId;
-
-  const MarkNotificationAsRead(this.notificationId);
-
-  @override
-  List<Object> get props => [notificationId];
-}
-
 /// Event to export metrics
 class ExportMetrics extends AdminEvent {
   final String format; // 'csv' or 'pdf'

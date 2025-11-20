@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:logger/logger.dart';
 import 'package:makan_mate/features/admin/data/models/activity_log_model.dart';
-import 'package:makan_mate/features/admin/data/models/admin_notification_model.dart';
 import 'package:makan_mate/features/admin/domain/entities/metric_trend_entity.dart';
 import 'package:makan_mate/features/admin/data/models/metric_trend_model.dart';
 import 'package:makan_mate/features/admin/data/models/platform_metrics_model.dart';
@@ -41,13 +40,6 @@ abstract class AdminRemoteDataSource {
     String? userId,
     int? limit,
   });
-
-  Future<List<AdminNotificationModel>> getNotifications({
-    bool? unreadOnly,
-    int? limit,
-  });
-
-  Future<void> markNotificationAsRead(String notificationId);
 
   Future<String> exportMetricsToCSV({DateTime? startDate, DateTime? endDate});
 
@@ -721,55 +713,6 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
     } catch (e, stackTrace) {
       logger.e('Error fetching activity logs: $e', stackTrace: stackTrace);
       return [];
-    }
-  }
-
-  @override
-  Future<List<AdminNotificationModel>> getNotifications({
-    bool? unreadOnly,
-    int? limit,
-  }) async {
-    try {
-      logger.i('Fetching admin notifications');
-
-      Query query = firestore
-          .collection('admin_notifications')
-          .orderBy('timestamp', descending: true);
-
-      if (unreadOnly == true) {
-        query = query.where('isRead', isEqualTo: false);
-      }
-
-      if (limit != null) {
-        query = query.limit(limit);
-      }
-
-      final snapshot = await query.get();
-
-      return snapshot.docs
-          .map((doc) => AdminNotificationModel.fromFirestore(doc))
-          .toList();
-    } catch (e) {
-      // Collection doesn't exist yet - return empty list
-      logger.w('admin_notifications collection not found: $e');
-      return [];
-    }
-  }
-
-  @override
-  Future<void> markNotificationAsRead(String notificationId) async {
-    try {
-      await firestore
-          .collection('admin_notifications')
-          .doc(notificationId)
-          .update({'isRead': true});
-      logger.i('Marked notification $notificationId as read');
-    } catch (e, stackTrace) {
-      logger.e(
-        'Error marking notification as read: $e',
-        stackTrace: stackTrace,
-      );
-      rethrow;
     }
   }
 
@@ -1486,7 +1429,7 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
 
       // TODO: Implement A/B testing feature in the future
       // return ABTestResultModel.fromFirestore(doc);
-      final data = doc.data() as Map<String, dynamic>?;
+      final data = doc.data();
       if (data == null) {
         return await calculateABTestStats(testId);
       }
@@ -1581,8 +1524,7 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
       // final assignment = ABTestAssignmentModel.fromFirestore(
       //   assignmentQuery.docs.first,
       // );
-      final assignmentData =
-          assignmentQuery.docs.first.data() as Map<String, dynamic>;
+      final assignmentData = assignmentQuery.docs.first.data();
       final variantId = assignmentData['variantId'] as String? ?? '';
 
       // Record event
@@ -1627,7 +1569,7 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
       //     .map((doc) => ABTestAssignmentModel.fromFirestore(doc))
       //     .toList();
       final assignments = assignmentsSnapshot.docs.map((doc) {
-        final data = doc.data() as Map<String, dynamic>;
+        final data = doc.data();
         return {
           'id': doc.id,
           'variantId': data['variantId'] as String? ?? '',
