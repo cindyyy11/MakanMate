@@ -160,9 +160,6 @@ class PushNotificationService {
   /// **Current implementation:** Logs the message
   /// **Future enhancement:** Show in-app notification banner
   static void _handleForegroundMessage(RemoteMessage message) {
-    // TODO: Show in-app notification using flutter_local_notifications
-    // For now, just log it
-    // You can also update UI state, show snackbar, etc.
 
     final title = message.notification?.title ?? 'Notification';
     final body = message.notification?.body ?? '';

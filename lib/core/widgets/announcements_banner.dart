@@ -4,11 +4,13 @@ import 'package:makan_mate/core/theme/app_colors.dart';
 import 'package:makan_mate/core/theme/app_theme.dart';
 import 'package:makan_mate/features/admin/domain/repositories/admin_repository.dart';
 import 'package:makan_mate/core/di/injection_container.dart' as di;
-import 'package:dartz/dartz.dart';
+import 'package:dartz/dartz.dart' hide State;
 import 'package:makan_mate/core/errors/failures.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 /// Widget to display active announcements as banners
-class AnnouncementsBanner extends StatelessWidget {
+class AnnouncementsBanner extends StatefulWidget {
   final String? userRole; // 'user', 'vendor', 'admin', or null for 'all'
   final bool showUrgentOnly; // If true, only show urgent announcements
 
@@ -19,9 +21,63 @@ class AnnouncementsBanner extends StatelessWidget {
   });
 
   @override
+  State<AnnouncementsBanner> createState() => _AnnouncementsBannerState();
+}
+
+class _AnnouncementsBannerState extends State<AnnouncementsBanner> {
+  static const String _dismissedAnnouncementsKey = 'dismissed_announcements';
+  Set<String> _dismissedAnnouncements = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDismissedAnnouncements();
+  }
+
+  Future<void> _loadDismissedAnnouncements() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final dismissedJson = prefs.getString(_dismissedAnnouncementsKey);
+      if (dismissedJson != null) {
+        final List<dynamic> dismissedList = json.decode(dismissedJson);
+        setState(() {
+          _dismissedAnnouncements = dismissedList.cast<String>().toSet();
+        });
+      }
+    } catch (e) {
+      // Handle error silently
+    }
+  }
+
+  Future<void> _dismissAnnouncement(String announcementId) async {
+    try {
+      setState(() {
+        _dismissedAnnouncements.add(announcementId);
+      });
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        _dismissedAnnouncementsKey,
+        json.encode(_dismissedAnnouncements.toList()),
+      );
+    } catch (e) {
+      // Handle error silently
+    }
+  }
+
+  List<Map<String, dynamic>> _filterDismissed(
+    List<Map<String, dynamic>> announcements,
+  ) {
+    return announcements.where((announcement) {
+      final id = announcement['id']?.toString() ?? '';
+      return !_dismissedAnnouncements.contains(id);
+    }).toList();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final repository = di.sl<AdminRepository>();
-    final targetAudience = userRole ?? 'all';
+    final targetAudience = widget.userRole ?? 'all';
 
     return StreamBuilder<Either<Failure, List<Map<String, dynamic>>>>(
       stream: repository.streamAnnouncements(
@@ -40,7 +96,13 @@ class AnnouncementsBanner extends StatelessWidget {
               return const SizedBox.shrink();
             }
 
-            return _buildAnnouncements(context, announcements);
+            // Filter out dismissed announcements
+            final filteredAnnouncements = _filterDismissed(announcements);
+            if (filteredAnnouncements.isEmpty) {
+              return const SizedBox.shrink();
+            }
+
+            return _buildAnnouncements(context, filteredAnnouncements);
           },
         );
       },
@@ -52,7 +114,7 @@ class AnnouncementsBanner extends StatelessWidget {
     List<Map<String, dynamic>> announcements,
   ) {
     // Filter by priority if needed
-    final filteredAnnouncements = showUrgentOnly
+    final filteredAnnouncements = widget.showUrgentOnly
         ? announcements.where((a) => 
             a['priority'] == 'urgent' || a['priority'] == 'high')
         .toList()
@@ -84,8 +146,6 @@ class AnnouncementsBanner extends StatelessWidget {
     BuildContext context,
     Map<String, dynamic> announcement,
   ) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 8),
@@ -141,8 +201,10 @@ class AnnouncementsBanner extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.close_rounded, color: Colors.white),
             onPressed: () {
-              // Optionally dismiss this announcement
-              // You could store dismissed announcements in local storage
+              final announcementId = announcement['id']?.toString() ?? '';
+              if (announcementId.isNotEmpty) {
+                _dismissAnnouncement(announcementId);
+              }
             },
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
@@ -156,7 +218,6 @@ class AnnouncementsBanner extends StatelessWidget {
     BuildContext context,
     Map<String, dynamic> announcement,
   ) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final priority = announcement['priority'] ?? 'medium';
     
     Color backgroundColor;
@@ -165,17 +226,17 @@ class AnnouncementsBanner extends StatelessWidget {
 
     switch (priority) {
       case 'high':
-        backgroundColor = AppColors.warning.withOpacity(0.1);
+        backgroundColor = AppColors.warning.withAlpha(26);
         textColor = AppColors.warning;
         icon = Icons.info_rounded;
         break;
       case 'low':
-        backgroundColor = AppColors.info.withOpacity(0.1);
+        backgroundColor = AppColors.info.withAlpha(26);
         textColor = AppColors.info;
         icon = Icons.campaign_rounded;
         break;
       default: // medium
-        backgroundColor = AppColors.primary.withOpacity(0.1);
+        backgroundColor = AppColors.primary.withAlpha(26);
         textColor = AppColors.primary;
         icon = Icons.announcement_rounded;
     }
@@ -188,7 +249,7 @@ class AnnouncementsBanner extends StatelessWidget {
         color: backgroundColor,
         borderRadius: UIConstants.borderRadiusMd,
         border: Border.all(
-          color: textColor.withOpacity(0.3),
+          color: textColor.withAlpha(77),
           width: 1,
         ),
       ),
@@ -228,7 +289,10 @@ class AnnouncementsBanner extends StatelessWidget {
               size: 18,
             ),
             onPressed: () {
-              // Optionally dismiss this announcement
+              final announcementId = announcement['id']?.toString() ?? '';
+              if (announcementId.isNotEmpty) {
+                _dismissAnnouncement(announcementId);
+              }
             },
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),

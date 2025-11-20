@@ -93,35 +93,3 @@ Future<void> main() async {
   // 8) Run the app
   runApp(const MakanMateApp());
 }
-
-/* 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(create: (_) => di.sl<HomeBloc>()),
-        BlocProvider(create: (_) => di.sl<AuthBloc>()..add(AppStarted())),
-        BlocProvider(create: (_) => di.sl<VendorBloc>()..add(LoadMenuEvent())),
-        BlocProvider(create: (_) => AuthBloc()),
-        BlocProvider(create: (_) => di.sl<MapBloc>()),
-      ],
-      child: MaterialApp(
-        title: 'MakanMate',
-        debugShowCheckedModeBanner: false,
-        routes: {
-          '/vendorOnboarding': (_) => const VendorOnboardingPage(),
-          '/pendingApproval': (_) => PendingApprovalPage(
-            onBackToLogin: () {
-              // This route is used only for navigation overview; the actual
-              // AuthBloc listener will handle resetting state.
-            },
-          ),
-        },
-        home: const AuthPage(), // Use AuthPage for proper authentication flow
-      ),
-    );
-  }
-} */
