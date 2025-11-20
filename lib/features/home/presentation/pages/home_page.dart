@@ -12,7 +12,8 @@ import 'package:makan_mate/features/home/presentation/pages/restaurant_detail_pa
 import 'package:makan_mate/features/home/presentation/widgets/ai_recommendations_section.dart';
 import 'package:makan_mate/features/map/presentation/bloc/map_bloc.dart';
 import 'package:makan_mate/features/map/presentation/pages/map_page.dart';
-import 'package:makan_mate/features/map/presentation/bloc/map_event.dart' as map;
+import 'package:makan_mate/features/map/presentation/bloc/map_event.dart'
+    as map;
 import 'package:makan_mate/core/widgets/announcements_banner.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -114,22 +115,22 @@ class _HomeScreenState extends State<HomeScreen> {
         .where('vendorId', isEqualTo: vendorId)
         .snapshots()
         .map((snap) {
-      if (snap.docs.isEmpty) return 0.0;
+          if (snap.docs.isEmpty) return 0.0;
 
-      double total = 0;
-      for (var doc in snap.docs) {
-        final r = (doc['rating'] as num?)?.toDouble() ?? 0.0;
-        total += r;
-      }
+          double total = 0;
+          for (var doc in snap.docs) {
+            final r = (doc['rating'] as num?)?.toDouble() ?? 0.0;
+            total += r;
+          }
 
-      return total / snap.docs.length;
-    });
+          return total / snap.docs.length;
+        });
   }
 
   PreferredSizeWidget _buildAppBar(ThemeData theme) {
     final primary = theme.colorScheme.primary;
-    final iconColor = theme.appBarTheme.iconTheme?.color ??
-        theme.colorScheme.onPrimary;
+    final iconColor =
+        theme.appBarTheme.iconTheme?.color ?? theme.colorScheme.onPrimary;
 
     return AppBar(
       elevation: 0,
@@ -216,10 +217,7 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            primary.withOpacity(0.85),
-            primary,
-          ],
+          colors: [primary.withOpacity(0.85), primary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -368,7 +366,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         width: 60,
                         decoration: BoxDecoration(
                           color: primary.withOpacity(
-                              isDark ? 0.25 : 0.1), // subtle in both modes
+                            isDark ? 0.25 : 0.1,
+                          ), // subtle in both modes
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Icon(Icons.fastfood, color: primary),
@@ -459,8 +458,8 @@ class _HomeScreenState extends State<HomeScreen> {
             color: isFavorited
                 ? Colors.red
                 : (isDark
-                    ? Colors.white70
-                    : theme.iconTheme.color ?? Colors.grey),
+                      ? Colors.white70
+                      : theme.iconTheme.color ?? Colors.grey),
           ),
           onPressed: () async {
             final user = FirebaseAuth.instance.currentUser;
@@ -566,8 +565,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(
                       vendor.shortDescription,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.textTheme.bodySmall?.color
-                            ?.withOpacity(0.75),
+                        color: theme.textTheme.bodySmall?.color?.withOpacity(
+                          0.75,
+                        ),
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -575,8 +575,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(Icons.star,
-                            color: Colors.amber, size: 16),
+                        const Icon(Icons.star, color: Colors.amber, size: 16),
                         const SizedBox(width: 4),
                         StreamBuilder<double>(
                           stream: _watchVendorRating(vendor.id),
