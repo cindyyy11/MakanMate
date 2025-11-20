@@ -8,7 +8,7 @@ import 'package:makan_mate/features/admin/presentation/pages/vendor_management_p
 import 'package:makan_mate/features/admin/presentation/pages/user_management_page.dart';
 import 'package:makan_mate/features/admin/presentation/pages/create_admin_page.dart';
 import 'package:makan_mate/features/admin/presentation/pages/create_announcement_page.dart';
-import 'package:makan_mate/features/admin/presentation/widgets/creative_bottom_nav_bar.dart';
+import 'package:makan_mate/features/admin/presentation/widgets/bottom_nav_bar.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:makan_mate/features/auth/presentation/bloc/auth_event.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -512,7 +512,7 @@ class _AdminMainPageState extends State<AdminMainPage> {
         ? currentMainIndex
         : 4; // Default to "More" if not found
 
-    return CreativeBottomNavBar(
+    return BottomNavBar(
       currentIndex: currentIndex,
       onTap: (index) {
         if (index < mainItems.length) {

@@ -6,18 +6,12 @@ import 'package:makan_mate/features/admin/data/models/activity_log_model.dart';
 import 'package:makan_mate/features/admin/domain/entities/metric_trend_entity.dart';
 import 'package:makan_mate/features/admin/data/models/metric_trend_model.dart';
 import 'package:makan_mate/features/admin/data/models/platform_metrics_model.dart';
-import 'package:makan_mate/features/admin/data/models/system_metrics_model.dart';
-import 'package:makan_mate/features/admin/domain/entities/system_metrics_entity.dart';
-import 'package:makan_mate/features/admin/data/models/fairness_metrics_model.dart';
 import 'package:makan_mate/features/admin/data/models/seasonal_trend_model.dart';
-import 'package:makan_mate/features/admin/data/models/data_quality_metrics_model.dart';
 // TODO: Uncomment when implementing A/B testing feature in the future
 // import 'package:makan_mate/features/admin/data/models/ab_test_model.dart';
 // import 'package:makan_mate/features/admin/domain/entities/ab_test_entity.dart';
 import 'package:makan_mate/features/admin/domain/entities/seasonal_trend_entity.dart';
-import 'package:makan_mate/features/admin/domain/services/fairness_metrics_calculator_interface.dart';
 import 'package:makan_mate/features/admin/domain/services/seasonal_trend_calculator_interface.dart';
-import 'package:makan_mate/features/admin/data/datasources/fairness_metrics_calculator_impl.dart';
 import 'package:makan_mate/features/admin/data/datasources/seasonal_trend_calculator_impl.dart';
 
 /// Remote data source for admin operations
@@ -45,18 +39,6 @@ abstract class AdminRemoteDataSource {
 
   Future<String> exportMetricsToPDF({DateTime? startDate, DateTime? endDate});
 
-  /// Stream real-time system metrics
-  Stream<SystemMetricsModel> streamSystemMetrics();
-
-  /// Get fairness metrics for AI recommendations
-  Future<FairnessMetricsModel> getFairnessMetrics({
-    int recommendationLimit = 1000,
-    DateTime? startDate,
-    DateTime? endDate,
-  });
-
-  /// Trigger fairness metrics calculation (for cloud function)
-  Future<void> calculateAndSaveFairnessMetrics();
 
   /// Get seasonal trend analysis
   Future<SeasonalTrendAnalysisModel> getSeasonalTrends({
@@ -64,8 +46,6 @@ abstract class AdminRemoteDataSource {
     DateTime? endDate,
   });
 
-  /// Get data quality metrics
-  Future<DataQualityMetricsModel> getDataQualityMetrics();
 
   // A/B Test Management
 
@@ -148,14 +128,9 @@ abstract class AdminRemoteDataSource {
 class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
   final FirebaseFirestore firestore;
   final Logger logger;
-  late final FairnessMetricsCalculatorInterface _fairnessCalculator;
   late final SeasonalTrendCalculatorInterface _seasonalTrendCalculator;
 
   AdminRemoteDataSourceImpl({required this.firestore, required this.logger}) {
-    _fairnessCalculator = FairnessMetricsCalculatorImpl(
-      firestore: firestore,
-      logger: logger,
-    );
     _seasonalTrendCalculator = SeasonalTrendCalculatorImpl(
       firestore: firestore,
       logger: logger,
@@ -770,194 +745,6 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
   }
 
   @override
-  Stream<SystemMetricsModel> streamSystemMetrics() {
-    try {
-      logger.i('Streaming real-time system metrics');
-
-      return firestore
-          .collection('system_metrics')
-          .doc('current')
-          .snapshots()
-          .map((doc) {
-            if (!doc.exists) {
-              // Return default metrics if document doesn't exist
-              return SystemMetricsModel(
-                activeUsers: 0,
-                activeSessions: 0,
-                apiCallsPerMinute: 0,
-                avgResponseTime: 0.0,
-                errorCount: 0,
-                errorRate: 0.0,
-                healthStatus: SystemHealthStatus.healthy,
-                lastUpdated: DateTime.now(),
-              );
-            }
-            return SystemMetricsModel.fromFirestore(doc);
-          })
-          .handleError((error) {
-            logger.e('Error streaming system metrics: $error');
-            // Return default metrics on error
-            return SystemMetricsModel(
-              activeUsers: 0,
-              activeSessions: 0,
-              apiCallsPerMinute: 0,
-              avgResponseTime: 0.0,
-              errorCount: 0,
-              errorRate: 0.0,
-              healthStatus: SystemHealthStatus.warning,
-              lastUpdated: DateTime.now(),
-            );
-          });
-    } catch (e, stackTrace) {
-      logger.e(
-        'Error setting up system metrics stream: $e',
-        stackTrace: stackTrace,
-      );
-      // Return a stream with default metrics
-      return Stream.value(
-        SystemMetricsModel(
-          activeUsers: 0,
-          activeSessions: 0,
-          apiCallsPerMinute: 0,
-          avgResponseTime: 0.0,
-          errorCount: 0,
-          errorRate: 0.0,
-          healthStatus: SystemHealthStatus.warning,
-          lastUpdated: DateTime.now(),
-        ),
-      );
-    }
-  }
-
-  @override
-  Future<FairnessMetricsModel> getFairnessMetrics({
-    int recommendationLimit = 1000,
-    DateTime? startDate,
-    DateTime? endDate,
-  }) async {
-    try {
-      logger.i('Fetching fairness metrics');
-
-      // Try to get latest cached metrics first
-      final latestDoc = await firestore
-          .collection('fairness_metrics')
-          .doc('latest')
-          .get();
-
-      if (latestDoc.exists) {
-        final cached = FairnessMetricsModel.fromFirestore(latestDoc);
-        final cacheAge = DateTime.now().difference(cached.calculatedAt);
-
-        // Use cached if less than 1 hour old
-        if (cacheAge.inHours < 1) {
-          logger.i(
-            'Using cached fairness metrics (age: ${cacheAge.inMinutes} minutes)',
-          );
-          return cached;
-        }
-      }
-
-      // Calculate fresh metrics
-      logger.i('Calculating fresh fairness metrics');
-      final metrics = await _fairnessCalculator.calculateFairnessMetrics(
-        recommendationLimit: recommendationLimit,
-        startDate: startDate,
-        endDate: endDate,
-      );
-
-      // Convert to model
-      final model = FairnessMetricsModel(
-        cuisineDistribution: metrics.cuisineDistribution,
-        regionDistribution: metrics.regionDistribution,
-        smallVendorVisibility: metrics.smallVendorVisibility,
-        largeVendorVisibility: metrics.largeVendorVisibility,
-        diversityScore: metrics.diversityScore,
-        ndcgScore: metrics.ndcgScore,
-        biasAlerts: metrics.biasAlerts,
-        totalRecommendations: metrics.totalRecommendations,
-        analysisStartDate: metrics.analysisStartDate,
-        analysisEndDate: metrics.analysisEndDate,
-        calculatedAt: metrics.calculatedAt,
-      );
-
-      // Save to Firestore
-      await firestore
-          .collection('fairness_metrics')
-          .doc('latest')
-          .set(model.toFirestore());
-
-      logger.i('Successfully fetched fairness metrics');
-      return model;
-    } catch (e, stackTrace) {
-      logger.e('Error fetching fairness metrics: $e', stackTrace: stackTrace);
-      // Return default metrics instead of throwing
-      return _getDefaultFairnessMetrics();
-    }
-  }
-
-  /// Get default fairness metrics when data is not available
-  FairnessMetricsModel _getDefaultFairnessMetrics() {
-    return FairnessMetricsModel(
-      cuisineDistribution: {},
-      regionDistribution: {},
-      smallVendorVisibility: 0.0,
-      largeVendorVisibility: 0.0,
-      diversityScore: 0.0,
-      ndcgScore: 0.0,
-      biasAlerts: const [],
-      totalRecommendations: 0,
-      analysisStartDate: DateTime.now().subtract(const Duration(days: 30)),
-      analysisEndDate: DateTime.now(),
-      calculatedAt: DateTime.now(),
-    );
-  }
-
-  @override
-  Future<void> calculateAndSaveFairnessMetrics() async {
-    try {
-      logger.i('Calculating and saving fairness metrics (cloud function)');
-
-      final metrics = await _fairnessCalculator.calculateFairnessMetrics(
-        recommendationLimit: 1000,
-      );
-
-      final model = FairnessMetricsModel(
-        cuisineDistribution: metrics.cuisineDistribution,
-        regionDistribution: metrics.regionDistribution,
-        smallVendorVisibility: metrics.smallVendorVisibility,
-        largeVendorVisibility: metrics.largeVendorVisibility,
-        diversityScore: metrics.diversityScore,
-        ndcgScore: metrics.ndcgScore,
-        biasAlerts: metrics.biasAlerts,
-        totalRecommendations: metrics.totalRecommendations,
-        analysisStartDate: metrics.analysisStartDate,
-        analysisEndDate: metrics.analysisEndDate,
-        calculatedAt: metrics.calculatedAt,
-      );
-
-      // Save latest
-      await firestore
-          .collection('fairness_metrics')
-          .doc('latest')
-          .set(model.toFirestore());
-
-      // Also save historical record
-      await firestore
-          .collection('fairness_metrics')
-          .doc(DateTime.now().toIso8601String())
-          .set(model.toFirestore());
-
-      logger.i('Successfully calculated and saved fairness metrics');
-    } catch (e, stackTrace) {
-      logger.e(
-        'Error calculating fairness metrics: $e',
-        stackTrace: stackTrace,
-      );
-      rethrow;
-    }
-  }
-
-  @override
   Future<SeasonalTrendAnalysisModel> getSeasonalTrends({
     DateTime? startDate,
     DateTime? endDate,
@@ -1052,52 +839,6 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
     );
   }
 
-  @override
-  Future<DataQualityMetricsModel> getDataQualityMetrics() async {
-    try {
-      logger.i('Fetching data quality metrics from Firestore');
-
-      // Get latest data quality metrics
-      final doc = await firestore
-          .collection('data_quality')
-          .doc('latest')
-          .get();
-
-      if (!doc.exists) {
-        logger.w('No data quality metrics found, returning empty metrics');
-        // Return default empty metrics
-        return DataQualityMetricsModel(
-          overallQualityScore: 0.0,
-          menuCompleteness: 0.0,
-          halalCoverage: 0.0,
-          staleness: 0.0,
-          locationAccuracy: 0.0,
-          totalVendors: 0,
-          vendorsWithCompleteMenus: 0,
-          vendorsWithValidHalalCerts: 0,
-          vendorsStaleData: 0,
-          duplicateListings: 0,
-          totalFoodItems: 0,
-          criticalIssues: const [],
-          staleVendorIds: const [],
-          expiredCertVendorIds: const [],
-          incompleteMenuVendorIds: const [],
-          duplicateVendorIds: const [],
-          calculatedAt: DateTime.now(),
-        );
-      }
-
-      final model = DataQualityMetricsModel.fromFirestore(doc);
-      logger.i('Successfully fetched data quality metrics');
-      return model;
-    } catch (e, stackTrace) {
-      logger.e(
-        'Error fetching data quality metrics: $e',
-        stackTrace: stackTrace,
-      );
-      rethrow;
-    }
-  }
 
   // Announcement Management Implementation
 

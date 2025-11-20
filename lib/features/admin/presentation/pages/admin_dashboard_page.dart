@@ -15,12 +15,6 @@ import 'package:makan_mate/features/admin/presentation/widgets/animated_metric_c
 import 'package:makan_mate/core/widgets/date_range_filter.dart';
 import 'package:makan_mate/core/widgets/loading_animation.dart';
 import 'package:makan_mate/core/theme/theme_bloc.dart';
-// TODO: Uncomment when implementing real-time monitoring in the future
-// import 'package:makan_mate/features/admin/presentation/widgets/realtime_monitoring_widget.dart';
-// TODO: Uncomment when implementing fairness metrics in the future
-// import 'package:makan_mate/features/admin/presentation/widgets/fairness_dashboard_widget.dart';
-// TODO: Uncomment when implementing data quality metrics in the future
-// import 'package:makan_mate/features/admin/presentation/widgets/data_quality_dashboard_widget.dart';
 import 'package:makan_mate/features/admin/presentation/widgets/metric_trend_indicator.dart';
 import 'package:makan_mate/features/admin/presentation/widgets/animated_background.dart';
 import 'package:makan_mate/features/admin/presentation/widgets/seasonal_insights_widget.dart';
@@ -44,8 +38,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   Timer? _refreshTimer;
   DateTime? _startDate;
   DateTime? _endDate;
-  int _selectedTab =
-      0; // 0: Overview, 1: Trends, 2: Activity, 3: Real-time, 4: Fairness, 5: Data Quality
+  int _selectedTab = 0; // 0: Overview, 1: Trends, 2: Activity
 
   @override
   void initState() {
@@ -66,9 +59,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   @override
   void dispose() {
     _refreshTimer?.cancel();
-    // TODO: Implement system metrics streaming in the future
-    // Stop streaming when disposing
-    // context.read<AdminBloc>().add(const StopStreamingSystemMetrics());
     super.dispose();
   }
 
@@ -890,18 +880,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   //   Icons.sensors_rounded,
                   //   'Real-time',
                   // ),
-                  _buildEnhancedTab(
-                    4,
-                    'Fairness',
-                    Icons.balance_rounded,
-                    'AI equity',
-                  ),
-                  _buildEnhancedTab(
-                    5,
-                    'Quality',
-                    Icons.verified_user_rounded,
-                    'Data health',
-                  ),
                 ],
               ),
             )
@@ -931,30 +909,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     'Recent actions',
                   ),
                 ),
-                // Expanded(
-                //   child: _buildEnhancedTab(
-                //     3,
-                //     'Live',
-                //     Icons.sensors_rounded,
-                //     'Real-time',
-                //   ),
-                // ),
-                Expanded(
-                  child: _buildEnhancedTab(
-                    4,
-                    'Fairness',
-                    Icons.balance_rounded,
-                    'AI equity',
-                  ),
-                ),
-                Expanded(
-                  child: _buildEnhancedTab(
-                    5,
-                    'Quality',
-                    Icons.verified_user_rounded,
-                    'Data health',
-                  ),
-                ),
               ],
             ),
     );
@@ -978,19 +932,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         onTap: () {
           setState(() => _selectedTab = index);
           HapticFeedback.selectionClick();
-
-          // TODO: Implement system metrics streaming in the future
-          // Start/stop streaming based on tab selection
-          /*
-          final previousTab = _selectedTab;
-          if (index == 3 && previousTab != 3) {
-            // Starting real-time monitoring
-            context.read<AdminBloc>().add(const StartStreamingSystemMetrics());
-          } else if (previousTab == 3 && index != 3) {
-            // Stopping real-time monitoring
-            context.read<AdminBloc>().add(const StopStreamingSystemMetrics());
-          }
-          */
         },
         borderRadius: UIConstants.borderRadiusMd,
         child: AnimatedContainer(
@@ -1320,161 +1261,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         return _buildTrendsTab(loadedState);
       case 2:
         return _buildActivityTab(loadedState);
-      case 3:
-        return _buildRealtimeTab(loadedState);
-      case 4:
-        return _buildFairnessTab(loadedState);
-      case 5:
-        return _buildDataQualityTab(loadedState);
       default:
         return const SizedBox();
     }
-  }
-
-  Widget _buildDataQualityTab(AdminLoaded? loadedState) {
-    // TODO: Implement data quality metrics in the future
-    // This feature is commented out for future implementation
-    /*
-    // Load data quality metrics if not already loaded
-    if (loadedState?.dataQualityMetrics == null) {
-      context.read<AdminBloc>().add(const LoadDataQualityMetrics());
-    }
-
-    return const DataQualityDashboardWidget();
-    */
-
-    // Placeholder widget for future implementation
-    return Center(
-      child: Padding(
-        padding: UIConstants.paddingXl,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.verified_user_rounded,
-              size: 64,
-              color: AppColorsExtension.getGrey600(context),
-            ),
-            const SizedBox(height: UIConstants.spacingMd),
-            Text(
-              'Data Quality Dashboard',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColorsExtension.getTextPrimary(context),
-              ),
-            ),
-            const SizedBox(height: UIConstants.spacingSm),
-            Text(
-              'This feature will be implemented in the future',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColorsExtension.getTextSecondary(context),
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFairnessTab(AdminLoaded? loadedState) {
-    // TODO: Implement fairness metrics in the future
-    // This feature is commented out for future implementation
-    /*
-    // Load fairness metrics if not already loaded
-    if (loadedState?.fairnessMetrics == null) {
-      context.read<AdminBloc>().add(const LoadFairnessMetrics());
-    }
-
-    return const FairnessDashboardWidget();
-    */
-
-    // Placeholder widget for future implementation
-    return Center(
-      child: Padding(
-        padding: UIConstants.paddingXl,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.balance_rounded,
-              size: 64,
-              color: AppColorsExtension.getGrey600(context),
-            ),
-            const SizedBox(height: UIConstants.spacingMd),
-            Text(
-              'AI Recommendation Fairness',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColorsExtension.getTextPrimary(context),
-              ),
-            ),
-            const SizedBox(height: UIConstants.spacingSm),
-            Text(
-              'This feature will be implemented in the future',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColorsExtension.getTextSecondary(context),
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRealtimeTab(AdminLoaded? loadedState) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildEnhancedSectionTitle(
-          'Real-Time Monitoring',
-          Icons.sensors_rounded,
-        ),
-        const SizedBox(height: UIConstants.spacingMd),
-        Text(
-          'Live system metrics updated in real-time',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: AppColorsExtension.getTextSecondary(context),
-          ),
-        ),
-        const SizedBox(height: UIConstants.spacingXl),
-        // TODO: Implement real-time monitoring widget in the future
-        // RealtimeMonitoringWidget(systemMetrics: loadedState?.systemMetrics),
-        Center(
-          child: Padding(
-            padding: UIConstants.paddingXl,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.sensors_rounded,
-                  size: 64,
-                  color: AppColorsExtension.getGrey600(context),
-                ),
-                const SizedBox(height: UIConstants.spacingMd),
-                Text(
-                  'Real-Time Monitoring',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColorsExtension.getTextPrimary(context),
-                  ),
-                ),
-                const SizedBox(height: UIConstants.spacingSm),
-                Text(
-                  'This feature will be implemented in the future',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColorsExtension.getTextSecondary(context),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: UIConstants.spacingXl),
-      ],
-    );
   }
 
   Widget _buildOverviewTab(metrics, bool isRefreshing) {

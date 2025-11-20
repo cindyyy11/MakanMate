@@ -4,10 +4,7 @@ import 'package:makan_mate/core/errors/failures.dart';
 import 'package:makan_mate/features/admin/domain/entities/activity_log_entity.dart';
 import 'package:makan_mate/features/admin/domain/entities/metric_trend_entity.dart';
 import 'package:makan_mate/features/admin/domain/entities/platform_metrics_entity.dart';
-import 'package:makan_mate/features/admin/domain/entities/system_metrics_entity.dart';
-import 'package:makan_mate/features/admin/domain/entities/fairness_metrics_entity.dart';
 import 'package:makan_mate/features/admin/domain/entities/seasonal_trend_entity.dart';
-import 'package:makan_mate/features/admin/domain/entities/data_quality_metrics_entity.dart';
 
 /// Repository interface for admin operations
 abstract class AdminRepository {
@@ -43,24 +40,12 @@ abstract class AdminRepository {
     DateTime? endDate,
   });
 
-  /// Stream real-time system metrics
-  Stream<Either<Failure, SystemMetrics>> streamSystemMetrics();
-
-  /// Get fairness metrics for AI recommendations
-  Future<Either<Failure, FairnessMetrics>> getFairnessMetrics({
-    int recommendationLimit = 1000,
-    DateTime? startDate,
-    DateTime? endDate,
-  });
-
   /// Get seasonal trend analysis
   Future<Either<Failure, SeasonalTrendAnalysis>> getSeasonalTrends({
     DateTime? startDate,
     DateTime? endDate,
   });
 
-  /// Get data quality metrics
-  Future<Either<Failure, DataQualityMetrics>> getDataQualityMetrics();
 
   
   /// Create a system-wide announcement

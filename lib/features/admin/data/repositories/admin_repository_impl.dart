@@ -8,10 +8,7 @@ import 'package:makan_mate/features/admin/data/datasources/admin_remote_datasour
 import 'package:makan_mate/features/admin/domain/entities/activity_log_entity.dart';
 import 'package:makan_mate/features/admin/domain/entities/metric_trend_entity.dart';
 import 'package:makan_mate/features/admin/domain/entities/platform_metrics_entity.dart';
-import 'package:makan_mate/features/admin/domain/entities/system_metrics_entity.dart';
-import 'package:makan_mate/features/admin/domain/entities/fairness_metrics_entity.dart';
 import 'package:makan_mate/features/admin/domain/entities/seasonal_trend_entity.dart';
-import 'package:makan_mate/features/admin/domain/entities/data_quality_metrics_entity.dart';
 import 'package:makan_mate/features/admin/domain/repositories/admin_repository.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
@@ -257,50 +254,6 @@ class AdminRepositoryImpl implements AdminRepository {
   }
 
   @override
-  Stream<Either<Failure, SystemMetrics>> streamSystemMetrics() {
-    try {
-      return remoteDataSource
-          .streamSystemMetrics()
-          .map((model) => Right<Failure, SystemMetrics>(model.toEntity()))
-          .handleError((error) {
-            return Left<Failure, SystemMetrics>(
-              ServerFailure('Failed to stream system metrics: $error'),
-            );
-          });
-    } catch (e) {
-      return Stream.value(
-        Left<Failure, SystemMetrics>(
-          ServerFailure('Failed to stream system metrics: $e'),
-        ),
-      );
-    }
-  }
-
-  @override
-  Future<Either<Failure, FairnessMetrics>> getFairnessMetrics({
-    int recommendationLimit = 1000,
-    DateTime? startDate,
-    DateTime? endDate,
-  }) async {
-    if (!await networkInfo.isConnected) {
-      return const Left(NetworkFailure('No internet connection'));
-    }
-
-    try {
-      final metrics = await remoteDataSource.getFairnessMetrics(
-        recommendationLimit: recommendationLimit,
-        startDate: startDate,
-        endDate: endDate,
-      );
-      return Right(metrics.toEntity());
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Failed to fetch fairness metrics: $e'));
-    }
-  }
-
-  @override
   Future<Either<Failure, SeasonalTrendAnalysis>> getSeasonalTrends({
     DateTime? startDate,
     DateTime? endDate,
@@ -322,21 +275,6 @@ class AdminRepositoryImpl implements AdminRepository {
     }
   }
 
-  @override
-  Future<Either<Failure, DataQualityMetrics>> getDataQualityMetrics() async {
-    if (!await networkInfo.isConnected) {
-      return const Left(NetworkFailure('No internet connection'));
-    }
-
-    try {
-      final metrics = await remoteDataSource.getDataQualityMetrics();
-      return Right(metrics.toEntity());
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Failed to fetch data quality metrics: $e'));
-    }
-  }
 
 
   @override

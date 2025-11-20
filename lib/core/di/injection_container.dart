@@ -52,7 +52,6 @@ import 'package:makan_mate/features/recommendations/domain/repositories/recommen
 import 'package:makan_mate/features/recommendations/domain/usecases/get_recommendations_usecase.dart';
 import 'package:makan_mate/features/admin/data/datasources/admin_remote_datasource.dart';
 import 'package:makan_mate/features/admin/data/datasources/admin_vendor_management_datasource.dart';
-import 'package:makan_mate/features/admin/data/datasources/admin_promotion_management_datasource.dart';
 import 'package:makan_mate/features/admin/data/datasources/admin_voucher_management_datasource.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_pending_vouchers_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/approve_voucher_usecase.dart';
@@ -81,14 +80,10 @@ import 'package:makan_mate/features/admin/domain/usecases/export_metrics_usecase
 import 'package:makan_mate/features/admin/domain/usecases/get_activity_logs_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_metric_trend_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_platform_metrics_usecase.dart';
-import 'package:makan_mate/features/admin/domain/usecases/get_fairness_metrics_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_seasonal_trends_usecase.dart';
-import 'package:makan_mate/features/admin/domain/usecases/get_data_quality_metrics_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_vendors_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/approve_vendor_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/reject_vendor_usecase.dart';
-import 'package:makan_mate/features/admin/domain/usecases/get_pending_promotions_usecase.dart';
-import 'package:makan_mate/features/admin/domain/usecases/approve_promotion_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_users_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_user_by_id_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/verify_user_usecase.dart';
@@ -239,10 +234,7 @@ void _initSplash() {
 
   // BLoC
   sl.registerFactory(
-    () => SplashBloc(
-      checkOnboardingStatus: sl(),
-      logger: logger,
-    ),
+    () => SplashBloc(checkOnboardingStatus: sl(), logger: logger),
   );
 
   // Use cases
@@ -561,8 +553,6 @@ void _initAdmin() {
       getPlatformMetrics: sl(),
       getMetricTrend: sl(),
       getActivityLogs: sl(),
-      getDataQualityMetrics: sl(),
-      getFairnessMetrics: sl(),
       getSeasonalTrends: sl(),
       exportMetrics: sl(),
       logger: logger,
@@ -581,10 +571,12 @@ void _initAdmin() {
       dismissFlaggedReviewUseCase: sl(),
     ),
   );
-  sl.registerFactory(() => AdminSupportTicketBloc(
-        getSupportTickets: sl(),
-        respondToSupportTicket: sl(),
-      ));
+  sl.registerFactory(
+    () => AdminSupportTicketBloc(
+      getSupportTickets: sl(),
+      respondToSupportTicket: sl(),
+    ),
+  );
 
   sl.registerFactory(
     () => AdminVoucherManagementBloc(
@@ -599,9 +591,7 @@ void _initAdmin() {
   sl.registerLazySingleton(() => GetMetricTrendUseCase(sl()));
   sl.registerLazySingleton(() => GetActivityLogsUseCase(sl()));
   sl.registerLazySingleton(() => ExportMetricsUseCase(sl()));
-  sl.registerLazySingleton(() => GetFairnessMetricsUseCase(sl()));
   sl.registerLazySingleton(() => GetSeasonalTrendsUseCase(sl()));
-  sl.registerLazySingleton(() => GetDataQualityMetricsUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<AdminRepository>(
@@ -628,7 +618,6 @@ void _initAdmin() {
     () => AdminVendorRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
   );
 
-
   sl.registerLazySingleton<AdminUserManagementDataSource>(
     () => AdminUserManagementDataSource(
       firestore: sl(),
@@ -640,15 +629,6 @@ void _initAdmin() {
 
   sl.registerLazySingleton<AdminUserRepository>(
     () => AdminUserRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
-  );
-
-  sl.registerLazySingleton<AdminPromotionManagementDataSource>(
-    () => AdminPromotionManagementDataSource(
-      firestore: sl(),
-      auth: sl(),
-      logger: logger,
-      auditLogService: sl(),
-    ),
   );
 
   sl.registerLazySingleton<AdminVoucherManagementDataSource>(
@@ -692,8 +672,6 @@ void _initAdmin() {
   sl.registerLazySingleton(() => GetVendorsUseCase(sl()));
   sl.registerLazySingleton(() => ApproveVendorUseCase(sl()));
   sl.registerLazySingleton(() => RejectVendorUseCase(sl()));
-  sl.registerLazySingleton(() => GetPendingPromotionsUseCase(sl()));
-  sl.registerLazySingleton(() => ApprovePromotionUseCase(sl()));
 
   // Voucher management use cases
   sl.registerLazySingleton(() => GetPendingVouchersUseCase(sl(), sl()));
@@ -775,6 +753,7 @@ void _initAnalytics() {
   // Bloc
   sl.registerFactory(() => AdminUserAnalyticsBloc(getUserAnalytics: sl()));
 }
+
 // ---------------------------
 // Reviews
 // ---------------------------
@@ -905,7 +884,9 @@ void _initVendor() {
   sl.registerLazySingleton(() => IncrementPromotionRedeemedUseCase(sl()));
   sl.registerLazySingleton(() => WatchApprovedPromotionsUseCase(sl()));
   sl.registerLazySingleton(() => IncrementPromotionClickForUserUseCase(sl()));
-  sl.registerLazySingleton(() => IncrementPromotionRedeemedForUserUseCase(sl()));
+  sl.registerLazySingleton(
+    () => IncrementPromotionRedeemedForUserUseCase(sl()),
+  );
 
   sl.registerFactory(
     () => PromotionBloc(
@@ -992,9 +973,7 @@ void _initVendor() {
     () => AnalyticsRepositoryImpl(remoteDataSource: sl()),
   );
 
-  sl.registerFactory(
-    () => AnalyticsBloc(analyticsRepository: sl()),
-  );
+  sl.registerFactory(() => AnalyticsBloc(analyticsRepository: sl()));
 
   // Promotion Analytics Service
   sl.registerLazySingleton<PromotionAnalyticsService>(
@@ -1002,16 +981,14 @@ void _initVendor() {
   );
 
   // Restaurant DataSources
-  sl.registerLazySingleton<SearchRemoteDataSource>(() => SearchRemoteDataSourceImpl(
-        firestore: sl(),
-        firebaseAuth: sl(),
-      ));
+  sl.registerLazySingleton<SearchRemoteDataSource>(
+    () => SearchRemoteDataSourceImpl(firestore: sl(), firebaseAuth: sl()),
+  );
 
   // Repositories
-  sl.registerLazySingleton<SearchRepository>(() => SearchRepositoryImpl(
-        remoteDataSource: sl(),
-        networkInfo: sl(),
-      ));
+  sl.registerLazySingleton<SearchRepository>(
+    () => SearchRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
+  );
 
   // Usecases
   sl.registerLazySingleton(() => SearchRestaurantUsecase(sl()));
@@ -1020,12 +997,12 @@ void _initVendor() {
   sl.registerLazySingleton(() => AddSearchHistoryUsecase(sl()));
 
   // Bloc
-  sl.registerFactory(() => SearchBloc(
-        searchRestaurantUsecase: sl(),
-        searchFoodUsecase: sl(),
-        getSearchHistoryUsecase: sl(),
-        addSearchHistoryUsecase: sl(),
-      ));
-
-
+  sl.registerFactory(
+    () => SearchBloc(
+      searchRestaurantUsecase: sl(),
+      searchFoodUsecase: sl(),
+      getSearchHistoryUsecase: sl(),
+      addSearchHistoryUsecase: sl(),
+    ),
+  );
 }

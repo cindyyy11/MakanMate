@@ -3,12 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:makan_mate/core/constants/ui_constants.dart';
 import 'package:makan_mate/core/theme/app_colors.dart';
 import 'package:makan_mate/core/theme/app_theme.dart';
-class CreativeBottomNavBar extends StatefulWidget {
+class BottomNavBar extends StatefulWidget {
   final int currentIndex;
   final Function(int) onTap;
   final List<BottomNavItem> items;
 
-  const CreativeBottomNavBar({
+  const BottomNavBar({
     super.key,
     required this.currentIndex,
     required this.onTap,
@@ -16,10 +16,10 @@ class CreativeBottomNavBar extends StatefulWidget {
   });
 
   @override
-  State<CreativeBottomNavBar> createState() => _CreativeBottomNavBarState();
+  State<BottomNavBar> createState() => _BottomNavBarState();
 }
 
-class _CreativeBottomNavBarState extends State<CreativeBottomNavBar>
+class _BottomNavBarState extends State<BottomNavBar>
     with TickerProviderStateMixin {
   late List<AnimationController> _controllers;
   late List<Animation<double>> _scaleAnimations;
@@ -65,7 +65,7 @@ class _CreativeBottomNavBarState extends State<CreativeBottomNavBar>
   }
 
   @override
-  void didUpdateWidget(CreativeBottomNavBar oldWidget) {
+  void didUpdateWidget(BottomNavBar oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.currentIndex != widget.currentIndex) {
       // Animate previous item out

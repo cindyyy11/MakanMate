@@ -7,9 +7,7 @@ import 'package:makan_mate/features/admin/domain/usecases/export_metrics_usecase
 import 'package:makan_mate/features/admin/domain/usecases/get_activity_logs_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_metric_trend_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_platform_metrics_usecase.dart';
-import 'package:makan_mate/features/admin/domain/usecases/get_fairness_metrics_usecase.dart';
 import 'package:makan_mate/features/admin/domain/usecases/get_seasonal_trends_usecase.dart';
-import 'package:makan_mate/features/admin/domain/usecases/get_data_quality_metrics_usecase.dart';
 import 'package:makan_mate/features/admin/presentation/bloc/admin_event.dart';
 import 'package:makan_mate/features/admin/presentation/bloc/admin_state.dart';
 
@@ -19,9 +17,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
   final GetMetricTrendUseCase getMetricTrend;
   final GetActivityLogsUseCase getActivityLogs;
   final ExportMetricsUseCase exportMetrics;
-  final GetFairnessMetricsUseCase getFairnessMetrics;
   final GetSeasonalTrendsUseCase getSeasonalTrends;
-  final GetDataQualityMetricsUseCase getDataQualityMetrics;
   final Logger logger;
 
   AdminBloc({
@@ -29,9 +25,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     required this.getMetricTrend,
     required this.getActivityLogs,
     required this.exportMetrics,
-    required this.getFairnessMetrics,
     required this.getSeasonalTrends,
-    required this.getDataQualityMetrics,
     required this.logger,
   }) : super(const AdminInitial()) {
     on<LoadPlatformMetrics>(_onLoadPlatformMetrics);
@@ -39,12 +33,8 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     on<LoadMetricTrend>(_onLoadMetricTrend);
     on<LoadActivityLogs>(_onLoadActivityLogs);
     on<ExportMetrics>(_onExportMetrics);
-    on<LoadFairnessMetrics>(_onLoadFairnessMetrics);
-    on<RefreshFairnessMetrics>(_onRefreshFairnessMetrics);
     on<LoadSeasonalTrends>(_onLoadSeasonalTrends);
     on<RefreshSeasonalTrends>(_onRefreshSeasonalTrends);
-    on<LoadDataQualityMetrics>(_onLoadDataQualityMetrics);
-    on<RefreshDataQualityMetrics>(_onRefreshDataQualityMetrics);
   }
 
   @override
@@ -311,92 +301,6 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     }
   }
 
-  Future<void> _onLoadFairnessMetrics(
-    LoadFairnessMetrics event,
-    Emitter<AdminState> emit,
-  ) async {
-    try {
-      logger.i('Loading fairness metrics');
-
-      final result = await getFairnessMetrics(
-        GetFairnessMetricsParams(
-          recommendationLimit: event.recommendationLimit,
-          startDate: event.startDate,
-          endDate: event.endDate,
-        ),
-      );
-
-      result.fold(
-        (failure) {
-          logger.e('Failed to load fairness metrics: ${failure.message}');
-        },
-        (metrics) {
-          logger.i('Successfully loaded fairness metrics');
-          if (state is AdminLoaded) {
-            final currentState = state as AdminLoaded;
-            emit(
-              AdminLoaded(
-                currentState.metrics,
-                userTrend: currentState.userTrend,
-                vendorTrend: currentState.vendorTrend,
-                activityLogs: currentState.activityLogs,
-                systemMetrics: currentState.systemMetrics,
-                fairnessMetrics: metrics,
-              ),
-            );
-          } else {
-            // If no loaded state, create one with just fairness metrics
-            // This shouldn't happen normally, but handle gracefully
-            logger.w('Loading fairness metrics without existing loaded state');
-          }
-        },
-      );
-    } catch (e, stackTrace) {
-      logger.e('Error loading fairness metrics: $e', stackTrace: stackTrace);
-    }
-  }
-
-  Future<void> _onRefreshFairnessMetrics(
-    RefreshFairnessMetrics event,
-    Emitter<AdminState> emit,
-  ) async {
-    try {
-      logger.i('Refreshing fairness metrics');
-
-      final result = await getFairnessMetrics(
-        GetFairnessMetricsParams(
-          recommendationLimit: event.recommendationLimit,
-          startDate: event.startDate,
-          endDate: event.endDate,
-        ),
-      );
-
-      result.fold(
-        (failure) {
-          logger.e('Failed to refresh fairness metrics: ${failure.message}');
-        },
-        (metrics) {
-          logger.i('Successfully refreshed fairness metrics');
-          if (state is AdminLoaded) {
-            final currentState = state as AdminLoaded;
-            emit(
-              AdminLoaded(
-                currentState.metrics,
-                userTrend: currentState.userTrend,
-                vendorTrend: currentState.vendorTrend,
-                activityLogs: currentState.activityLogs,
-                systemMetrics: currentState.systemMetrics,
-                fairnessMetrics: metrics,
-              ),
-            );
-          }
-        },
-      );
-    } catch (e, stackTrace) {
-      logger.e('Error refreshing fairness metrics: $e', stackTrace: stackTrace);
-    }
-  }
-
   Future<void> _onLoadSeasonalTrends(
     LoadSeasonalTrends event,
     Emitter<AdminState> emit,
@@ -427,8 +331,6 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
                 userTrend: currentState.userTrend,
                 vendorTrend: currentState.vendorTrend,
                 activityLogs: currentState.activityLogs,
-                systemMetrics: currentState.systemMetrics,
-                fairnessMetrics: currentState.fairnessMetrics,
                 seasonalTrends: trends,
               ),
             );
@@ -469,8 +371,6 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
                 userTrend: currentState.userTrend,
                 vendorTrend: currentState.vendorTrend,
                 activityLogs: currentState.activityLogs,
-                systemMetrics: currentState.systemMetrics,
-                fairnessMetrics: currentState.fairnessMetrics,
                 seasonalTrends: trends,
               ),
             );
@@ -482,90 +382,4 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     }
   }
 
-  Future<void> _onLoadDataQualityMetrics(
-    LoadDataQualityMetrics event,
-    Emitter<AdminState> emit,
-  ) async {
-    try {
-      logger.i('Loading data quality metrics');
-
-      final result = await getDataQualityMetrics();
-
-      result.fold(
-        (failure) {
-          logger.e('Failed to load data quality metrics: ${failure.message}');
-        },
-        (metrics) {
-          logger.i('Successfully loaded data quality metrics');
-          if (state is AdminLoaded) {
-            final currentState = state as AdminLoaded;
-            emit(
-              AdminLoaded(
-                currentState.metrics,
-                userTrend: currentState.userTrend,
-                vendorTrend: currentState.vendorTrend,
-                activityLogs: currentState.activityLogs,
-                systemMetrics: currentState.systemMetrics,
-                fairnessMetrics: currentState.fairnessMetrics,
-                seasonalTrends: currentState.seasonalTrends,
-                dataQualityMetrics: metrics,
-              ),
-            );
-          } else {
-            // If no loaded state, create one with just data quality metrics
-            logger.w(
-              'Loading data quality metrics without existing loaded state',
-            );
-          }
-        },
-      );
-    } catch (e, stackTrace) {
-      logger.e(
-        'Error loading data quality metrics: $e',
-        stackTrace: stackTrace,
-      );
-    }
-  }
-
-  Future<void> _onRefreshDataQualityMetrics(
-    RefreshDataQualityMetrics event,
-    Emitter<AdminState> emit,
-  ) async {
-    try {
-      logger.i('Refreshing data quality metrics');
-
-      final result = await getDataQualityMetrics();
-
-      result.fold(
-        (failure) {
-          logger.e(
-            'Failed to refresh data quality metrics: ${failure.message}',
-          );
-        },
-        (metrics) {
-          logger.i('Successfully refreshed data quality metrics');
-          if (state is AdminLoaded) {
-            final currentState = state as AdminLoaded;
-            emit(
-              AdminLoaded(
-                currentState.metrics,
-                userTrend: currentState.userTrend,
-                vendorTrend: currentState.vendorTrend,
-                activityLogs: currentState.activityLogs,
-                systemMetrics: currentState.systemMetrics,
-                fairnessMetrics: currentState.fairnessMetrics,
-                seasonalTrends: currentState.seasonalTrends,
-                dataQualityMetrics: metrics,
-              ),
-            );
-          }
-        },
-      );
-    } catch (e, stackTrace) {
-      logger.e(
-        'Error refreshing data quality metrics: $e',
-        stackTrace: stackTrace,
-      );
-    }
-  }
 }

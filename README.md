@@ -150,8 +150,6 @@ Get deep insights into your business:
 
 #### 📈 **Platform Analytics**
 - System-wide metrics dashboard
-- Data quality monitoring
-- Fairness metrics calculation
 - Seasonal trend analysis
 - Activity logs & audit trails
 

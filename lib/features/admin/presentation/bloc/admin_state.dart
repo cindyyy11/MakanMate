@@ -2,10 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:makan_mate/features/admin/domain/entities/activity_log_entity.dart';
 import 'package:makan_mate/features/admin/domain/entities/metric_trend_entity.dart';
 import 'package:makan_mate/features/admin/domain/entities/platform_metrics_entity.dart';
-import 'package:makan_mate/features/admin/domain/entities/system_metrics_entity.dart';
-import 'package:makan_mate/features/admin/domain/entities/fairness_metrics_entity.dart';
 import 'package:makan_mate/features/admin/domain/entities/seasonal_trend_entity.dart';
-import 'package:makan_mate/features/admin/domain/entities/data_quality_metrics_entity.dart';
 
 /// States for admin BLoC
 abstract class AdminState extends Equatable {
@@ -41,20 +38,14 @@ class AdminLoaded extends AdminState {
   final MetricTrend? userTrend;
   final MetricTrend? vendorTrend;
   final List<ActivityLog>? activityLogs;
-  final SystemMetrics? systemMetrics;
-  final FairnessMetrics? fairnessMetrics;
   final SeasonalTrendAnalysis? seasonalTrends;
-  final DataQualityMetrics? dataQualityMetrics;
 
   const AdminLoaded(
     this.metrics, {
     this.userTrend,
     this.vendorTrend,
     this.activityLogs,
-    this.systemMetrics,
-    this.fairnessMetrics,
     this.seasonalTrends,
-    this.dataQualityMetrics,
   });
 
   @override
@@ -63,10 +54,7 @@ class AdminLoaded extends AdminState {
     userTrend,
     vendorTrend,
     activityLogs,
-    systemMetrics,
-    fairnessMetrics,
     seasonalTrends,
-    dataQualityMetrics,
   ];
 }
 
