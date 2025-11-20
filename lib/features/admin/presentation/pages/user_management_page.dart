@@ -49,11 +49,11 @@ class UserManagementPage extends StatelessWidget {
                 end: Alignment.bottomRight,
                 colors: isDark
                     ? [const Color(0xFF2C2C2C), const Color(0xFF1E1E1E)]
-                    : [Colors.white, Colors.white.withOpacity(0.95)],
+                    : [Colors.white, Colors.white.withValues(alpha: 0.95)],
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 2),
                 ),
@@ -118,7 +118,7 @@ class UserManagementPage extends StatelessWidget {
                 border: Border(
                   bottom: BorderSide(
                     color: isDark
-                        ? Colors.white.withOpacity(0.1)
+                        ? Colors.white.withValues(alpha: 0.1)
                         : AppColors.grey200,
                   ),
                 ),
@@ -556,7 +556,7 @@ class _AllUsersTabState extends State<_AllUsersTab>
                   border: Border(
                     bottom: BorderSide(
                       color: isDark
-                          ? Colors.white.withOpacity(0.1)
+                          ? Colors.white.withValues(alpha: 0.1)
                           : AppColors.grey200,
                     ),
                   ),
@@ -760,7 +760,7 @@ class _AllUsersTabState extends State<_AllUsersTab>
                                                       ),
                                                   decoration: BoxDecoration(
                                                     color: AppColors.error
-                                                        .withOpacity(0.1),
+                                                        .withValues(alpha: 0.1),
                                                     borderRadius:
                                                         BorderRadius.circular(
                                                           12,
@@ -787,7 +787,7 @@ class _AllUsersTabState extends State<_AllUsersTab>
                                                     ),
                                                 decoration: BoxDecoration(
                                                   color: AppColors.primary
-                                                      .withOpacity(0.1),
+                                                      .withValues(alpha: 0.1),
                                                   borderRadius:
                                                       BorderRadius.circular(12),
                                                 ),
@@ -947,7 +947,7 @@ class _AllUsersTabState extends State<_AllUsersTab>
                     border: Border(
                       bottom: BorderSide(
                         color: isDark
-                            ? Colors.white.withOpacity(0.1)
+                            ? Colors.white.withValues(alpha: 0.1)
                             : AppColors.grey200,
                       ),
                     ),
@@ -1074,7 +1074,7 @@ class _AllUsersTabState extends State<_AllUsersTab>
                                             ),
                                             decoration: BoxDecoration(
                                               color: AppColors.error
-                                                  .withOpacity(0.1),
+                                                  .withValues(alpha: 0.1),
                                               borderRadius:
                                                   BorderRadius.circular(12),
                                             ),
@@ -1096,7 +1096,7 @@ class _AllUsersTabState extends State<_AllUsersTab>
                                           ),
                                           decoration: BoxDecoration(
                                             color: AppColors.primary
-                                                .withOpacity(0.1),
+                                                .withValues(alpha: 0.1),
                                             borderRadius: BorderRadius.circular(
                                               12,
                                             ),
@@ -1161,7 +1161,7 @@ class _AllUsersTabState extends State<_AllUsersTab>
                           child: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.1),
+                              color: AppColors.primary.withValues(alpha: 0.1),
                               shape: BoxShape.circle,
                             ),
                             child: const SizedBox(
@@ -1861,7 +1861,7 @@ class _ReviewModerationTabState extends State<_ReviewModerationTab>
                 border: Border(
                   bottom: BorderSide(
                     color: isDark
-                        ? Colors.white.withOpacity(0.1)
+                        ? Colors.white.withValues(alpha: 0.1)
                         : AppColors.grey200,
                   ),
                 ),
@@ -2042,8 +2042,8 @@ class _ReviewModerationTabState extends State<_ReviewModerationTab>
           borderRadius: UIConstants.borderRadiusLg,
           border: Border.all(
             color: isFlagged
-                ? AppColors.error.withOpacity(0.3)
-                : AppColors.grey200.withOpacity(0.3),
+                ? AppColors.error.withValues(alpha: 0.3)
+                : AppColors.grey200.withValues(alpha: 0.3),
             width: 1.5,
           ),
         ),
@@ -2061,7 +2061,7 @@ class _ReviewModerationTabState extends State<_ReviewModerationTab>
                         colors: [
                           isFlagged ? AppColors.error : AppColors.warning,
                           (isFlagged ? AppColors.error : AppColors.warning)
-                              .withOpacity(0.8),
+                              .withValues(alpha: 0.8),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(10),
@@ -2114,7 +2114,7 @@ class _ReviewModerationTabState extends State<_ReviewModerationTab>
                 padding: UIConstants.paddingSm,
                 decoration: BoxDecoration(
                   color: isDark
-                      ? Colors.white.withOpacity(0.05)
+                      ? Colors.white.withValues(alpha: 0.05)
                       : AppColors.grey50,
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -2167,7 +2167,7 @@ class _ReviewModerationTabState extends State<_ReviewModerationTab>
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: AppColors.error.withOpacity(0.1),
+                          color: AppColors.error.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Row(
@@ -2486,7 +2486,7 @@ class _BansWarningsTabState extends State<_BansWarningsTab>
                 border: Border(
                   bottom: BorderSide(
                     color: isDark
-                        ? Colors.white.withOpacity(0.1)
+                        ? Colors.white.withValues(alpha: 0.1)
                         : AppColors.grey200,
                   ),
                 ),
@@ -2671,8 +2671,8 @@ class _BansWarningsTabState extends State<_BansWarningsTab>
           borderRadius: UIConstants.borderRadiusLg,
           border: Border.all(
             color: item.isActive
-                ? (isBan ? AppColors.error : AppColors.warning).withOpacity(0.3)
-                : AppColors.grey300.withOpacity(0.3),
+                ? (isBan ? AppColors.error : AppColors.warning).withValues(alpha: 0.3)
+                : AppColors.grey300.withValues(alpha: 0.3),
             width: 1.5,
           ),
         ),
@@ -2690,7 +2690,7 @@ class _BansWarningsTabState extends State<_BansWarningsTab>
                         colors: [
                           isBan ? AppColors.error : AppColors.warning,
                           (isBan ? AppColors.error : AppColors.warning)
-                              .withOpacity(0.8),
+                              .withValues(alpha: 0.8),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(10),
@@ -2724,8 +2724,8 @@ class _BansWarningsTabState extends State<_BansWarningsTab>
                                     ? (isBan
                                               ? AppColors.error
                                               : AppColors.warning)
-                                          .withOpacity(0.1)
-                                    : AppColors.grey300.withOpacity(0.1),
+                                          .withValues(alpha: 0.1)
+                                    : AppColors.grey300.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
@@ -2760,7 +2760,7 @@ class _BansWarningsTabState extends State<_BansWarningsTab>
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppColors.success.withOpacity(0.1),
+                        color: AppColors.success.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
@@ -2776,7 +2776,7 @@ class _BansWarningsTabState extends State<_BansWarningsTab>
                 padding: UIConstants.paddingSm,
                 decoration: BoxDecoration(
                   color: isDark
-                      ? Colors.white.withOpacity(0.05)
+                      ? Colors.white.withValues(alpha: 0.05)
                       : AppColors.grey50,
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -3308,7 +3308,7 @@ class _SupportTicketsTabState extends State<_SupportTicketsTab>
                 border: Border(
                   bottom: BorderSide(
                     color: isDark
-                        ? Colors.white.withOpacity(0.1)
+                        ? Colors.white.withValues(alpha: 0.1)
                         : AppColors.grey200,
                   ),
                 ),
@@ -3487,7 +3487,7 @@ class _SupportTicketsTabState extends State<_SupportTicketsTab>
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
           borderRadius: UIConstants.borderRadiusLg,
-          border: Border.all(color: priorityColor.withOpacity(0.3), width: 1.5),
+          border: Border.all(color: priorityColor.withValues(alpha: 0.3), width: 1.5),
         ),
         child: Padding(
           padding: UIConstants.paddingMd,
@@ -3501,7 +3501,7 @@ class _SupportTicketsTabState extends State<_SupportTicketsTab>
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [statusColor, statusColor.withOpacity(0.8)],
+                        colors: [statusColor, statusColor.withValues(alpha: 0.8)],
                       ),
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -3567,7 +3567,7 @@ class _SupportTicketsTabState extends State<_SupportTicketsTab>
                 padding: UIConstants.paddingSm,
                 decoration: BoxDecoration(
                   color: isDark
-                      ? Colors.white.withOpacity(0.05)
+                      ? Colors.white.withValues(alpha: 0.05)
                       : AppColors.grey50,
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -3676,9 +3676,9 @@ class _SupportTicketsTabState extends State<_SupportTicketsTab>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(
         label,
@@ -4122,7 +4122,7 @@ class _AnalyticsTabState extends State<_AnalyticsTab>
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
           borderRadius: UIConstants.borderRadiusLg,
-          border: Border.all(color: color.withOpacity(0.3), width: 1.5),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
         ),
         child: Padding(
           padding: UIConstants.paddingMd,
@@ -4137,7 +4137,7 @@ class _AnalyticsTabState extends State<_AnalyticsTab>
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
-                      color: color.withOpacity(0.3),
+                      color: color.withValues(alpha: 0.3),
                       blurRadius: 8,
                       spreadRadius: 0,
                     ),
@@ -4228,7 +4228,7 @@ class _AnalyticsTabState extends State<_AnalyticsTab>
                   const SizedBox(height: 8),
                   LinearProgressIndicator(
                     value: _totalUsers > 0 ? entry.value / _totalUsers : 0,
-                    backgroundColor: color.withOpacity(0.2),
+                    backgroundColor: color.withValues(alpha: 0.2),
                     valueColor: AlwaysStoppedAnimation<Color>(color),
                     minHeight: 8,
                     borderRadius: BorderRadius.circular(4),
@@ -4285,7 +4285,7 @@ class _AnalyticsTabState extends State<_AnalyticsTab>
                       end: Alignment.topCenter,
                       colors: [
                         AppColors.primary,
-                        AppColors.primary.withOpacity(0.6),
+                        AppColors.primary.withValues(alpha: 0.6),
                       ],
                     ),
                     borderRadius: const BorderRadius.vertical(
@@ -4293,7 +4293,7 @@ class _AnalyticsTabState extends State<_AnalyticsTab>
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primary.withOpacity(0.3),
+                        color: AppColors.primary.withValues(alpha: 0.3),
                         blurRadius: 8,
                         spreadRadius: 0,
                       ),
@@ -4381,7 +4381,7 @@ class _AnalyticsTabState extends State<_AnalyticsTab>
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, color: color, size: 20),
@@ -4407,7 +4407,7 @@ class _AnalyticsTabState extends State<_AnalyticsTab>
         const SizedBox(height: 12),
         LinearProgressIndicator(
           value: progress.clamp(0.0, 1.0),
-          backgroundColor: color.withOpacity(0.2),
+          backgroundColor: color.withValues(alpha: 0.2),
           valueColor: AlwaysStoppedAnimation<Color>(color),
           minHeight: 8,
           borderRadius: BorderRadius.circular(4),

@@ -123,7 +123,7 @@ async function menuToFoodPayload(params: {
 /**
  * Main backfill function
  */
-async function backfillFoodItems() {
+export async function backfillFoodItems() {
   console.log("Starting backfill of food_items collection...");
 
   try {
@@ -176,7 +176,8 @@ async function backfillFoodItems() {
             });
 
             // Add to batch
-            const foodDocId = `${vendorId}_${menuId}`;
+            // Use simple menuId as document ID (AI expects this format)
+            const foodDocId = menuId;
             const foodDocRef = db.collection("food_items").doc(foodDocId);
             batch.set(foodDocRef, payload, {merge: true});
 
@@ -300,5 +301,5 @@ if (require.main === module) {
 }
 
 // Export for use as Cloud Function
-export {backfillFoodItems, verifyBackfill};
+export {verifyBackfill};
 

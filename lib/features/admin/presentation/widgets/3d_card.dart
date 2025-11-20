@@ -84,7 +84,7 @@ class _Card3DState extends State<Card3D> with SingleTickerProviderStateMixin {
                 borderRadius: UIConstants.borderRadiusLg,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2 * value),
+                    color: Colors.black.withValues(alpha: 0.2 * value),
                     blurRadius: 20 * value,
                     offset: Offset(_yRotation * 20 * value, _xRotation * 20 * value),
                   ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:makan_mate/features/food/data/models/food_models.dart';
 import 'package:makan_mate/features/recommendations/domain/entities/recommendation_entity.dart';
 import 'package:makan_mate/features/recommendations/presentation/bloc/recommendation_bloc.dart';
@@ -45,18 +46,31 @@ class _AIRecommendationsSectionState extends State<AIRecommendationsSection> {
   Widget build(BuildContext context) {
     return BlocBuilder<RecommendationBloc, RecommendationState>(
       builder: (context, state) {
+        print('🤖 AI Section State: ${state.runtimeType}');
+
         if (state is RecommendationLoading) {
+          print('🤖 AI Section: Loading...');
           return _buildLoadingState();
         }
 
         if (state is RecommendationLoaded) {
+          print(
+            '🤖 AI Section: Loaded ${state.recommendations.length} recommendations',
+          );
           return _buildLoadedState(state.recommendations);
         }
 
+        if (state is RecommendationEmpty) {
+          print('🤖 AI Section: Empty - ${state.message}');
+          return _buildNoRecommendationsState();
+        }
+
         if (state is RecommendationError) {
+          print('🤖 AI Section: Error - ${state.message}');
           return _buildErrorState();
         }
 
+        print('🤖 AI Section: Initial state');
         return _buildEmptyState();
       },
     );
@@ -85,7 +99,7 @@ class _AIRecommendationsSectionState extends State<AIRecommendationsSection> {
 
   Widget _buildLoadedState(List<RecommendationEntity> recommendations) {
     if (recommendations.isEmpty) {
-      return const SizedBox.shrink();
+      return _buildNoRecommendationsState();
     }
 
     return Container(
@@ -96,7 +110,7 @@ class _AIRecommendationsSectionState extends State<AIRecommendationsSection> {
           _buildSectionHeader(),
           const SizedBox(height: 16),
           SizedBox(
-            height: 240,
+            height: 280,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -136,6 +150,7 @@ class _AIRecommendationsSectionState extends State<AIRecommendationsSection> {
                 const Text(
                   'AI Recommendations',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   'Personalized just for you',
@@ -143,17 +158,24 @@ class _AIRecommendationsSectionState extends State<AIRecommendationsSection> {
                     fontSize: UIConstants.fontSizeSm,
                     color: AppColors.textSecondary,
                   ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
-          TextButton.icon(
-            onPressed: () {
-              Navigator.pushNamed(context, '/recommendations');
-            },
-            icon: const Icon(Icons.arrow_forward, size: 16),
-            label: const Text('See All'),
-            style: TextButton.styleFrom(foregroundColor: AppColors.aiPrimary),
+          const SizedBox(width: 8),
+          Flexible(
+            child: TextButton.icon(
+              onPressed: () {
+                Navigator.pushNamed(context, '/recommendations');
+              },
+              icon: const Icon(Icons.arrow_forward, size: 16),
+              label: const Text('See All'),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.aiPrimary,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              ),
+            ),
           ),
         ],
       ),
@@ -189,7 +211,7 @@ class _AIRecommendationsSectionState extends State<AIRecommendationsSection> {
             // Navigator.pushNamed(context, '/food-detail', arguments: foodItem);
           },
           child: Container(
-            width: 180,
+            width: 200,
             margin: const EdgeInsets.only(right: 16),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -204,6 +226,7 @@ class _AIRecommendationsSectionState extends State<AIRecommendationsSection> {
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 // Food Image with AI Badge
                 Stack(
@@ -215,31 +238,70 @@ class _AIRecommendationsSectionState extends State<AIRecommendationsSection> {
                       child: foodItem.imageUrls.isNotEmpty
                           ? CachedNetworkImage(
                               imageUrl: foodItem.imageUrls.first,
-                              height: 120,
+                              height: 140,
                               width: double.infinity,
                               fit: BoxFit.cover,
                               placeholder: (context, url) => Container(
-                                height: 120,
+                                height: 140,
+                                width: double.infinity,
                                 color: AppColors.grey200,
                                 child: const Center(
                                   child: CircularProgressIndicator(),
                                 ),
                               ),
                               errorWidget: (context, url, error) => Container(
-                                height: 120,
+                                height: 140,
+                                width: double.infinity,
                                 color: AppColors.grey300,
-                                child: const Icon(Icons.restaurant),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.restaurant, size: 40),
+                                    const SizedBox(height: 8),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                      ),
+                                      child: Text(
+                                        foodItem.name,
+                                        style: const TextStyle(fontSize: 12),
+                                        textAlign: TextAlign.center,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             )
                           : Container(
-                              height: 120,
+                              height: 140,
+                              width: double.infinity,
                               color: Colors.grey[300],
-                              child: const Icon(Icons.restaurant, size: 40),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.restaurant, size: 40),
+                                  const SizedBox(height: 8),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                    ),
+                                    child: Text(
+                                      foodItem.name,
+                                      style: const TextStyle(fontSize: 12),
+                                      textAlign: TextAlign.center,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                     ),
                     Positioned(
                       top: 8,
-                      right: 8,
+                      left: 8,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
@@ -274,11 +336,12 @@ class _AIRecommendationsSectionState extends State<AIRecommendationsSection> {
                 ),
 
                 // Food Details
-                Expanded(
+                Flexible(
                   child: Padding(
                     padding: const EdgeInsets.all(12),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           foodItem.name,
@@ -286,15 +349,43 @@ class _AIRecommendationsSectionState extends State<AIRecommendationsSection> {
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
-                          maxLines: 1,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
+                        // Restaurant name with icon
+                        FutureBuilder<String>(
+                          future: _getRestaurantName(foodItem.restaurantId),
+                          builder: (context, snapshot) {
+                            return Row(
+                              children: [
+                                Icon(
+                                  Icons.store,
+                                  size: 12,
+                                  color: AppColors.grey600,
+                                ),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    snapshot.data ?? 'Loading...',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: AppColors.grey600,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 6),
                         Row(
                           children: [
                             Icon(
                               Icons.star,
-                              size: UIConstants.fontSizeSm,
+                              size: 12,
                               color: AppColors.ratingFilled,
                             ),
                             const SizedBox(width: 4),
@@ -328,25 +419,18 @@ class _AIRecommendationsSectionState extends State<AIRecommendationsSection> {
                               ),
                           ],
                         ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'RM ${foodItem.price.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontSize: UIConstants.fontSizeSm,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.aiPrimary,
+                        const SizedBox(height: 8),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'RM ${foodItem.price.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.aiPrimary,
+                            ),
                           ),
-                        ),
-                        const Spacer(),
-                        Text(
-                          recommendation.reason,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: AppColors.textSecondary,
-                            fontStyle: FontStyle.italic,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
@@ -358,6 +442,24 @@ class _AIRecommendationsSectionState extends State<AIRecommendationsSection> {
         );
       },
     );
+  }
+
+  Future<String> _getRestaurantName(String restaurantId) async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('vendors')
+          .doc(restaurantId)
+          .get();
+
+      if (doc.exists) {
+        return doc.data()?['businessName'] ??
+            doc.data()?['name'] ??
+            'Unknown Restaurant';
+      }
+      return 'Unknown Restaurant';
+    } catch (e) {
+      return 'Unknown Restaurant';
+    }
   }
 
   Widget _buildLoadingCard() {
@@ -453,15 +555,59 @@ class _AIRecommendationsSectionState extends State<AIRecommendationsSection> {
   }
 
   Widget _buildEmptyState() {
-    return const SizedBox.shrink();
+    // Show loading state initially
+    return _buildLoadingState();
+  }
+
+  Widget _buildNoRecommendationsState() {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.auto_awesome_outlined,
+            size: 48,
+            color: Colors.grey.shade400,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'No AI Recommendations Yet',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey.shade700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Start exploring food to get personalized recommendations!',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: _loadRecommendations,
+            icon: const Icon(Icons.refresh, size: 18),
+            label: const Text('Refresh'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.aiPrimary,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   /// Get food item using use case
   Future<FoodItem?> _getFoodItem(String itemId) async {
     final result = await _getFoodItemUseCase(itemId);
-    return result.fold(
-      (failure) => null,
-      (entity) => entity.toFoodItem(),
-    );
+    return result.fold((failure) => null, (entity) => entity.toFoodItem());
   }
 }

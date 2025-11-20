@@ -70,8 +70,8 @@ class _AnimatedBackgroundState extends State<AnimatedBackground>
                           const Color(0xFF121212),
                         ]
                       : [
-                          AppColors.primary.withOpacity(0.03),
-                          AppColors.secondary.withOpacity(0.03),
+                          AppColors.primary.withValues(alpha: 0.03),
+                          AppColors.secondary.withValues(alpha: 0.03),
                           AppColors.background,
                         ],
                   stops: [
@@ -129,7 +129,7 @@ class ParticlePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = (isDark ? Colors.white : AppColors.primary)
-          .withOpacity(0.1)
+          .withValues(alpha: 0.1)
       ..style = PaintingStyle.fill;
 
     for (final particle in particles) {

@@ -111,7 +111,7 @@ class _CreateAnnouncementPageState extends State<CreateAnnouncementPage> {
               end: Alignment.bottomRight,
               colors: isDark
                   ? [const Color(0xFF2C2C2C), const Color(0xFF1E1E1E)]
-                  : [Colors.white, Colors.white.withOpacity(0.95)],
+                  : [Colors.white, Colors.white.withValues(alpha: 0.95)],
             ),
           ),
         ),
@@ -237,7 +237,7 @@ class _CreateAnnouncementPageState extends State<CreateAnnouncementPage> {
                           borderRadius: UIConstants.borderRadiusMd,
                           border: Border.all(
                             color: isDark
-                                ? Colors.white.withOpacity(0.1)
+                                ? Colors.white.withValues(alpha: 0.1)
                                 : AppColors.grey200,
                           ),
                         ),
@@ -306,7 +306,7 @@ class _CreateAnnouncementPageState extends State<CreateAnnouncementPage> {
                           borderRadius: UIConstants.borderRadiusMd,
                           border: Border.all(
                             color: isDark
-                                ? Colors.white.withOpacity(0.1)
+                                ? Colors.white.withValues(alpha: 0.1)
                                 : AppColors.grey200,
                           ),
                         ),
@@ -378,7 +378,7 @@ class _CreateAnnouncementPageState extends State<CreateAnnouncementPage> {
                             borderRadius: UIConstants.borderRadiusMd,
                             border: Border.all(
                               color: isDark
-                                  ? Colors.white.withOpacity(0.1)
+                                  ? Colors.white.withValues(alpha: 0.1)
                                   : AppColors.grey200,
                             ),
                           ),
@@ -559,7 +559,7 @@ class _CreateAnnouncementPageState extends State<CreateAnnouncementPage> {
           vertical: UIConstants.spacingSm,
         ),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.2) : Colors.transparent,
+          color: isSelected ? color.withValues(alpha: 0.2) : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected ? color : AppColors.grey300,
@@ -613,7 +613,7 @@ class _CreateAnnouncementPageState extends State<CreateAnnouncementPage> {
           vertical: UIConstants.spacingSm,
         ),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.2) : Colors.transparent,
+          color: isSelected ? color.withValues(alpha: 0.2) : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected ? color : AppColors.grey300,

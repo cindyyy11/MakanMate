@@ -610,11 +610,11 @@ class _AdminProfilePageState extends State<AdminProfilePage> {
               end: Alignment.bottomRight,
               colors: isDark
                   ? [const Color(0xFF2C2C2C), const Color(0xFF1E1E1E)]
-                  : [Colors.white, Colors.white.withOpacity(0.95)],
+                  : [Colors.white, Colors.white.withValues(alpha: 0.95)],
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 2),
               ),
@@ -961,7 +961,7 @@ class _AdminProfilePageState extends State<AdminProfilePage> {
                       color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
                       borderRadius: UIConstants.borderRadiusLg,
                       border: Border.all(
-                        color: AppColors.error.withOpacity(0.3),
+                        color: AppColors.error.withValues(alpha: 0.3),
                         width: 1.5,
                       ),
                     ),
@@ -1063,7 +1063,7 @@ class _AdminProfilePageState extends State<AdminProfilePage> {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: (textColor ?? AppColors.primary).withOpacity(0.1),
+          color: (textColor ?? AppColors.primary).withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(icon, color: textColor ?? AppColors.primary, size: 20),
@@ -1249,7 +1249,7 @@ class _AdminProfilePageState extends State<AdminProfilePage> {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.15),
+          color: color.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(icon, color: color),
@@ -1536,7 +1536,7 @@ class _AdminProfilePageState extends State<AdminProfilePage> {
                         borderRadius: UIConstants.borderRadiusLg,
                         border: Border.all(
                           color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.white.withOpacity(0.1)
+                              ? Colors.white.withValues(alpha: 0.1)
                               : AppColors.grey200,
                         ),
                       ),

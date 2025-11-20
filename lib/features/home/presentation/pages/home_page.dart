@@ -9,6 +9,7 @@ import 'package:makan_mate/features/home/domain/entities/restaurant_entity.dart'
 import 'package:makan_mate/features/home/presentation/pages/all_restaurants_page.dart';
 import 'package:makan_mate/features/home/presentation/pages/categories_restaurant_page.dart';
 import 'package:makan_mate/features/home/presentation/pages/restaurant_detail_page.dart';
+import 'package:makan_mate/features/home/presentation/widgets/ai_recommendations_section.dart';
 import 'package:makan_mate/features/map/presentation/bloc/map_bloc.dart';
 import 'package:makan_mate/features/map/presentation/pages/map_page.dart';
 import 'package:makan_mate/features/map/presentation/bloc/map_event.dart' as map;
@@ -40,7 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: BlocBuilder<HomeBloc, HomeState>(
         builder: (context, state) {
           if (state is HomeLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return _buildInitialLoader(theme);
           } else if (state is HomeLoaded) {
             return _buildBody(
               theme: theme,
@@ -50,10 +51,59 @@ class _HomeScreenState extends State<HomeScreen> {
               isPersonalized: state.isPersonalized,
             );
           } else if (state is HomeError) {
-            return Center(child: Text(state.message));
+            return _buildErrorState(theme, state.message);
           }
-          return const SizedBox();
+          return _buildInitialLoader(theme);
         },
+      ),
+    );
+  }
+
+  Widget _buildInitialLoader(ThemeData theme) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(),
+          const SizedBox(height: 16),
+          Text(
+            'Loading your food experience...',
+            style: theme.textTheme.bodyLarge,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(ThemeData theme, String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            const SizedBox(height: 16),
+            Text(
+              'Error Loading Home',
+              style: theme.textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message.isEmpty ? 'Something went wrong. Please try again.' : message,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () {
+                context.read<HomeBloc>().add(LoadHomeDataEvent());
+              },
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -139,6 +189,10 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 24),
 
               _buildCategoriesSection(theme, categories),
+              const SizedBox(height: 24),
+
+              // AI Recommendations Section
+              const AIRecommendationsSection(),
               const SizedBox(height: 24),
 
               _buildRecommendationsSection(

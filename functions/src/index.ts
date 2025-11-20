@@ -423,7 +423,8 @@ export const syncMenuToFoodItems = functions.firestore
   .onWrite(async (change, context) => {
     const {vendorId, menuId} = context.params;
     const db = admin.firestore();
-    const foodDocId = `${vendorId}_${menuId}`;
+    // Use simple menuId as document ID (AI expects this format)
+    const foodDocId = menuId;
     const foodDocRef = db.collection("food_items").doc(foodDocId);
 
     try {
@@ -568,3 +569,27 @@ export const syncVendorProfileToFoodItems = functions.firestore
       return null;
     }
   });
+
+// ============================================================================
+// One-time HTTP function to backfill food_items collection
+// ============================================================================
+import {backfillFoodItems} from "./backfill_food_items";
+
+export const runBackfill = functions.https.onRequest(async (req, res) => {
+  try {
+    console.log("Starting backfill via HTTP trigger...");
+    const result = await backfillFoodItems();
+    console.log("Backfill completed successfully!");
+    res.json({
+      message: "Backfill completed successfully",
+      result,
+    });
+  } catch (error) {
+    console.error("Backfill failed:", error);
+    res.status(500).json({
+      success: false,
+      error: String(error),
+      message: "Backfill failed - check logs for details",
+    });
+  }
+});

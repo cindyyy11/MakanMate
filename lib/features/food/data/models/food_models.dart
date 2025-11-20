@@ -63,9 +63,27 @@ class FoodItem extends BaseModel {
   
   factory FoodItem.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    
+    // Convert Timestamps to ISO strings for fromJson
+    final processedData = Map<String, dynamic>.from(data);
+    
+    // Handle createdAt
+    if (data['createdAt'] is Timestamp) {
+      processedData['createdAt'] = (data['createdAt'] as Timestamp).toDate().toIso8601String();
+    } else if (data['createdAt'] is! String) {
+      processedData['createdAt'] = DateTime.now().toIso8601String();
+    }
+    
+    // Handle updatedAt
+    if (data['updatedAt'] is Timestamp) {
+      processedData['updatedAt'] = (data['updatedAt'] as Timestamp).toDate().toIso8601String();
+    } else if (data['updatedAt'] is! String) {
+      processedData['updatedAt'] = DateTime.now().toIso8601String();
+    }
+    
     return FoodItem.fromJson({
       'id': doc.id,
-      ...data,
+      ...processedData,
     });
   }
   

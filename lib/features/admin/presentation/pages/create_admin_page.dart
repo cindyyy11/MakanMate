@@ -71,7 +71,7 @@ class _CreateAdminPageState extends State<CreateAdminPage> {
               end: Alignment.bottomRight,
               colors: isDark
                   ? [const Color(0xFF2C2C2C), const Color(0xFF1E1E1E)]
-                  : [Colors.white, Colors.white.withOpacity(0.95)],
+                  : [Colors.white, Colors.white.withValues(alpha: 0.95)],
             ),
           ),
         ),
@@ -286,7 +286,7 @@ class _CreateAdminPageState extends State<CreateAdminPage> {
                             borderRadius: UIConstants.borderRadiusMd,
                             border: Border.all(
                               color: isDark
-                                  ? Colors.white.withOpacity(0.1)
+                                  ? Colors.white.withValues(alpha: 0.1)
                                   : AppColors.grey200,
                             ),
                           ),

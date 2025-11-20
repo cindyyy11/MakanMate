@@ -119,7 +119,7 @@ class AdminUtils {
         color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: UIConstants.borderRadiusMd,
         border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.1) : AppColors.grey200,
+          color: isDark ? Colors.white.withValues(alpha: 0.1) : AppColors.grey200,
         ),
       ),
       child: Column(

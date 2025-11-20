@@ -26,7 +26,7 @@ class MetricTrendIndicator extends StatelessWidget {
           vertical: 4,
         ),
         decoration: BoxDecoration(
-          color: (isPositive ? AppColors.success : AppColors.error).withOpacity(
+          color: (isPositive ? AppColors.success : AppColors.error).withValues(alpha: 
             0.1,
           ),
           borderRadius: BorderRadius.circular(8),

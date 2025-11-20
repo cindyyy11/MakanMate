@@ -99,11 +99,11 @@ class _VendorManagementPageState extends State<VendorManagementPage>
               end: Alignment.bottomRight,
               colors: isDark
                   ? [const Color(0xFF2C2C2C), const Color(0xFF1E1E1E)]
-                  : [Colors.white, Colors.white.withOpacity(0.95)],
+                  : [Colors.white, Colors.white.withValues(alpha: 0.95)],
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 2),
               ),
@@ -168,7 +168,7 @@ class _VendorManagementPageState extends State<VendorManagementPage>
               border: Border(
                 bottom: BorderSide(
                   color: isDark
-                      ? Colors.white.withOpacity(0.1)
+                      ? Colors.white.withValues(alpha: 0.1)
                       : AppColors.grey200,
                 ),
               ),
@@ -618,7 +618,7 @@ class _VendorApplicationsTabState extends State<_VendorApplicationsTab> {
             border: Border(
               bottom: BorderSide(
                 color: isDark
-                    ? Colors.white.withOpacity(0.1)
+                    ? Colors.white.withValues(alpha: 0.1)
                     : AppColors.grey200,
               ),
             ),
@@ -794,7 +794,7 @@ class _VendorApplicationsTabState extends State<_VendorApplicationsTab> {
         color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: UIConstants.borderRadiusMd,
         border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.1) : AppColors.grey200,
+          color: isDark ? Colors.white.withValues(alpha: 0.1) : AppColors.grey200,
         ),
       ),
       child: Column(
@@ -858,10 +858,10 @@ class _VendorApplicationsTabState extends State<_VendorApplicationsTab> {
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
           borderRadius: UIConstants.borderRadiusLg,
-          border: Border.all(color: riskColor.withOpacity(0.3), width: 1.5),
+          border: Border.all(color: riskColor.withValues(alpha: 0.3), width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: riskColor.withOpacity(0.1),
+              color: riskColor.withValues(alpha: 0.1),
               blurRadius: 12,
               spreadRadius: 2,
             ),
@@ -1004,13 +1004,13 @@ class _VendorApplicationsTabState extends State<_VendorApplicationsTab> {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          riskColor.withOpacity(0.2),
-                          riskColor.withOpacity(0.1),
+                          riskColor.withValues(alpha: 0.2),
+                          riskColor.withValues(alpha: 0.1),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: riskColor.withOpacity(0.3),
+                        color: riskColor.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -1050,10 +1050,10 @@ class _VendorApplicationsTabState extends State<_VendorApplicationsTab> {
                 Container(
                   padding: UIConstants.paddingSm,
                   decoration: BoxDecoration(
-                    color: AppColors.warning.withOpacity(0.1),
+                    color: AppColors.warning.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: AppColors.warning.withOpacity(0.3),
+                      color: AppColors.warning.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Column(
@@ -1846,7 +1846,7 @@ class _ActiveVendorsTabState extends State<_ActiveVendorsTab> {
             border: Border(
               bottom: BorderSide(
                 color: isDark
-                    ? Colors.white.withOpacity(0.1)
+                    ? Colors.white.withValues(alpha: 0.1)
                     : AppColors.grey200,
               ),
             ),
@@ -1976,7 +1976,7 @@ class _ActiveVendorsTabState extends State<_ActiveVendorsTab> {
         color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: UIConstants.borderRadiusMd,
         border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.1) : AppColors.grey200,
+          color: isDark ? Colors.white.withValues(alpha: 0.1) : AppColors.grey200,
         ),
       ),
       child: Row(
@@ -2023,7 +2023,7 @@ class _ActiveVendorsTabState extends State<_ActiveVendorsTab> {
           color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
           borderRadius: UIConstants.borderRadiusLg,
           border: Border.all(
-            color: isDark ? Colors.white.withOpacity(0.1) : AppColors.grey200,
+            color: isDark ? Colors.white.withValues(alpha: 0.1) : AppColors.grey200,
             width: 1,
           ),
         ),
@@ -2115,7 +2115,7 @@ class _ActiveVendorsTabState extends State<_ActiveVendorsTab> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.success.withOpacity(0.1),
+                      color: AppColors.success.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
@@ -2378,7 +2378,7 @@ class _ActiveVendorsTabState extends State<_ActiveVendorsTab> {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: suspendForever
-                            ? AppColors.warning.withOpacity(0.1)
+                            ? AppColors.warning.withValues(alpha: 0.1)
                             : Colors.transparent,
                         border: Border.all(
                           color: suspendForever
@@ -2435,7 +2435,7 @@ class _ActiveVendorsTabState extends State<_ActiveVendorsTab> {
                                   padding: const EdgeInsets.all(10),
                                   decoration: BoxDecoration(
                                     color: suspendForever
-                                        ? AppColors.warning.withOpacity(0.1)
+                                        ? AppColors.warning.withValues(alpha: 0.1)
                                         : AppColors.grey100,
                                     borderRadius: BorderRadius.circular(8),
                                   ),
@@ -2489,7 +2489,7 @@ class _ActiveVendorsTabState extends State<_ActiveVendorsTab> {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: !suspendForever
-                            ? AppColors.primary.withOpacity(0.1)
+                            ? AppColors.primary.withValues(alpha: 0.1)
                             : Colors.transparent,
                         border: Border.all(
                           color: !suspendForever
@@ -2546,7 +2546,7 @@ class _ActiveVendorsTabState extends State<_ActiveVendorsTab> {
                                   padding: const EdgeInsets.all(10),
                                   decoration: BoxDecoration(
                                     color: !suspendForever
-                                        ? AppColors.primary.withOpacity(0.1)
+                                        ? AppColors.primary.withValues(alpha: 0.1)
                                         : AppColors.grey100,
                                     borderRadius: BorderRadius.circular(8),
                                   ),
@@ -2644,7 +2644,7 @@ class _ActiveVendorsTabState extends State<_ActiveVendorsTab> {
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: suspendUntil != null
-                              ? AppColors.primary.withOpacity(0.05)
+                              ? AppColors.primary.withValues(alpha: 0.05)
                               : AppColors.grey100,
                           border: Border.all(
                             color: suspendUntil != null
@@ -2699,7 +2699,7 @@ class _ActiveVendorsTabState extends State<_ActiveVendorsTab> {
                                         vertical: 4,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: AppColors.success.withOpacity(
+                                        color: AppColors.success.withValues(alpha: 
                                           0.1,
                                         ),
                                         borderRadius: BorderRadius.circular(4),
@@ -3331,7 +3331,7 @@ class _SuspendedVendorsTabState extends State<_SuspendedVendorsTab> {
             border: Border(
               bottom: BorderSide(
                 color: isDark
-                    ? Colors.white.withOpacity(0.1)
+                    ? Colors.white.withValues(alpha: 0.1)
                     : AppColors.grey200,
               ),
             ),
@@ -3454,7 +3454,7 @@ class _SuspendedVendorsTabState extends State<_SuspendedVendorsTab> {
         color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: UIConstants.borderRadiusMd,
         border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.1) : AppColors.grey200,
+          color: isDark ? Colors.white.withValues(alpha: 0.1) : AppColors.grey200,
         ),
       ),
       child: Row(
@@ -3531,7 +3531,7 @@ class _SuspendedVendorsTabState extends State<_SuspendedVendorsTab> {
           color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
           borderRadius: UIConstants.borderRadiusLg,
           border: Border.all(
-            color: isDark ? Colors.white.withOpacity(0.1) : AppColors.grey200,
+            color: isDark ? Colors.white.withValues(alpha: 0.1) : AppColors.grey200,
             width: 1,
           ),
         ),
@@ -3623,7 +3623,7 @@ class _SuspendedVendorsTabState extends State<_SuspendedVendorsTab> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.warning.withOpacity(0.1),
+                      color: AppColors.warning.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
@@ -3644,13 +3644,13 @@ class _SuspendedVendorsTabState extends State<_SuspendedVendorsTab> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: isForever
-                        ? AppColors.warning.withOpacity(0.1)
-                        : AppColors.primary.withOpacity(0.1),
+                        ? AppColors.warning.withValues(alpha: 0.1)
+                        : AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: isForever
-                          ? AppColors.warning.withOpacity(0.3)
-                          : AppColors.primary.withOpacity(0.3),
+                          ? AppColors.warning.withValues(alpha: 0.3)
+                          : AppColors.primary.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Column(
@@ -4360,7 +4360,7 @@ class _DeactivatedVendorsTabState extends State<_DeactivatedVendorsTab> {
             border: Border(
               bottom: BorderSide(
                 color: isDark
-                    ? Colors.white.withOpacity(0.1)
+                    ? Colors.white.withValues(alpha: 0.1)
                     : AppColors.grey200,
               ),
             ),
@@ -4483,7 +4483,7 @@ class _DeactivatedVendorsTabState extends State<_DeactivatedVendorsTab> {
         color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: UIConstants.borderRadiusMd,
         border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.1) : AppColors.grey200,
+          color: isDark ? Colors.white.withValues(alpha: 0.1) : AppColors.grey200,
         ),
       ),
       child: Row(
@@ -4530,7 +4530,7 @@ class _DeactivatedVendorsTabState extends State<_DeactivatedVendorsTab> {
           color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
           borderRadius: UIConstants.borderRadiusLg,
           border: Border.all(
-            color: isDark ? Colors.white.withOpacity(0.1) : AppColors.grey200,
+            color: isDark ? Colors.white.withValues(alpha: 0.1) : AppColors.grey200,
             width: 1,
           ),
         ),
@@ -4622,7 +4622,7 @@ class _DeactivatedVendorsTabState extends State<_DeactivatedVendorsTab> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.error.withOpacity(0.1),
+                      color: AppColors.error.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
@@ -5324,7 +5324,7 @@ class _VoucherApprovalsTabState extends State<_VoucherApprovalsTab>
               border: Border(
                 bottom: BorderSide(
                   color: isDark
-                      ? Colors.white.withOpacity(0.1)
+                      ? Colors.white.withValues(alpha: 0.1)
                       : AppColors.grey200,
                 ),
               ),
@@ -5615,7 +5615,7 @@ class _VoucherApprovalsTabState extends State<_VoucherApprovalsTab>
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -5642,7 +5642,7 @@ class _VoucherApprovalsTabState extends State<_VoucherApprovalsTab>
               padding: UIConstants.paddingSm,
               decoration: BoxDecoration(
                 color: isDark
-                    ? Colors.white.withOpacity(0.05)
+                    ? Colors.white.withValues(alpha: 0.05)
                     : AppColors.grey50,
                 borderRadius: BorderRadius.circular(8),
               ),

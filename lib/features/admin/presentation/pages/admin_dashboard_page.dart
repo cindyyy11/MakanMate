@@ -175,7 +175,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.success.withOpacity(0.1),
+                          color: AppColors.success.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
@@ -288,7 +288,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 tooltip: 'Logout',
                 onPressed: () => AdminUtils.showLogoutDialog(context),
                 style: IconButton.styleFrom(
-                  backgroundColor: AppColors.error.withOpacity(0.1),
+                  backgroundColor: AppColors.error.withValues(alpha: 0.1),
                   padding: const EdgeInsets.all(10),
                 ),
               ),
@@ -309,7 +309,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       backgroundImage: user?.photoURL != null
                           ? NetworkImage(user!.photoURL!)
                           : null,
-                      backgroundColor: AppColors.primary.withOpacity(0.1),
+                      backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                       child: user?.photoURL == null
                           ? Icon(
                               Icons.person_rounded,
@@ -328,12 +328,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: isDark
-                        ? Colors.white.withOpacity(0.1)
+                        ? Colors.white.withValues(alpha: 0.1)
                         : AppColors.grey100,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: isDark
-                          ? Colors.white.withOpacity(0.1)
+                          ? Colors.white.withValues(alpha: 0.1)
                           : AppColors.grey300,
                       width: 1,
                     ),
@@ -488,7 +488,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     backgroundImage: user?.photoURL != null
                         ? NetworkImage(user!.photoURL!)
                         : null,
-                    backgroundColor: AppColors.primary.withOpacity(0.1),
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                     child: user?.photoURL == null
                         ? Icon(
                             Icons.person_rounded,
@@ -507,12 +507,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: isDark
-                      ? Colors.white.withOpacity(0.1)
+                      ? Colors.white.withValues(alpha: 0.1)
                       : AppColors.grey100,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
                     color: isDark
-                        ? Colors.white.withOpacity(0.1)
+                        ? Colors.white.withValues(alpha: 0.1)
                         : AppColors.grey300,
                     width: 1,
                   ),
@@ -1337,7 +1337,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         border: Border.all(
           color: isDark
               ? Colors.white.withValues(alpha: 0.15)
-              : AppColors.grey200.withOpacity(0.5),
+              : AppColors.grey200.withValues(alpha: 0.5),
           width: 1.5,
         ),
         boxShadow: [
@@ -1535,7 +1535,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primary.withOpacity(0.4),
+                              color: AppColors.primary.withValues(alpha: 0.4),
                               blurRadius: 12,
                               spreadRadius: 2,
                             ),
@@ -1552,13 +1552,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       color: isSelected
                           ? null
                           : (isDark
-                                ? Colors.white.withOpacity(0.05)
+                                ? Colors.white.withValues(alpha: 0.05)
                                 : AppColors.grey100),
                       shape: BoxShape.circle,
                       boxShadow: isSelected
                           ? [
                               BoxShadow(
-                                color: AppColors.primary.withOpacity(0.4),
+                                color: AppColors.primary.withValues(alpha: 0.4),
                                 blurRadius: 10,
                                 spreadRadius: 1,
                               ),
@@ -1626,10 +1626,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                         style: TextStyle(
                           fontSize: 9,
                           color: isSelected
-                              ? AppColors.primary.withOpacity(0.7)
+                              ? AppColors.primary.withValues(alpha: 0.7)
                               : AppColorsExtension.getGrey600(
                                   context,
-                                ).withOpacity(0.7),
+                                ).withValues(alpha: 0.7),
                           fontWeight: FontWeight.w500,
                         ),
                         child: Text(

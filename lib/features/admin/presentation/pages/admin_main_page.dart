@@ -240,7 +240,7 @@ class _AdminMainPageState extends State<AdminMainPage> {
                                     ? null
                                     : AppColorsExtension.getGrey600(
                                         context,
-                                      ).withOpacity(0.1),
+                                      ).withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Icon(
@@ -287,7 +287,7 @@ class _AdminMainPageState extends State<AdminMainPage> {
         color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         border: Border(
           right: BorderSide(
-            color: isDark ? Colors.white.withOpacity(0.1) : AppColors.grey200,
+            color: isDark ? Colors.white.withValues(alpha: 0.1) : AppColors.grey200,
             width: 1,
           ),
         ),
@@ -302,7 +302,7 @@ class _AdminMainPageState extends State<AdminMainPage> {
               border: Border(
                 bottom: BorderSide(
                   color: isDark
-                      ? Colors.white.withOpacity(0.1)
+                      ? Colors.white.withValues(alpha: 0.1)
                       : AppColors.grey200,
                   width: 1,
                 ),
@@ -313,7 +313,7 @@ class _AdminMainPageState extends State<AdminMainPage> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
@@ -337,7 +337,7 @@ class _AdminMainPageState extends State<AdminMainPage> {
                       Text(
                         'MakanMate',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                         ),
                       ),
                     ],
@@ -430,12 +430,12 @@ class _AdminMainPageState extends State<AdminMainPage> {
           ),
           decoration: BoxDecoration(
             color: isSelected
-                ? AppColors.primary.withOpacity(0.1)
+                ? AppColors.primary.withValues(alpha: 0.1)
                 : Colors.transparent,
             borderRadius: UIConstants.borderRadiusMd,
             border: isSelected
                 ? Border.all(
-                    color: AppColors.primary.withOpacity(0.3),
+                    color: AppColors.primary.withValues(alpha: 0.3),
                     width: 1.5,
                   )
                 : null,

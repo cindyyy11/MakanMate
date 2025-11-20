@@ -189,7 +189,7 @@ class AdminVoucherApprovalPage extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -216,7 +216,7 @@ class AdminVoucherApprovalPage extends StatelessWidget {
               padding: UIConstants.paddingSm,
               decoration: BoxDecoration(
                 color: isDark
-                    ? Colors.white.withOpacity(0.05)
+                    ? Colors.white.withValues(alpha: 0.05)
                     : AppColors.grey50,
                 borderRadius: BorderRadius.circular(8),
               ),

@@ -99,25 +99,25 @@ class _CreativeBottomNavBarState extends State<CreativeBottomNavBar>
           end: Alignment.bottomCenter,
           colors: isDark
               ? [
-                  const Color(0xFF1E1E1E).withOpacity(0.95),
-                  const Color(0xFF1A1A1A).withOpacity(0.98),
+                  const Color(0xFF1E1E1E).withValues(alpha: 0.95),
+                  const Color(0xFF1A1A1A).withValues(alpha: 0.98),
                 ]
               : [
-                  Colors.white.withOpacity(0.95),
-                  Colors.white.withOpacity(0.98),
+                  Colors.white.withValues(alpha: 0.95),
+                  Colors.white.withValues(alpha: 0.98),
                 ],
         ),
         border: Border(
           top: BorderSide(
             color: isDark
-                ? Colors.white.withOpacity(0.1)
-                : AppColors.grey200.withOpacity(0.5),
+                ? Colors.white.withValues(alpha: 0.1)
+                : AppColors.grey200.withValues(alpha: 0.5),
             width: 1,
           ),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.5 : 0.1),
+            color: Colors.black.withValues(alpha: isDark ? 0.5 : 0.1),
             blurRadius: 30,
             offset: const Offset(0, -10),
             spreadRadius: 0,
@@ -188,8 +188,8 @@ class _CreativeBottomNavBarState extends State<CreativeBottomNavBar>
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            AppColors.primary.withOpacity(0.15 * indicatorValue),
-                            AppColors.primary.withOpacity(0.05 * indicatorValue),
+                            AppColors.primary.withValues(alpha: 0.15 * indicatorValue),
+                            AppColors.primary.withValues(alpha: 0.05 * indicatorValue),
                           ],
                         )
                       : null,
@@ -210,7 +210,7 @@ class _CreativeBottomNavBarState extends State<CreativeBottomNavBar>
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.primary.withOpacity(
+                                    color: AppColors.primary.withValues(alpha: 
                                       0.4 * indicatorValue,
                                     ),
                                     blurRadius: 15 * indicatorValue,
@@ -234,7 +234,7 @@ class _CreativeBottomNavBarState extends State<CreativeBottomNavBar>
                             boxShadow: isSelected
                                 ? [
                                     BoxShadow(
-                                      color: AppColors.primary.withOpacity(
+                                      color: AppColors.primary.withValues(alpha: 
                                         0.5 * indicatorValue,
                                       ),
                                       blurRadius: 12 * indicatorValue,
@@ -270,7 +270,7 @@ class _CreativeBottomNavBarState extends State<CreativeBottomNavBar>
                                   gradient: LinearGradient(
                                     colors: [
                                       AppColors.success,
-                                      AppColors.success.withOpacity(0.8),
+                                      AppColors.success.withValues(alpha: 0.8),
                                     ],
                                   ),
                                   shape: BoxShape.circle,
@@ -282,7 +282,7 @@ class _CreativeBottomNavBarState extends State<CreativeBottomNavBar>
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: AppColors.success.withOpacity(0.6),
+                                      color: AppColors.success.withValues(alpha: 0.6),
                                       blurRadius: 6,
                                       spreadRadius: 1,
                                     ),

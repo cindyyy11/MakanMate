@@ -441,7 +441,7 @@ class FairnessDashboardWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: severityColor.withOpacity(0.3)),
+        border: Border.all(color: severityColor.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

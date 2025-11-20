@@ -21,7 +21,6 @@ import 'package:makan_mate/features/vendor/presentation/pages/vendor_onboarding_
 import 'package:makan_mate/features/vendor/presentation/pages/vendor_reviews_page.dart';
 import 'package:makan_mate/features/vendor/presentation/pages/vendor_settings_page.dart';
 import 'package:makan_mate/features/vendor/presentation/pages/vendor_analytics_page.dart';
-import 'package:makan_mate/features/vendor/presentation/bloc/analytics_bloc.dart';
 
 class MainScaffold extends StatefulWidget {
   final UserEntity user;
@@ -89,7 +88,7 @@ class _MainScaffoldState extends State<MainScaffold> {
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
             icon: Icon(Icons.restaurant_menu),
-            label: 'Menu',  
+            label: 'Menu',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.local_offer),
@@ -99,10 +98,7 @@ class _MainScaffoldState extends State<MainScaffold> {
             icon: Icon(Icons.analytics_outlined),
             label: 'Analytics',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.star),
-            label: 'Reviews',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.star), label: 'Reviews'),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
             label: 'App Settings',
@@ -120,7 +116,10 @@ class _MainScaffoldState extends State<MainScaffold> {
             icon: Icon(Icons.local_offer),
             label: 'Promotions',
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.casino), label: 'Spin Wheel'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.casino),
+            label: 'Spin Wheel',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ];
     }
@@ -165,8 +164,7 @@ class _MainScaffoldState extends State<MainScaffold> {
             case 'rejected':
               return _buildVendorGateView(
                 title: 'Application Rejected',
-                message:
-                    'Update your details and resubmit for admin review.',
+                message: 'Update your details and resubmit for admin review.',
                 primaryLabel: 'Update profile',
                 primaryAction: _openVendorOnboarding,
               );
@@ -230,9 +228,9 @@ class _MainScaffoldState extends State<MainScaffold> {
   }
 
   void _openVendorOnboarding() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const VendorOnboardingPage()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const VendorOnboardingPage()));
   }
 
   void _openSupportEmail() {
@@ -259,7 +257,7 @@ class _MainScaffoldState extends State<MainScaffold> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
+                  color: Colors.orange.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -313,10 +311,7 @@ class _MainScaffoldState extends State<MainScaffold> {
               TextButton(
                 onPressed: () =>
                     context.read<AuthBloc>().add(SignOutRequested()),
-                child: const Text(
-                  'Sign out',
-                  style: TextStyle(fontSize: 15),
-                ),
+                child: const Text('Sign out', style: TextStyle(fontSize: 15)),
               ),
             ],
           ),
@@ -325,4 +320,3 @@ class _MainScaffoldState extends State<MainScaffold> {
     );
   }
 }
-

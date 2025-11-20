@@ -89,14 +89,14 @@ class _AnimatedBottomNavBarState extends State<AnimatedBottomNavBar>
         border: Border(
           top: BorderSide(
             color: isDark
-                ? Colors.white.withOpacity(0.1)
+                ? Colors.white.withValues(alpha: 0.1)
                 : AppColors.grey200,
             width: 1,
           ),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, -5),
             spreadRadius: 0,
@@ -168,8 +168,8 @@ class _AnimatedBottomNavBarState extends State<AnimatedBottomNavBar>
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            AppColors.primary.withOpacity(0.1),
-                            AppColors.primary.withOpacity(0.05),
+                            AppColors.primary.withValues(alpha: 0.1),
+                            AppColors.primary.withValues(alpha: 0.05),
                           ],
                         )
                       : null,
@@ -195,7 +195,7 @@ class _AnimatedBottomNavBarState extends State<AnimatedBottomNavBar>
                             boxShadow: isSelected
                                 ? [
                                     BoxShadow(
-                                      color: AppColors.primary.withOpacity(0.4),
+                                      color: AppColors.primary.withValues(alpha: 0.4),
                                       blurRadius: 12,
                                       spreadRadius: 2,
                                     ),

@@ -43,11 +43,11 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
               end: Alignment.bottomRight,
               colors: isDark
                   ? [const Color(0xFF2C2C2C), const Color(0xFF1E1E1E)]
-                  : [Colors.white, Colors.white.withOpacity(0.95)],
+                  : [Colors.white, Colors.white.withValues(alpha: 0.95)],
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 2),
               ),
@@ -267,8 +267,8 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
                         ),
                         decoration: BoxDecoration(
                           color: _currentUser.isVerified
-                              ? AppColors.success.withOpacity(0.2)
-                              : AppColors.warning.withOpacity(0.2),
+                              ? AppColors.success.withValues(alpha: 0.2)
+                              : AppColors.warning.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
@@ -308,7 +308,7 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
                         decoration: BoxDecoration(
                           color: _getRoleColor(
                             _currentUser.role,
-                          ).withOpacity(0.2),
+                          ).withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -442,7 +442,7 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
                         ) {
                           return Chip(
                             label: Text(restriction),
-                            backgroundColor: AppColors.primary.withOpacity(0.1),
+                            backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                             labelStyle: TextStyle(
                               color: AppColors.primary,
                               fontSize: UIConstants.fontSizeSm,
@@ -477,7 +477,7 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
                           label: Text(
                             '${entry.key}: ${(entry.value * 100).toStringAsFixed(0)}%',
                           ),
-                          backgroundColor: AppColors.primary.withOpacity(0.1),
+                          backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                           labelStyle: TextStyle(
                             color: AppColors.primary,
                             fontSize: UIConstants.fontSizeSm,

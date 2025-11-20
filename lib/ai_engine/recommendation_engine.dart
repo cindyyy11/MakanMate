@@ -217,6 +217,10 @@ class RecommendationEngine extends AIEngineBase {
     required List<RecommendationItem> contentBased,
     required List<RecommendationItem> contextual,
   }) {
+    logger.i(
+      '🔄 Combining: ${collaborative.length} collaborative, ${contentBased.length} content-based, ${contextual.length} contextual',
+    );
+
     Map<String, RecommendationItem> combinedRecs = {};
 
     // Collaborative filtering: 40% weight
@@ -257,6 +261,9 @@ class RecommendationEngine extends AIEngineBase {
       }
     }
 
+    logger.i(
+      '🔄 Combined result: ${combinedRecs.length} unique recommendations',
+    );
     return combinedRecs.values.toList();
   }
 
@@ -1171,6 +1178,15 @@ class RecommendationEngine extends AIEngineBase {
     List<RecommendationItem> recommendations,
     String userId,
   ) async {
+    logger.i(
+      '📋 Applying business rules to ${recommendations.length} recommendations',
+    );
+
+    // If no recommendations, return early
+    if (recommendations.isEmpty) {
+      return recommendations;
+    }
+
     Set<String> seenCuisines = {};
     List<RecommendationItem> diverseRecommendations = [];
 
@@ -1216,6 +1232,9 @@ class RecommendationEngine extends AIEngineBase {
       }
     }
 
+    logger.i(
+      '📋 Business rules result: ${diverseRecommendations.length} recommendations passed',
+    );
     return diverseRecommendations;
   }
 

@@ -164,7 +164,7 @@ class TrendChartWidget extends StatelessWidget {
         show: true,
         border: Border.all(
           color: isDark
-              ? Colors.white.withOpacity(0.1)
+              ? Colors.white.withValues(alpha: 0.1)
               : AppColors.grey300,
         ),
       ),

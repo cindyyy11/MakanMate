@@ -112,14 +112,23 @@ class FoodRemoteDataSourceImpl implements FoodRemoteDataSource {
   @override
   Future<List<FoodItem>> getPopularItems({int limit = 50}) async {
     try {
+      print('🔍 Querying food_items collection for popular items...');
       final query = await firestore
           .collection(FOOD_COLLECTION)
           .orderBy('totalOrders', descending: true)
           .limit(limit)
           .get();
 
-      return query.docs.map((doc) => FoodItem.fromFirestore(doc)).toList();
+      print('🔍 Found ${query.docs.length} popular items in food_items');
+      final items = query.docs.map((doc) => FoodItem.fromFirestore(doc)).toList();
+      
+      if (items.isEmpty) {
+        print('⚠️ WARNING: food_items collection is empty or query returned no results!');
+      }
+      
+      return items;
     } catch (e) {
+      print('❌ ERROR querying food_items: $e');
       throw ServerException('Failed to get popular items: $e');
     }
   }

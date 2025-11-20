@@ -102,8 +102,8 @@ class SeasonalInsightsWidget extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  seasonColor.withOpacity(0.3),
-                  seasonColor.withOpacity(0.1),
+                  seasonColor.withValues(alpha: 0.3),
+                  seasonColor.withValues(alpha: 0.1),
                 ],
               ),
               borderRadius: BorderRadius.circular(16),
@@ -146,7 +146,7 @@ class SeasonalInsightsWidget extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
@@ -279,12 +279,12 @@ class SeasonalInsightsWidget extends StatelessWidget {
       padding: UIConstants.paddingMd,
       decoration: BoxDecoration(
         color: isDark
-            ? Colors.white.withOpacity(0.05)
+            ? Colors.white.withValues(alpha: 0.05)
             : AppColors.grey50,
         borderRadius: UIConstants.borderRadiusMd,
         border: Border.all(
           color: isDark
-              ? Colors.white.withOpacity(0.1)
+              ? Colors.white.withValues(alpha: 0.1)
               : AppColors.grey200,
         ),
       ),
@@ -293,7 +293,7 @@ class SeasonalInsightsWidget extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: color, size: 20),
@@ -399,10 +399,10 @@ class SeasonalInsightsWidget extends StatelessWidget {
     return Container(
       padding: UIConstants.paddingMd,
       decoration: BoxDecoration(
-        color: impactColor.withOpacity(0.1),
+        color: impactColor.withValues(alpha: 0.1),
         borderRadius: UIConstants.borderRadiusMd,
         border: Border.all(
-          color: impactColor.withOpacity(0.3),
+          color: impactColor.withValues(alpha: 0.3),
           width: 1.5,
         ),
       ),
@@ -433,12 +433,12 @@ class SeasonalInsightsWidget extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [impactColor, impactColor.withOpacity(0.8)],
+                    colors: [impactColor, impactColor.withValues(alpha: 0.8)],
                   ),
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: impactColor.withOpacity(0.3),
+                      color: impactColor.withValues(alpha: 0.3),
                       blurRadius: 8,
                       spreadRadius: 0,
                     ),
@@ -497,12 +497,12 @@ class SeasonalInsightsWidget extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: isDark
-                            ? Colors.white.withOpacity(0.1)
+                            ? Colors.white.withValues(alpha: 0.1)
                             : AppColors.grey100,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: isDark
-                              ? Colors.white.withOpacity(0.1)
+                              ? Colors.white.withValues(alpha: 0.1)
                               : AppColors.grey300,
                         ),
                       ),
@@ -540,7 +540,7 @@ class SeasonalInsightsWidget extends StatelessWidget {
                   gradient: LinearGradient(
                     colors: [
                       AppColors.warning,
-                      AppColors.warning.withOpacity(0.8),
+                      AppColors.warning.withValues(alpha: 0.8),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(10),
@@ -583,11 +583,11 @@ class SeasonalInsightsWidget extends StatelessWidget {
       padding: UIConstants.paddingMd,
       decoration: BoxDecoration(
         color: isDark
-            ? Colors.white.withOpacity(0.05)
+            ? Colors.white.withValues(alpha: 0.05)
             : Colors.white,
         borderRadius: UIConstants.borderRadiusMd,
         border: Border.all(
-          color: priorityColor.withOpacity(0.3),
+          color: priorityColor.withValues(alpha: 0.3),
           width: 2,
         ),
       ),
@@ -599,7 +599,7 @@ class SeasonalInsightsWidget extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: priorityColor.withOpacity(0.1),
+                  color: priorityColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(typeIcon, color: priorityColor, size: 18),
@@ -620,7 +620,7 @@ class SeasonalInsightsWidget extends StatelessWidget {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: priorityColor.withOpacity(0.2),
+                  color: priorityColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(

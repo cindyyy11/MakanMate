@@ -49,7 +49,7 @@ class _AuditLogViewerPageState extends State<AuditLogViewerPage> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -106,7 +106,7 @@ class _AuditLogViewerPageState extends State<AuditLogViewerPage> {
         border: Border(
           bottom: BorderSide(
             color: isDark
-                ? Colors.white.withOpacity(0.1)
+                ? Colors.white.withValues(alpha: 0.1)
                 : AppColors.grey200,
           ),
         ),
@@ -266,12 +266,12 @@ class _AuditLogViewerPageState extends State<AuditLogViewerPage> {
         borderRadius: UIConstants.borderRadiusMd,
         border: Border.all(
           color: isDark
-              ? Colors.white.withOpacity(0.1)
+              ? Colors.white.withValues(alpha: 0.1)
               : AppColors.grey200,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 5,
             offset: const Offset(0, 2),
           ),
@@ -283,7 +283,7 @@ class _AuditLogViewerPageState extends State<AuditLogViewerPage> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: _getActionColor(log.action).withOpacity(0.1),
+              color: _getActionColor(log.action).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
@@ -315,7 +315,7 @@ class _AuditLogViewerPageState extends State<AuditLogViewerPage> {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
+                        color: AppColors.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(

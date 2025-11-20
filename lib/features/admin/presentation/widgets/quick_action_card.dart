@@ -37,11 +37,11 @@ class QuickActionCard extends StatelessWidget {
             color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
             borderRadius: UIConstants.borderRadiusMd,
             border: Border.all(
-              color: isDark ? Colors.white.withOpacity(0.1) : AppColors.grey200,
+              color: isDark ? Colors.white.withValues(alpha: 0.1) : AppColors.grey200,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -58,7 +58,7 @@ class QuickActionCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
+                      color: color.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(icon, color: color, size: 20),
