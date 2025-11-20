@@ -120,8 +120,16 @@ class UserModel extends BaseModel {
           };
         }
       } else if (entry.value is List) {
-        // Handle lists - ensure they're properly typed
-        jsonData[entry.key] = List.from(entry.value as List);
+        final listValue = entry.value as List;
+        // If list contains maps (e.g., warnings), normalize each map.
+        if (listValue.isNotEmpty && listValue.first is Map) {
+          jsonData[entry.key] = listValue
+              .map((item) =>
+                  item is Map ? Map<String, dynamic>.from(item) : item)
+              .toList();
+        } else {
+          jsonData[entry.key] = List.from(listValue);
+        }
       } else if (entry.value is Map) {
         // Handle nested maps - convert to Map<String, dynamic>
         jsonData[entry.key] = Map<String, dynamic>.from(entry.value as Map);
