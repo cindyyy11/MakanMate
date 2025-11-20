@@ -9,3 +9,5 @@ This directory contains Lottie animation JSON files used in the application.
 - `reviews_ratings.json` - Animation for reviews and ratings
 - `user_profile.json` - Animation for user profile features
 
+
+

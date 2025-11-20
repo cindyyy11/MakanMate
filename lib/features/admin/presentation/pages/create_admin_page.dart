@@ -75,10 +75,6 @@ class _CreateAdminPageState extends State<CreateAdminPage> {
             ),
           ),
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
         title: Row(
           children: [
             Container(

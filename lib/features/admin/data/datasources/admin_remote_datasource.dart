@@ -190,6 +190,7 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
         _getTotalRestaurants(),
         _getTotalFoodItems(),
       ]);
+      final lastUpdatedTimestamp = await _getLatestDataTimestamp();
 
       return PlatformMetricsModel(
         totalUsers: results[0] as int,
@@ -201,7 +202,7 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
         todaysActiveUsers: results[6] as int,
         totalRestaurants: results[7] as int,
         totalFoodItems: results[8] as int,
-        lastUpdated: DateTime.now(),
+        lastUpdated: lastUpdatedTimestamp ?? DateTime.now(),
       );
     } catch (e, stackTrace) {
       logger.e('Error fetching platform metrics: $e', stackTrace: stackTrace);
@@ -485,6 +486,81 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
       logger.w('Error counting food items from vendor menus: $e');
       return 0;
     }
+  }
+
+  Future<DateTime?> _getLatestDataTimestamp() async {
+    final configs = [
+      {
+        'collection': 'users',
+        'fields': ['updatedAt', 'lastActive', 'createdAt'],
+      },
+      {
+        'collection': 'vendors',
+        'fields': ['updatedAt', 'approvalUpdatedAt', 'createdAt'],
+      },
+      {
+        'collection': 'reviews',
+        'fields': ['updatedAt', 'flaggedAt', 'createdAt'],
+      },
+      {
+        'collection': 'food_items',
+        'fields': ['updatedAt', 'createdAt'],
+      },
+    ];
+
+    final futures = configs.map((config) {
+      return _getLatestTimestampForCollection(
+        config['collection'] as String,
+        fieldCandidates: (config['fields'] as List<String>),
+      );
+    }).toList();
+
+    final timestamps = await Future.wait(futures);
+    final validTimestamps = timestamps.whereType<DateTime>().toList();
+
+    if (validTimestamps.isEmpty) {
+      return null;
+    }
+
+    validTimestamps.sort();
+    return validTimestamps.last;
+  }
+
+  Future<DateTime?> _getLatestTimestampForCollection(
+    String collectionPath, {
+    List<String> fieldCandidates = const [
+      'updatedAt',
+      'lastUpdated',
+      'modifiedAt',
+      'createdAt',
+    ],
+  }) async {
+    for (final field in fieldCandidates) {
+      try {
+        final snapshot = await firestore
+            .collection(collectionPath)
+            .orderBy(field, descending: true)
+            .limit(1)
+            .get();
+
+        if (snapshot.docs.isEmpty) {
+          continue;
+        }
+
+        final data = snapshot.docs.first.data();
+        final value = data[field];
+
+        if (value is Timestamp) {
+          return value.toDate();
+        } else if (value is DateTime) {
+          return value;
+        }
+      } catch (e) {
+        logger.v('Field $field missing in $collectionPath: $e');
+      }
+    }
+
+    return null;
   }
 
   @override

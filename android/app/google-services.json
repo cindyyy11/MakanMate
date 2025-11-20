@@ -10,7 +10,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:400315761727:android:20bc2b2f498faf0520248a",
         "android_client_info": {
-          "package_name": "com.example.makan_mate"
+          "package_name": "com.localguides.makanmate"
         }
       },
       "oauth_client": [
@@ -18,7 +18,7 @@
           "client_id": "400315761727-j5bc7kuolnf6bb129krcid7q7orc5tph.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.makan_mate",
+            "package_name": "com.localguides.makanmate",
             "certificate_hash": "05158b0e5d7945959b624578fcf617cfcf160dee"
           }
         },
@@ -26,7 +26,7 @@
           "client_id": "400315761727-sbgb2q7834k0if021kt53nns7rcu0of0.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.makan_mate",
+            "package_name": "com.localguides.makanmate",
             "certificate_hash": "99d56539c063c279ab27e4406f971c160dc0ab73"
           }
         },

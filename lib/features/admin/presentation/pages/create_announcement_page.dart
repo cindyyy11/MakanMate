@@ -115,10 +115,6 @@ class _CreateAnnouncementPageState extends State<CreateAnnouncementPage> {
             ),
           ),
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
         title: Row(
           children: [
             Container(
@@ -176,21 +172,18 @@ class _CreateAnnouncementPageState extends State<CreateAnnouncementPage> {
                               children: [
                                 Text(
                                   'System Announcement',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleLarge
+                                  style: Theme.of(context).textTheme.titleLarge
                                       ?.copyWith(fontWeight: FontWeight.bold),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
                                   'Create a system-wide announcement',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
+                                  style: Theme.of(context).textTheme.bodySmall
                                       ?.copyWith(
-                                        color: AppColorsExtension.getTextSecondary(
-                                          context,
-                                        ),
+                                        color:
+                                            AppColorsExtension.getTextSecondary(
+                                              context,
+                                            ),
                                       ),
                                 ),
                               ],
@@ -256,14 +249,14 @@ class _CreateAnnouncementPageState extends State<CreateAnnouncementPage> {
                                 Icon(
                                   Icons.priority_high_rounded,
                                   size: 20,
-                                  color: AppColorsExtension.getTextPrimary(context),
+                                  color: AppColorsExtension.getTextPrimary(
+                                    context,
+                                  ),
                                 ),
                                 const SizedBox(width: UIConstants.spacingSm),
                                 Text(
                                   'Priority Level',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
+                                  style: Theme.of(context).textTheme.bodyMedium
                                       ?.copyWith(fontWeight: FontWeight.w600),
                                 ),
                               ],
@@ -273,10 +266,30 @@ class _CreateAnnouncementPageState extends State<CreateAnnouncementPage> {
                               spacing: UIConstants.spacingSm,
                               runSpacing: UIConstants.spacingSm,
                               children: [
-                                _buildPriorityChip('low', 'Low', Icons.info_outline_rounded, AppColors.info),
-                                _buildPriorityChip('medium', 'Medium', Icons.check_circle_outline_rounded, AppColors.primary),
-                                _buildPriorityChip('high', 'High', Icons.warning_amber_rounded, AppColors.warning),
-                                _buildPriorityChip('urgent', 'Urgent', Icons.error_outline_rounded, AppColors.error),
+                                _buildPriorityChip(
+                                  'low',
+                                  'Low',
+                                  Icons.info_outline_rounded,
+                                  AppColors.info,
+                                ),
+                                _buildPriorityChip(
+                                  'medium',
+                                  'Medium',
+                                  Icons.check_circle_outline_rounded,
+                                  AppColors.primary,
+                                ),
+                                _buildPriorityChip(
+                                  'high',
+                                  'High',
+                                  Icons.warning_amber_rounded,
+                                  AppColors.warning,
+                                ),
+                                _buildPriorityChip(
+                                  'urgent',
+                                  'Urgent',
+                                  Icons.error_outline_rounded,
+                                  AppColors.error,
+                                ),
                               ],
                             ),
                           ],
@@ -305,14 +318,14 @@ class _CreateAnnouncementPageState extends State<CreateAnnouncementPage> {
                                 Icon(
                                   Icons.people_rounded,
                                   size: 20,
-                                  color: AppColorsExtension.getTextPrimary(context),
+                                  color: AppColorsExtension.getTextPrimary(
+                                    context,
+                                  ),
                                 ),
                                 const SizedBox(width: UIConstants.spacingSm),
                                 Text(
                                   'Target Audience',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
+                                  style: Theme.of(context).textTheme.bodyMedium
                                       ?.copyWith(fontWeight: FontWeight.w600),
                                 ),
                               ],
@@ -322,10 +335,30 @@ class _CreateAnnouncementPageState extends State<CreateAnnouncementPage> {
                               spacing: UIConstants.spacingSm,
                               runSpacing: UIConstants.spacingSm,
                               children: [
-                                _buildAudienceChip('all', 'All Users', Icons.public_rounded, AppColors.primary),
-                                _buildAudienceChip('users', 'Users', Icons.person_rounded, AppColors.info),
-                                _buildAudienceChip('vendors', 'Vendors', Icons.store_rounded, AppColors.secondary),
-                                _buildAudienceChip('admins', 'Admins', Icons.admin_panel_settings_rounded, AppColors.warning),
+                                _buildAudienceChip(
+                                  'all',
+                                  'All Users',
+                                  Icons.public_rounded,
+                                  AppColors.primary,
+                                ),
+                                _buildAudienceChip(
+                                  'users',
+                                  'Users',
+                                  Icons.person_rounded,
+                                  AppColors.info,
+                                ),
+                                _buildAudienceChip(
+                                  'vendors',
+                                  'Vendors',
+                                  Icons.store_rounded,
+                                  AppColors.secondary,
+                                ),
+                                _buildAudienceChip(
+                                  'admins',
+                                  'Admins',
+                                  Icons.admin_panel_settings_rounded,
+                                  AppColors.warning,
+                                ),
                               ],
                             ),
                           ],
@@ -353,7 +386,9 @@ class _CreateAnnouncementPageState extends State<CreateAnnouncementPage> {
                             children: [
                               Icon(
                                 Icons.calendar_today_rounded,
-                                color: AppColorsExtension.getTextPrimary(context),
+                                color: AppColorsExtension.getTextPrimary(
+                                  context,
+                                ),
                                 size: 20,
                               ),
                               const SizedBox(width: UIConstants.spacingMd),
@@ -367,15 +402,18 @@ class _CreateAnnouncementPageState extends State<CreateAnnouncementPage> {
                                           .textTheme
                                           .bodySmall
                                           ?.copyWith(
-                                            color: AppColorsExtension.getTextSecondary(
-                                              context,
-                                            ),
+                                            color:
+                                                AppColorsExtension.getTextSecondary(
+                                                  context,
+                                                ),
                                           ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
                                       _expiresAt != null
-                                          ? DateFormat('MMM dd, yyyy • HH:mm').format(_expiresAt!)
+                                          ? DateFormat(
+                                              'MMM dd, yyyy • HH:mm',
+                                            ).format(_expiresAt!)
                                           : 'No expiry date set',
                                       style: Theme.of(context)
                                           .textTheme
@@ -383,8 +421,12 @@ class _CreateAnnouncementPageState extends State<CreateAnnouncementPage> {
                                           ?.copyWith(
                                             fontWeight: FontWeight.w600,
                                             color: _expiresAt != null
-                                                ? AppColorsExtension.getTextPrimary(context)
-                                                : AppColorsExtension.getTextSecondary(context),
+                                                ? AppColorsExtension.getTextPrimary(
+                                                    context,
+                                                  )
+                                                : AppColorsExtension.getTextSecondary(
+                                                    context,
+                                                  ),
                                           ),
                                     ),
                                   ],
@@ -392,7 +434,10 @@ class _CreateAnnouncementPageState extends State<CreateAnnouncementPage> {
                               ),
                               if (_expiresAt != null)
                                 IconButton(
-                                  icon: const Icon(Icons.close_rounded, size: 18),
+                                  icon: const Icon(
+                                    Icons.close_rounded,
+                                    size: 18,
+                                  ),
                                   onPressed: () {
                                     setState(() => _expiresAt = null);
                                   },
@@ -410,7 +455,9 @@ class _CreateAnnouncementPageState extends State<CreateAnnouncementPage> {
                         children: [
                           Expanded(
                             child: OutlinedButton(
-                              onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                              onPressed: _isLoading
+                                  ? null
+                                  : () => Navigator.of(context).pop(),
                               style: OutlinedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: UIConstants.spacingMd,
@@ -419,13 +466,17 @@ class _CreateAnnouncementPageState extends State<CreateAnnouncementPage> {
                                   borderRadius: UIConstants.borderRadiusMd,
                                 ),
                                 side: BorderSide(
-                                  color: AppColorsExtension.getTextSecondary(context),
+                                  color: AppColorsExtension.getTextSecondary(
+                                    context,
+                                  ),
                                 ),
                               ),
                               child: Text(
                                 'Cancel',
                                 style: TextStyle(
-                                  color: AppColorsExtension.getTextPrimary(context),
+                                  color: AppColorsExtension.getTextPrimary(
+                                    context,
+                                  ),
                                 ),
                               ),
                             ),
@@ -454,11 +505,17 @@ class _CreateAnnouncementPageState extends State<CreateAnnouncementPage> {
                                       ),
                                     )
                                   : Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        const Icon(Icons.send_rounded, size: 18),
-                                        const SizedBox(width: UIConstants.spacingSm),
+                                        const Icon(
+                                          Icons.send_rounded,
+                                          size: 18,
+                                        ),
+                                        const SizedBox(
+                                          width: UIConstants.spacingSm,
+                                        ),
                                         Flexible(
                                           child: FittedBox(
                                             fit: BoxFit.scaleDown,
@@ -486,7 +543,12 @@ class _CreateAnnouncementPageState extends State<CreateAnnouncementPage> {
     );
   }
 
-  Widget _buildPriorityChip(String value, String label, IconData icon, Color color) {
+  Widget _buildPriorityChip(
+    String value,
+    String label,
+    IconData icon,
+    Color color,
+  ) {
     final isSelected = _priority == value;
     return InkWell(
       onTap: () => setState(() => _priority = value),
@@ -510,24 +572,24 @@ class _CreateAnnouncementPageState extends State<CreateAnnouncementPage> {
             Icon(
               icon,
               size: 16,
-              color: isSelected ? color : AppColorsExtension.getTextSecondary(context),
+              color: isSelected
+                  ? color
+                  : AppColorsExtension.getTextSecondary(context),
             ),
             const SizedBox(width: UIConstants.spacingSm),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? color : AppColorsExtension.getTextSecondary(context),
+                color: isSelected
+                    ? color
+                    : AppColorsExtension.getTextSecondary(context),
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 fontSize: 12,
               ),
             ),
             if (isSelected) ...[
               const SizedBox(width: UIConstants.spacingSm),
-              Icon(
-                Icons.check_circle_rounded,
-                size: 16,
-                color: color,
-              ),
+              Icon(Icons.check_circle_rounded, size: 16, color: color),
             ],
           ],
         ),
@@ -535,7 +597,12 @@ class _CreateAnnouncementPageState extends State<CreateAnnouncementPage> {
     );
   }
 
-  Widget _buildAudienceChip(String value, String label, IconData icon, Color color) {
+  Widget _buildAudienceChip(
+    String value,
+    String label,
+    IconData icon,
+    Color color,
+  ) {
     final isSelected = _targetAudience == value;
     return InkWell(
       onTap: () => setState(() => _targetAudience = value),
@@ -559,24 +626,24 @@ class _CreateAnnouncementPageState extends State<CreateAnnouncementPage> {
             Icon(
               icon,
               size: 16,
-              color: isSelected ? color : AppColorsExtension.getTextSecondary(context),
+              color: isSelected
+                  ? color
+                  : AppColorsExtension.getTextSecondary(context),
             ),
             const SizedBox(width: UIConstants.spacingSm),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? color : AppColorsExtension.getTextSecondary(context),
+                color: isSelected
+                    ? color
+                    : AppColorsExtension.getTextSecondary(context),
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 fontSize: 12,
               ),
             ),
             if (isSelected) ...[
               const SizedBox(width: UIConstants.spacingSm),
-              Icon(
-                Icons.check_circle_rounded,
-                size: 16,
-                color: color,
-              ),
+              Icon(Icons.check_circle_rounded, size: 16, color: color),
             ],
           ],
         ),
@@ -584,5 +651,3 @@ class _CreateAnnouncementPageState extends State<CreateAnnouncementPage> {
     );
   }
 }
-
-

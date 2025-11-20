@@ -52,13 +52,6 @@ class AppTheme {
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
-      
-      // cardTheme: CardTheme(
-      //   elevation: 2,
-      //   shape: RoundedRectangleBorder(
-      //     borderRadius: BorderRadius.circular(12),
-      //   ),
-      // ),
     );
   }
   
