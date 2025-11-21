@@ -566,9 +566,6 @@ Special thanks to the Flutter community for their incredible support and resourc
 ## 📞 Connect With Us
 
 - 🌐 Website: [www.makanmate.com](https://www.makanmate.com)
-- 📱 Twitter: [@MakanMateApp](https://twitter.com/makanmateapp)
-- 💼 LinkedIn: [MakanMate](https://linkedin.com/company/makanmate)
-- 📧 Contact: hello@makanmate.com
 
 ---
 
